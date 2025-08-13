@@ -230,7 +230,7 @@
 
 <section>
   <h3>🔥 Trending Coins</h3>
-  <div id="trendingCoins" class="coin-grid"></div>
+  <div id="trendingCoins" class="coin-grid" ></div>
 </section>
 
 
@@ -340,7 +340,7 @@
     });
 
   } catch (err) {
-    console.error("❌ Failed to load portfolio:", err);
+    console.error("❌ Failed to load portfolio reloqd after 15seconds:", err);
     portfolioEl.innerHTML = '<p style="color:red;">Error loading portfolio</p>';
   }
 }
@@ -748,7 +748,7 @@ async function loadTrendingCoins() {
       const changeClass = c.price_change_percentage_24h >= 0 ? 'positive' : 'negative';
 
       div.innerHTML = `
-        <h4>${c.name}</h4>
+        <h4 style = "color: white">${c.name}</h4>
         <p class="price">$${parseFloat(c.current_price).toFixed(4)}</p>
         <p class="change ${changeClass}">${change}%</p>
       `;
@@ -758,7 +758,7 @@ async function loadTrendingCoins() {
 
   } catch (err) {
     console.error('❌ Error loading trending coins:', err);
-    container.innerHTML = '<p>Failed to load trending coins.</p>';
+    container.innerHTML = '<p>Failed to load trending coins. Reload after 10seconds</p>';
   }
 }
 

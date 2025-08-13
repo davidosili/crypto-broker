@@ -104,6 +104,18 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected');
     const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+
+      // 🔄 Keep Render service awake by pinging itself every 14 minutes
+      const fetch = require('node-fetch');
+      const SELF_URL = 'https://krypt-broker.onrender.com'; // your Render URL
+
+      setInterval(() => {
+        fetch(SELF_URL)
+          .then(res => console.log(`Self-ping status: ${res.status}`))
+          .catch(err => console.error('Self-ping failed:', err));
+      }, 14 * 60 * 1000); // every 14 min
+    });
   })
   .catch(err => console.error('MongoDB connection error:', err));
