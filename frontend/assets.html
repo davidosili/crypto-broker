@@ -220,12 +220,9 @@
       <input name="postcode" placeholder="Postcode" required />
     </div>
 
-    <select name="country" required>
-      <option value="">Select your country</option>
-      <option value="US">United States</option>
-      <option value="GB">United Kingdom</option>
-      <!-- Add more countries if needed -->
-    </select>
+<select name="country" id="countrySelect" required>
+  <option value="">Select your country</option>
+</select>
 
     <button type="button" id="makePaymentBtn">Make Payment</button>
     <button type="button" onclick="closeDialog('cardDialog')">Cancel</button>
@@ -275,6 +272,33 @@ function checkCardType(input) {
 function closeDialog(id) {
   document.getElementById(id).close();
 }
+
+const fallbackCountries = [
+  { name: { common: "United States" }, cca2: "US" },
+  { name: { common: "United Kingdom" }, cca2: "GB" },
+  { name: { common: "Nigeria" }, cca2: "NG" },
+  // ... add more or import full list
+];
+
+function populateCountries(data) {
+  const select = document.getElementById("countrySelect");
+  data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+  data.forEach(country => {
+    const option = document.createElement("option");
+    option.value = country.cca2;
+    option.textContent = country.name.common;
+    select.appendChild(option);
+  });
+}
+
+fetch("https://restcountries.com/v3.1/all?fields=name,cca2")
+  .then(res => res.json())
+  .then(data => {
+    if (Array.isArray(data)) populateCountries(data);
+    else throw new Error("Invalid response");
+  })
+  .catch(() => populateCountries(fallbackCountries));
+
 </script>
 
 </body>
