@@ -3,6 +3,10 @@
 const registerForm = document.getElementById('registerForm');
 const loginForm = document.getElementById('loginForm');
 
+  window.alert = function(message) {
+  console.warn("🔔 ALERT:", message);
+};
+
 // Detect if running locally or on production
 const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
   ? 'http://localhost:3000/api'
