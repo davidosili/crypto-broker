@@ -43,17 +43,26 @@ if (loginForm) {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // Reset previous errors
+    loginForm.querySelectorAll("input").forEach(input => {
+      input.classList.remove("error-input");
+    });
+    loginForm.querySelectorAll(".error").forEach(err => {
+      err.style.display = "none";
+      err.textContent = "";
+    });
+
     // Show loading screen
     const loadingOverlay = document.getElementById('loadingOverlay');
     if (loadingOverlay) loadingOverlay.style.display = 'flex';
 
     const data = {
-      username: loginForm.username.value,
-      password: loginForm.password.value,
+      username: loginForm.username.value.trim(),
+      password: loginForm.password.value.trim(),
     };
 
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {  // ✅ use API_URL directly
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -61,22 +70,42 @@ if (loginForm) {
       });
 
       const result = await res.json();
-      alert(result.message);
 
       if (res.ok) {
         const role = result.user?.role;
 
-        // Wait 3 seconds before redirecting
         setTimeout(() => {
           window.location.href = role === 'admin' ? 'admin.html' : 'dashboard.html';
-        }, 3000);
+        }, 2000);
       } else {
+        // ❌ Show errors inline
         if (loadingOverlay) loadingOverlay.style.display = 'none';
+
+        if (result.message.toLowerCase().includes("username")) {
+          const input = loginForm.username;
+          input.classList.add("error-input");
+          input.parentElement.querySelector(".error").textContent = result.message;
+          input.parentElement.querySelector(".error").style.display = "block";
+        } else if (result.message.toLowerCase().includes("password")) {
+          const input = loginForm.password;
+          input.classList.add("error-input");
+          input.parentElement.querySelector(".error").textContent = result.message;
+          input.parentElement.querySelector(".error").style.display = "block";
+        } else {
+          // General error under password field
+          const input = loginForm.password;
+          input.classList.add("error-input");
+          input.parentElement.querySelector(".error").textContent = result.message;
+          input.parentElement.querySelector(".error").style.display = "block";
+        }
       }
     } catch (err) {
       console.error('❌ Login error:', err);
       if (loadingOverlay) loadingOverlay.style.display = 'none';
-      alert('Login failed. Try again.');
+      const input = loginForm.password;
+      input.classList.add("error-input");
+      input.parentElement.querySelector(".error").textContent = "Login failed. Try again.";
+      input.parentElement.querySelector(".error").style.display = "block";
     }
   });
 }

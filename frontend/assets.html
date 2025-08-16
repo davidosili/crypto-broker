@@ -142,6 +142,28 @@
   #cardForm button[type="button"]:not(#makePaymentBtn):hover {
     background-color: #444;
   }
+
+  .loading-bar {
+  width: 100%;
+  height: 10px;
+  background: #333;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.loading-fill {
+  width: 0%;
+  height: 100%;
+  background: #007bff;
+  animation: loadingAnim 3s linear forwards;
+}
+
+@keyframes loadingAnim {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
   </style>
 </head>
 <body>
@@ -176,7 +198,7 @@
 
   <div class="actions">
     <div class="action-btn" id="depositBtn">Deposit</div>
-    <div class="action-btn">Withdraw</div>
+    <div class="action-btn"> <a style="color: #fff;" href="withdrawal.html">Withdraw</a></div>
     <div class="action-btn">Transfer</div>
     <div class="action-btn">Convert</div>
   </div>
@@ -251,6 +273,22 @@
   </p>
   <button type="submit" id="depositSubmitBtn" disabled>Continue</button>
 </form>
+</dialog>
+
+<!-- Loading Popup -->
+<dialog id="depositLoadingDialog">
+  <h3>Processing Deposit...</h3>
+  <div class="loading-bar">
+    <div class="loading-fill"></div>
+  </div>
+</dialog>
+
+<!-- Deposit Confirmation Popup -->
+<dialog id="depositConfirmDialog">
+  <h3>✅ Deposit Submitted</h3>
+  <p>Your deposit has been submitted for review.<br>
+     Please wait a few minutes for update on balance.</p>
+  <button onclick="closeDialog('depositConfirmDialog')">OK</button>
 </dialog>
 
 

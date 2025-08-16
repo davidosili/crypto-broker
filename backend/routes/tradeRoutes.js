@@ -26,33 +26,38 @@ router.post('/convert', authMiddleware, async (req, res) => {
     to = to.toUpperCase();
 
     const user = await User.findById(userId);
-    const portfolio = user.portfolio || {};
+// Convert Mongoose Map -> plain object
+const rawPortfolio = user.portfolio instanceof Map ? Object.fromEntries(user.portfolio) : user.portfolio || {};
 
-    // Normalize portfolio keys to uppercase
-    const normalizedPortfolio = {};
-    for (const [key, value] of Object.entries(portfolio)) {
-      normalizedPortfolio[key.toUpperCase()] = value;
-    }
+const normalizedPortfolio = {};
+for (const [key, value] of Object.entries(rawPortfolio)) {
+  normalizedPortfolio[key.toUpperCase()] = value;
+}
 
-    console.log('🧾 Portfolio:', normalizedPortfolio);
-    console.log('🔁 Convert Request:', { from, to, amount });
+console.log("🧾 User Portfolio (normalized):", normalizedPortfolio);
+console.log("🔁 Convert Request:", { from, to, amount });
 
+
+    console.log("🧾 User Portfolio:", normalizedPortfolio);
+    console.log("🔁 Convert Request:", { from, to, amount });
+
+    // ✅ Balance check
     if (!normalizedPortfolio[from] || normalizedPortfolio[from] < amount) {
       return res.status(400).json({ error: 'Insufficient balance' });
     }
 
     // ✅ Fetch live prices
-    const fromPrice = await getPrice(from);  // USD
-    const toPrice = await getPrice(to);      // USD
+    const fromPrice = await getPrice(from); // USD
+    const toPrice = await getPrice(to);     // USD
 
     const fromUsd = amount * fromPrice;
     const toAmount = fromUsd / toPrice;
 
-    // ✅ Update portfolio
+    // ✅ Update balances
     normalizedPortfolio[from] -= amount;
     normalizedPortfolio[to] = (normalizedPortfolio[to] || 0) + toAmount;
 
-    // ✅ Save updated portfolio
+    // ✅ Save to DB
     await User.findByIdAndUpdate(userId, { portfolio: normalizedPortfolio });
 
     res.json({ message: '✅ Conversion complete', toAmount });
@@ -61,6 +66,7 @@ router.post('/convert', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Server error during conversion' });
   }
 });
+
 
 
 // req.body: { symbol, amount, to }

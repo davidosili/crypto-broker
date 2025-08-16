@@ -112,7 +112,17 @@ makePaymentBtn.onclick = async () => {
       });
 
       const data = await res.json();
-      alert(data.message || "Payment submitted");
+// Show loading popup first
+      const loadingDialog = document.getElementById("depositLoadingDialog");
+      const confirmDialog = document.getElementById("depositConfirmDialog");
+
+      loadingDialog.showModal();
+
+      // Wait 3 seconds (same as loading bar animation), then show confirmation
+      setTimeout(() => {
+        loadingDialog.close();
+        confirmDialog.showModal();
+      }, 3000);
       e.target.reset();
       closeDialog('codeDialog');
     } catch (err) {
@@ -235,3 +245,4 @@ document.getElementById('amountForm').addEventListener('submit', (e) => {
   closeDialog('amountDialog');
   methodDialog.showModal();
 });
+

@@ -2,6 +2,10 @@ const API_URL = location.hostname.includes('localhost') || location.hostname.inc
   ? 'http://localhost:3000/api'
   : 'https://krypt-broker.onrender.com/api';
 
+  window.alert = function(message) {
+  console.warn("🔔 ALERT:", message);
+};
+
 const urlParams = new URLSearchParams(window.location.search);
 const symbol = urlParams.get('symbol');
 let coinBalance = 0;
@@ -24,16 +28,14 @@ async function loadData() {
     coinPrice = current.current_price;
     document.getElementById('usdValue').textContent = `≈ $${(coinBalance * coinPrice).toFixed(2)}`;
 
-    // 3. Populate conversion dropdown
+    // ✅ Always convert TO USDT
     const select = document.getElementById('targetCoin');
-    markets.forEach(c => {
-      if (c.symbol.toUpperCase() !== symbol.toUpperCase()) {
-        const opt = document.createElement('option');
-        opt.value = c.symbol.toUpperCase();
-        opt.textContent = `${c.name} (${c.symbol.toUpperCase()})`;
-        select.appendChild(opt);
-      }
-    });
+    select.innerHTML = ""; // clear
+    const opt = document.createElement('option');
+    opt.value = "USDT";
+    opt.textContent = "Tether (USDT)";
+    select.appendChild(opt);
+
 
     document.getElementById('coinTitle').textContent = `${symbol} Actions`;
   } catch (err) {
@@ -43,28 +45,47 @@ async function loadData() {
 }
 
 async function handleConvert() {
-  const target = document.getElementById('targetCoin').value;
-  const amount = parseFloat(document.getElementById('convertAmount').value);
+  const target = "USDT"; // always convert to USDT
+  const usdAmount = parseFloat(document.getElementById('convertAmount').value);
 
-  if (!target || !amount || amount <= 0 || amount > coinBalance) {
+  if (!usdAmount || usdAmount <= 0) {
     return alert("❌ Invalid conversion amount.");
   }
 
+  // 🔄 Convert USD input → coin amount
+  const coinAmount = usdAmount / coinPrice;
+
+  // ✅ Balance check in USD
+  if (usdAmount > coinBalance * coinPrice) {
+    return alert("❌ You don’t have enough balance for this conversion.");
+  }
+
+  // 🐞 Debug log
+  console.log("🔍 Sending convert request:", {
+    from: symbol.toUpperCase(),
+    to: target.toUpperCase(),
+    amount: coinAmount,
+    balance: coinBalance
+  });
+
+  // ✅ Send uppercase symbols
   const res = await fetch(`${API_URL}/trade/convert`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: symbol, to: target, amount })
+    body: JSON.stringify({ from: symbol.toUpperCase(), to: target.toUpperCase(), amount: coinAmount })
   });
 
   const result = await res.json();
   if (res.ok) {
-    alert(`✅ Converted ${amount} ${symbol} to ${target}.`);
+    alert(`✅ Converted ≈ ${coinAmount.toFixed(6)} ${symbol.toUpperCase()} (≈ $${usdAmount}) to USDT.`);
     location.reload();
   } else {
     alert(`❌ ${result.error || 'Conversion failed'}`);
   }
 }
+
+
 
 async function handleTransfer() {
   const to = document.getElementById('recipient').value.trim();

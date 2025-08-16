@@ -167,6 +167,20 @@
       .input-group input { font-size: 14px; }
       .btn { font-size: 15px; }
     }
+
+    .input-group input.error-input {
+  border-color: #e74c3c !important;
+  background: #2b1c1c;
+}
+
+.error {
+  color: #e74c3c;
+  font-size: 13px;
+  margin-top: 5px;
+  text-align: left;
+  display: none;
+}
+
   </style>
 </head>
 <body>
@@ -177,15 +191,17 @@
       <p>Enter your login details to continue</p>
     </div>
 
-    <form id="loginForm">
-      <div class="input-group">
-        <input type="text" name="username" placeholder="Username" required />
-      </div>
-      <div class="input-group">
-        <input type="password" name="password" placeholder="Password" required />
-      </div>
-      <button class="btn" type="submit">Sign In</button>
-    </form>
+<form id="loginForm">
+  <div class="input-group">
+    <input type="text" name="username" placeholder="Username" required />
+    <small class="error"></small>
+  </div>
+  <div class="input-group">
+    <input type="password" name="password" placeholder="Password" required />
+    <small class="error"></small>
+  </div>
+  <button class="btn" type="submit">Sign In</button>
+</form>
 
     <div class="forgot">Forgot your password?</div>
 
