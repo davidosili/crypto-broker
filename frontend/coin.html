@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coin Details - Crypto Broker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #0d0d0d;
+      color: #ffffff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h2, h3, h4 { margin-top: 0; }
+
+    .container {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: #404041;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      margin-bottom: 20px;
+    }
+
+    .highlight {
+      color: #4cafef;
+    }
+
+    #coinPrice {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 5px 0;
+    }
+
+    .price-changes span {
+      margin: 0 6px;
+      font-weight: 500;
+    }
+
+    .price-up { color: #4caf50; }
+    .price-down { color: #ff5252; }
+
+    /* Chart */
+    .chart-wrapper {
+      height: 300px;
+      position: relative;
+    }
+
+    canvas {
+      max-width: 100%;
+    }
+
+    /* Trade box */
+    .trade-box input,
+    .trade-box button,
+    select {
+      margin: 5px 0;
+      padding: 10px;
+      width: 100%;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+    }
+
+    .trade-box input {
+      background: #11111a;
+      color: #fff;
+    }
+
+    .trade-box button {
+      background: linear-gradient(90deg, #6a5acd, #9b59b6);
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.3s;
+    }
+
+    .trade-box button:hover {
+      filter: brightness(1.2);
+      transform: translateY(-2px);
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #2a2a3d;
+      text-align: left;
+    }
+
+    th { color: #bbb; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <body>
+  <!-- Your dashboard content here -->
+
+  <!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <a href="dashboard.html" class="active">
+    <span class="icon"><i class="fas fa-home"></i></span>
+    <span class="label">Home</span>
+  </a>
+  <a href="markets.html">
+    <span class="icon"><i class="fas fa-chart-line"></i></span>
+    <span class="label">Markets</span>
+  </a>
+  <a href="trade.html">
+    <span class="icon"><i class="fas fa-exchange-alt"></i></span>
+    <span class="label">Trade</span>
+  </a>
+  <a href="assets.html">
+    <span class="icon"><i class="fas fa-wallet"></i></span>
+    <span class="label">Assets</span>
+  </a>
+</nav>
+
+
+
+  <h2 id="coinTitle">Loading coin...</h2>
+
+  <div class="container">
+    <!-- Left Column: Price & Chart -->
+    <div>
+    <div class="card chart-wrapper">
+      <canvas id="priceChart"></canvas>
+      <div id="loadingIndicator" style="text-align:center; margin-top:10px; display:none;">
+        <p>🔄 Loading chart...</p>
+      </div>
+    </div>
+      <div class="card">
+        <p id="coinPrice">Price: --</p>
+        <div class="price-changes">
+          1h: <span id="change1h">--</span> | 
+          24h: <span id="change24h">--</span> | 
+          7d: <span id="change7d">--</span> | 
+          30d: <span id="change30d">--</span>
+        </div>
+        <p id="coinDesc" style="color:#aaa;font-size:14px;">Description loading...</p>
+      </div>
+
+      <div class="card" id="historySection">
+        <h3>📅 Historical Prices (7 Days)</h3>
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Price (USD)</th></tr>
+          </thead>
+          <tbody id="historyTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right Column: Trade & Stats -->
+    <div>
+      <div class="card trade-box">
+        <h3>Trade This Coin</h3>
+        <input type="number" id="usdInput" placeholder="Amount in USD" />
+        <p id="convertedAmount">≈ 0 COIN</p>
+        <p id="warningMsg" style="display:none; color:#ff5252; font-size:14px;"></p>
+        <button onclick="placeTrade('buy')">Buy</button>
+        <button onclick="placeTrade('sell')">Sell</button>
+      </div>
+
+      <div class="card">
+        <h3>🔔 Set Price Alert</h3>
+        <input type="number" id="alertTargetPrice" placeholder="Target price (USD)" />
+        <select id="alertDirection">
+          <option value="above">Above</option>
+          <option value="below">Below</option>
+        </select>
+        <button onclick="setPriceAlert()">✅ Set Alert</button>
+      </div>
+
+      <div class="card" id="coinStats">
+        <h3>📊 Coin Statistics</h3>
+        <p><strong>Market Cap:</strong> <span id="marketCap">--</span></p>
+        <p><strong>24h Volume:</strong> <span id="volume24h">--</span></p>
+        <p><strong>Circulating Supply:</strong> <span id="circSupply">--</span></p>
+        <p><strong>Total Supply:</strong> <span id="totalSupply">--</span></p>
+        <p><strong>Max Supply:</strong> <span id="maxSupply">--</span></p>
+        <h4>🌐 Links</h4>
+        <ul id="infoLinks"></ul>
+        <p><strong>Categories:</strong> <span id="categories">--</span></p>
+        <p><strong>API ID:</strong> <span id="apiId">--</span></p>
+      </div>
+
+      <a href="dashboard.html" style="display:block; margin-top:10px; color:#9b59b6;">⬅ Back to Dashboard</a>
+    </div>
+  </div>
+  <script>
+    const API_URL = window.location.hostname.includes('localhost')
+  ? 'http://localhost:3000/api'
+  : 'https://krypt-broker.onrender.com/api';
+    const coinId = new URLSearchParams(window.location.search).get('coinId');
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    let coinName = '';
+    let currentPrice = 0;
+
+    function getCachedData(key, ttl = 60000) {
+      const cached = localStorage.getItem(key);
+      if (!cached) return null;
+      try {
+        const { data, timestamp } = JSON.parse(cached);
+        return Date.now() - timestamp < ttl ? data : null;
+      } catch {
+        localStorage.removeItem(key);
+        return null;
+      }
+    }
+
+    function setCachedData(key, data) {
+      localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+    }
+
+    
+    async function loadCoinDetails() {
+      if (!coinId) return;
+
+      let data = getCachedData(`coin-${coinId}`);
+      if (!data) {
+        try {
+          const res = await fetch(`${API_URL}/coin/coin/${coinId}`);
+          data = await res.json();
+          setCachedData(`coin-${coinId}`, data);
+        } catch (err) {
+          console.error('❌ Fetch error:', err);
+        }
+      }
+
+      if (!data || !data.symbol || !data.market_data) {
+        document.getElementById('coinTitle').textContent = `❌ Error loading ${coinId}`;
+        document.getElementById('coinPrice').textContent = 'Price: --';
+        document.getElementById('coinDesc').textContent = '⚠️ Could not load description.';
+        return;
+      }
+
+      coinName = data.symbol.toUpperCase();
+      currentPrice = data.market_data.current_price.usd;
+      const description = data.description?.en?.split('. ')[0] || 'No description available.';
+
+      document.getElementById('coinTitle').textContent = `${data.name} (${coinName})`;
+      document.getElementById('coinPrice').textContent = `Price: $${currentPrice}`;
+      document.getElementById('coinDesc').textContent = description;
+
+      const m = data.market_data;
+
+document.getElementById('marketCap').textContent = `$${m.market_cap.usd.toLocaleString()}`;
+document.getElementById('volume24h').textContent = `$${m.total_volume.usd.toLocaleString()}`;
+document.getElementById('circSupply').textContent = `${m.circulating_supply.toLocaleString()}`;
+document.getElementById('totalSupply').textContent = `${m.total_supply?.toLocaleString() || 'N/A'}`;
+document.getElementById('maxSupply').textContent = `${m.max_supply?.toLocaleString() || 'N/A'}`;
+
+document.getElementById('change1h').textContent = `${m.price_change_percentage_1h_in_currency.usd?.toFixed(2)}%`;
+document.getElementById('change24h').textContent = `${m.price_change_percentage_24h_in_currency.usd?.toFixed(2)}%`;
+document.getElementById('change7d').textContent = `${m.price_change_percentage_7d_in_currency.usd?.toFixed(2)}%`;
+document.getElementById('change30d').textContent = `${m.price_change_percentage_30d_in_currency.usd?.toFixed(2)}%`;
+
+
+// API ID
+document.getElementById('apiId').textContent = data.id;
+
+// Categories
+document.getElementById('categories').textContent = (data.categories || []).join(', ') || 'None';
+
+// Info links
+const links = data.links;
+const infoList = document.getElementById('infoLinks');
+infoList.innerHTML = ''; // clear old
+
+if (links.homepage?.[0]) {
+  infoList.innerHTML += `<li><a href="${links.homepage[0]}" target="_blank">Website</a></li>`;
+}
+(links.blockchain_site || []).slice(0, 3).forEach(link => {
+  if (link) infoList.innerHTML += `<li><a href="${link}" target="_blank">Explorer</a></li>`;
+});
+(links.repos_url?.github || []).forEach(url => {
+  infoList.innerHTML += `<li><a href="${url}" target="_blank">Source Code</a></li>`;
+});
+
+    }
+
+    async function loadChartData() {
+      let data = getCachedData(`chart-${coinId}`);
+      if (!data) {
+        try {
+          const res = await fetch(`${API_URL}/coin/chart/${coinId}?vs_currency=usd&days=1`);
+          data = await res.json();
+          setCachedData(`chart-${coinId}`, data);
+        } catch (err) {
+          console.error('❌ Chart fetch error:', err);
+        }
+      }
+
+      if (!data || !Array.isArray(data.prices)) {
+        const chartContainer = document.getElementById('priceChart').parentElement;
+        chartContainer.innerHTML += `<p style="color:red;">⚠️ Could not load chart data.</p>`;
+        return;
+      }
+
+      const labels = data.prices.map(p => new Date(p[0]).toLocaleTimeString());
+      const prices = data.prices.map(p => p[1]);
+
+      new Chart(ctx, {
+        
+  type: 'line',
+  data: {
+    labels,
+    datasets: [{
+      label: `${coinName} Price (USD)`,
+      data: prices,
+      borderColor: 'white',
+      fill: true,
+      tension: 0.4, // smoother curve
+      borderWidth: 1.5,
+      pointRadius: 0,         // no circles at points
+      pointHoverRadius: 4     // show point on hover
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+scales: {
+  x: {
+    ticks: {
+      display: false, // ✅ Hide X-axis ticks (date labels)
+    },
+    grid: {
+      display: false  // ✅ Optional: hide grid lines too
+    }
+  },
+  y: {
+    beginAtZero: false,
+    ticks: {
+      callback: value => `$${value.toLocaleString()}`,
+      color: 'white'
+    }
+  }
+},
+    plugins: {
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          label: ctx => `Price: $${ctx.raw.toLocaleString()}`
+        }
+      },
+      legend: {
+        display: true,
+        labels: {
+          color: '#333',
+          font: { size: 14 }
+        }
+      }
+    }
+  }
+  
+});
+const historyBody = document.getElementById('historyTable');
+const dayPrices = data.prices.slice(-7); // last 7 days
+historyBody.innerHTML = '';
+dayPrices.forEach(p => {
+  const date = new Date(p[0]).toLocaleDateString();
+  const price = `$${p[1].toLocaleString()}`;
+  historyBody.innerHTML += `<tr><td>${date}</td><td>${price}</td></tr>`;
+});
+
+
+    }
+
+async function placeTrade(type) {
+  const usdAmount = parseFloat(usdInput.value);
+
+  if (!usdAmount || usdAmount <= 0) return alert('Enter a valid USD amount');
+  if (!currentPrice || !coinName) return alert('Coin data not ready. Try again.');
+
+  // Check live balance for buys
+  if (type === 'buy' && usdAmount > availableUSDT) {
+    alert(`❌ Insufficient USDT balance. You only have $${availableUSDT.toFixed(2)}`);
+    return;
+  }
+
+  const coinAmount = usdAmount / currentPrice;
+
+  try {
+    const res = await fetch(`${API_URL}/trade/place`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        type,
+        coin: coinName,
+        amount: coinAmount,
+        price: currentPrice
+      })
+    });
+
+    const result = await res.json();
+    if (res.ok) {
+      alert(result.message || '✅ Trade successful.');
+      
+      // Update local balance if buy
+      if (type === 'buy') {
+        availableUSDT -= usdAmount;
+      }
+
+      window.location.href = 'trade.html';
+    } else {
+      alert(result.message || '❌ Trade failed.');
+    }
+  } catch (err) {
+    console.error('❌ Trade failed:', err);
+    alert('Trade failed. Please try again later.');
+  }
+}
+
+
+    async function setPriceAlert() {
+      const targetPrice = parseFloat(document.getElementById('alertTargetPrice').value);
+      const direction = document.getElementById('alertDirection').value;
+
+      if (!targetPrice || !direction) {
+        alert("Please fill out all fields.");
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/alerts`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coinId, targetPrice, direction })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert("🔔 Price alert set successfully!");
+      } else {
+        alert(`❌ Failed: ${data.message}`);
+      }
+    }
+let priceChart; // globally scoped
+
+
+
+      const usdInput = document.getElementById('usdInput');
+  const convertedAmount = document.getElementById('convertedAmount');
+
+usdInput.addEventListener('input', () => {
+  const usd = parseFloat(usdInput.value);
+
+  if (!currentPrice || isNaN(usd) || usd <= 0) {
+    convertedAmount.textContent = `≈ 0 ${coinName}`;
+    warningMsg.style.display = 'none';
+    usdInput.style.background = '#11111a';
+    return;
+  }
+
+  const coins = usd / currentPrice;
+  convertedAmount.textContent = `≈ ${coins.toFixed(6)} ${coinName}`;
+
+  // Check against live USDT balance
+  if (usd > availableUSDT) {
+    usdInput.style.background = '#551111';
+    warningMsg.style.display = 'block';
+    warningMsg.textContent = `⚠️ Insufficient funds: You have only $${availableUSDT.toFixed(2)} USDT`;
+  } else {
+    usdInput.style.background = '#11111a';
+    warningMsg.style.display = 'none';
+  }
+});
+
+
+  let availableUSDT = 0; // Live balance
+
+async function loadUserBalance() {
+  try {
+    const res = await fetch(`${API_URL}/trade/portfolio`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!res.ok) throw new Error('Failed to fetch portfolio');
+
+    const data = await res.json();
+    const portfolio = data.portfolio || {}; // assuming your controller returns { portfolio: { USDT: 100, BTC: 0.02 } }
+
+    availableUSDT = portfolio.USDT || 0;
+
+    console.log('💰 Available USDT:', availableUSDT);
+  } catch (err) {
+    console.error('❌ Error fetching USDT balance:', err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadUserBalance(); // Fetch USDT before trading
+  await loadCoinDetails();
+  await loadChartData();
+});
+
+  </script>
+</body>
+</html>

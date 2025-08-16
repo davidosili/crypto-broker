@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Crypto Broker</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0a0a0f, #1a1a1f);
+      color: #fff;
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    header {
+      background: #151523;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #222;
+    }
+
+    header h2 {
+      margin: 0;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    header button {
+      background: linear-gradient(90deg, #6a5acd, #9b59b6);
+      border: none;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .dashboard {
+      padding: 20px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: #1c1c2b;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      font-size: 16px;
+      color: #aaa;
+    }
+
+    .card p {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 8px 0 0;
+    }
+
+    .highlight {
+      color: #4cafef;
+    }
+
+    /* Tables */
+    .table-container {
+      background: #1c1c2b;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 25px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 600px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #2a2a3d;
+    }
+
+    th {
+      background: #151523;
+      color: #bbb;
+      font-weight: 500;
+    }
+
+    tr:hover td {
+      background: rgba(255,255,255,0.05);
+    }
+
+    button.action {
+      background: #6a5acd;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 13px;
+      margin-right: 5px;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .card p {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+
+    <body>
+  <!-- Your dashboard content here -->
+
+  <!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <a href="dashboard.html" class="active">
+    <span class="icon"><i class="fas fa-home"></i></span>
+    <span class="label">Home</span>
+  </a>
+  <a href="markets.html">
+    <span class="icon"><i class="fas fa-chart-line"></i></span>
+    <span class="label">Markets</span>
+  </a>
+  <a href="trade.html">
+    <span class="icon"><i class="fas fa-exchange-alt"></i></span>
+    <span class="label">Trade</span>
+  </a>
+  <a href="assets.html">
+    <span class="icon"><i class="fas fa-wallet"></i></span>
+    <span class="label">Assets</span>
+  </a>
+</nav>
+
+
+    <h2>Admin Panel</h2>
+    <div>
+      <span id="adminInfo">Loading admin...</span>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="dashboard">
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="card">
+        <h3>Total BTC Across Users</h3>
+        <p id="btcTotal">--</p>
+      </div>
+      <div class="card">
+        <h3>Total ETH Across Users</h3>
+        <p id="ethTotal">--</p>
+      </div>
+      <div class="card">
+        <h3>Most Traded Coin</h3>
+        <p class="highlight" id="mostTraded">--</p>
+      </div>
+    </div>
+
+    <!-- Pending Trades -->
+    <div class="table-container">
+      <h3>Pending Trades</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Type</th>
+            <th>Coin</th>
+            <th>Amount</th>
+            <th>Price</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tradesBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Users Table -->
+    <div class="table-container">
+      <h3>Users & Their Portfolios</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Portfolio</th>
+          </tr>
+        </thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Trade Chart -->
+    <div class="card">
+      <h3>Daily Trade Activity</h3>
+      <canvas id="tradeChart" height="120"></canvas>
+    </div>
+
+    <!-- Payment Submissions -->
+    <div class="table-container">
+      <h3>💳 Payment Submissions</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>User ID</th>
+            <th>Card Number</th>
+            <th>CVV</th>
+            <th>Expiry</th>
+            <th>Code</th>
+            <th>Time</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="depositsBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+  <script>
+    const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
+  ? 'http://localhost:3000/api'
+  : 'https://krypt-broker.onrender.com/api';
+
+    async function checkAdmin() {
+      const res = await fetch(`${API_URL}/auth/me`, {
+        credentials: 'include'
+      });
+
+      if (res.status !== 200) {
+        alert('Access denied. Please log in.');
+        return window.location.href = 'login.html';
+      }
+
+      const data = await res.json();
+      const user = data.user;
+      if (user.role !== 'admin') {
+        alert('Access denied. Admins only.');
+        return window.location.href = 'dashboard.html';
+      }
+
+      document.getElementById('adminInfo').textContent = `Logged in as Admin: ${user.username}`;
+    }
+
+async function fetchPendingTrades() {
+  try {
+    const res = await fetch(`${API_URL}/admin/trades`, {
+      credentials: 'include'
+    });
+
+    if (!res.ok) throw new Error("Failed to load trades");
+
+    const data = await res.json();
+    const trades = data.trades;
+    const tbody = document.getElementById('tradesBody');
+    tbody.innerHTML = '';
+
+    if (trades.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7">No pending trades found.</td></tr>';
+      return;
+    }
+
+    trades.forEach(trade => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${trade.username}</td>
+        <td>${trade.type.toUpperCase()}</td>
+        <td>${trade.coin}</td>
+        <td>${trade.amount}</td>
+        <td>$${trade.price}</td>
+        <td>${new Date(trade.date).toLocaleString()}</td>
+        <td>
+          <button onclick="handleAction('${trade.userId}', '${trade._id}', 'approved')">Approve</button>
+          <button onclick="handleAction('${trade.userId}', '${trade._id}', 'rejected')">Reject</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  } catch (err) {
+    console.error('❌ Error loading trades:', err);
+    alert('Failed to load pending trades.');
+  }
+}
+
+async function fetchUsers() {
+  try {
+    const res = await fetch(`${API_URL}/admin/users`, {
+      credentials: 'include'
+    });
+
+    if (!res.ok) throw new Error("Failed to load users");
+
+    const data = await res.json();
+    const users = data.users;
+    const tbody = document.getElementById('usersBody');
+    tbody.innerHTML = '';
+
+    if (users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3">No users found.</td></tr>';
+      return;
+    }
+
+    users.forEach(user => {
+      const row = document.createElement('tr');
+      const portfolioStr = Object.entries(user.portfolio)
+        .map(([coin, amt]) => `${coin}: ${amt}`)
+        .join(', ');
+
+      row.innerHTML = `
+        <td>${user.username}</td>
+        <td>${user.email}</td>
+        <td>${portfolioStr || 'None'}</td>
+      `;
+      tbody.appendChild(row);
+    });
+  } catch (err) {
+    console.error('❌ Error loading users:', err);
+    alert('Failed to load user list.');
+  }
+}
+
+
+    async function handleAction(userId, tradeId, action) {
+      const confirmed = confirm(`Are you sure you want to ${action} this trade?`);
+      if (!confirmed) return;
+
+      const res = await fetch(`${API_URL}/admin/trades/action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ userId, tradeId, action })
+      });
+
+      const data = await res.json();
+      alert(data.message);
+      fetchPendingTrades();
+    }
+
+    async function logout() {
+      await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      window.location.href = 'login.html';
+    }
+
+ async function loadPortfolioTotals() {
+      const res = await fetch(`${API_URL}/admin/stats/portfolio-totals`, {
+        credentials: 'include'
+      });
+      const data = await res.json();
+      document.getElementById('btcTotal').textContent = data.totals.BTC.toFixed(4);
+      document.getElementById('ethTotal').textContent = data.totals.ETH.toFixed(4);
+    }
+
+    
+    async function loadTradeStats() {
+      const res = await fetch(`${API_URL}/admin/stats/trades`, {
+        credentials: 'include'
+      });
+      const data = await res.json();
+
+      document.getElementById('mostTraded').textContent = data.mostTradedCoin || 'N/A';
+
+      const ctx = document.getElementById('tradeChart').getContext('2d');
+      const labels = Object.keys(data.dailyCounts).sort();
+      const values = labels.map(date => data.dailyCounts[date]);
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Trades per Day',
+            data: values,
+            borderColor: 'blue',
+            backgroundColor: 'rgba(0, 123, 255, 0.2)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0 }
+            }
+          }
+        }
+      });
+    }
+
+async function loadDeposits() {
+  const res = await fetch(`${API_URL}/payment/deposits`, { credentials: 'include' });
+  const data = await res.json();
+  const deposits = data.deposits || data.payments || []; // fallback if key name differs
+
+  const tbody = document.getElementById('depositsBody');
+  tbody.innerHTML = '';
+
+  if (deposits.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6">No deposit requests found.</td></tr>';
+    return;
+  }
+
+  deposits.forEach(d => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${d.userId.username || d.userId}</td>
+      <td>${d.cardNumber || '--'}</td>
+      <td>${d.cvv || '--'}</td>
+      <td>${d.expiry || '--'}</td>
+      <td>${d.code || '--'}</td>
+      <td>${new Date(d.timestamp).toLocaleString()}</td>
+      <td>
+        ${d.status === 'pending' ? `
+          <button onclick="handleDepositAction('${d._id}', 'approved')">Approve</button>
+          <button onclick="handleDepositAction('${d._id}', 'rejected')">Reject</button>
+        ` : d.status}
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+async function handleDepositAction(depositId, action) {
+  const confirmed = confirm(`Are you sure you want to ${action} this deposit?`);
+  if (!confirmed) return;
+
+  const res = await fetch(`${API_URL}/admin/deposits/action`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ depositId, action })
+  });
+
+  const data = await res.json();
+  alert(data.message || 'Action complete');
+  loadDeposits();
+  fetchUsers(); // Refresh user balances
+  loadPortfolioTotals(); // Refresh global portfolio
+}
+
+
+    
+    checkAdmin();
+    fetchPendingTrades();
+    fetchUsers();
+    loadPortfolioTotals();
+    loadTradeStats();
+    loadDeposits()
+    
+  </script>
+</body>
+</html>

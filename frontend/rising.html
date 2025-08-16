@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top 30 Rising Coins</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <body>
+  <!-- Your dashboard content here -->
+
+  <!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <a href="dashboard.html" class="active">
+    <span class="icon"><i class="fas fa-home"></i></span>
+    <span class="label">Home</span>
+  </a>
+  <a href="markets.html">
+    <span class="icon"><i class="fas fa-chart-line"></i></span>
+    <span class="label">Markets</span>
+  </a>
+  <a href="trade.html">
+    <span class="icon"><i class="fas fa-exchange-alt"></i></span>
+    <span class="label">Trade</span>
+  </a>
+  <a href="assets.html">
+    <span class="icon"><i class="fas fa-wallet"></i></span>
+    <span class="label">Assets</span>
+  </a>
+</nav>
+
+
+  <h2>🚀 Top 30 Rising Coins (24h)</h2>
+  <ul id="risingCoinsList"></ul>
+  <a href="dashboard.html">⬅️ Back to Dashboard</a>
+
+  <script>
+    async function loadRisingCoins() {
+      const res = await fetch('${API_URL}/coin/markets');
+      const coins = await res.json();
+
+      const rising = coins
+        .filter(c => c.price_change_percentage_24h > 0)
+        .sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)
+        .slice(0, 30);
+
+      const ul = document.getElementById('risingCoinsList');
+      rising.forEach(c => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a href="coin.html?coinId=${c.id}">
+        🚀 ${c.name} (${c.symbol.toUpperCase()}) ↑ ${c.price_change_percentage_24h.toFixed(2)}%
+        </a>`;
+        ul.appendChild(li);
+      });
+    }
+
+    loadRisingCoins();
+  </script>
+</body>
+</html>

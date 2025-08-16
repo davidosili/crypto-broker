@@ -1,0 +1,411 @@
+/* frontend/css/style.css */
+*{
+  box-sizing: border-box;
+}
+/*direct edit my code*/
+
+body {
+  font-family: sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  color: white;
+  border-radius: 10px;
+  background-color: #111;
+  
+}
+input, button {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px;
+  font-size: 1rem;
+}
+
+.card {
+  background: #494747;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+
+button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+  color: #333;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-left: 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: white;
+  text-transform: uppercase;
+}
+
+.badge-approved {
+  background-color: green;
+}
+
+.badge-rejected {
+  background-color: crimson;
+}
+
+.badge-pending {
+  background-color: darkorange;
+}
+
+.button-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.button-row button {
+  flex: 1 1 25%;
+  min-width: 100px;
+  padding: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.coin-slide {
+  transition: all 0.3s ease-in-out;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.coin-item {
+  margin: 4px 0;
+  padding: 6px;
+  background: #1e1e1e;
+  border-radius: 6px;
+  color: white;
+}
+
+ul {
+  list-style: none;
+  padding-left: 0;
+}
+ul li {
+  background: #f0f0f0;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  color: black;
+}
+.list-cover {
+  position: relative;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border: 1px solid #ccc;
+}
+
+.list-bottom {
+  position: absolute;
+  bottom: -0;
+  left: 0;
+  width: 100%;
+}
+
+#coinSearch {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+#searchResults {
+  list-style: none;
+  padding: 0;
+}
+
+#searchResults li {
+  background: #eee;
+  margin-bottom: 6px;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.coin-item a {
+  text-decoration: none;
+  color: #333;
+  display: block;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.coin-item a:hover {
+  background-color: #e0e0e0;
+}
+
+li a {
+  text-decoration: none;
+  color: #333;
+  display: block;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+li a:hover {
+  background-color: #eaeaea;
+}
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid green;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 0.8s linear infinite;
+  margin: auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.chart-wrapper {
+  width: 100%;
+  max-width: 100%;
+  height: 400px;
+  position: relative;
+  margin: 0 auto;
+  padding: 1rem;
+  box-sizing: border-box;
+  margin-bottom: 2rem;
+}
+
+#margin-top{
+  margin-top: 4rem;
+}
+
+.canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#priceChart {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#coinChart{
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  margin-top: -1rem;
+}
+
+@media (max-width: 600px) {
+  .chart-wrapper {
+    height: 280px;
+  }
+
+  h3, p {
+    font-size: 14px;
+  }
+
+  canvas {
+    font-size: 10px;
+  }
+}
+.news-list { list-style: none; padding: 0; }
+.news-list li {
+  display: flex;
+  align-items: center;
+  margin-bottom: .5rem;
+}
+.news-list img {
+  width: 60px; height: 40px;
+  object-fit: cover;
+  margin-right: .5rem;
+  border-radius: 4px;
+}
+
+
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  background: #111; /* dark background like crypto apps */
+  padding: 8px 0;
+  border-top: 1px solid #222;
+  z-index: 1000;
+}
+
+.bottom-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #aaa;
+  font-size: 12px;
+  transition: color 0.2s;
+  flex: 1;
+}
+
+.bottom-nav a .icon {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.bottom-nav a.active,
+.bottom-nav a:hover {
+  color: #ffd600; /* Highlight active */
+}
+
+/* Optional: adjust for desktop */
+@media (min-width: 768px) {
+  .bottom-nav {
+    width: 400px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 12px 12px 0 0;
+  }
+}
+
+
+
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -250px;
+  width: 250px;
+  height: 100%;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: #111;
+  padding: 15px;
+  transition: left 0.3s ease;
+  z-index: 999;
+}
+
+.sidebar a {
+  display: block;
+  color: white;
+  text-decoration: none;
+  margin: 10px 0;
+}
+.sidebar-toggle {
+  position: fixed;
+  top: 0;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 1000;
+  color: #111;
+  background: #eee;
+  border-radius: 5px;
+  padding: 5px 10px;
+  box-shadow: 0 0 4px rgba(0,0,0,0.2);
+  
+}
+.sidebar button {
+  width: 100%;
+  padding: 8px;
+  background: #e74c3c;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Trending coins grid */
+.coin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px,1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+.coin-grid .coin-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.25s;
+}
+.coin-grid .coin-card:hover {
+  background: linear-gradient(180deg,#262626,#1a1a1a);
+  transform: translateY(-4px);
+}
+.coin-grid h4 {
+  margin: 5px 0;
+  font-size: 14px;
+}
+.coin-grid .price {
+  color: #ccc;
+  font-size: 13px;
+}
+.coin-grid .change.positive { color: #00c853; }
+.coin-grid .change.negative { color: #ff5252; }
+
+.coin-card {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  color: black;
+}
+
+.coin-card:hover {
+  transform: scale(1.03);
+}
+
+.coin-card h4 {
+  margin: 0;
+  font-size: 1em;
+}
+
+.coin-card .price {
+  font-weight: bold;
+}
+
+.coin-card .change.positive {
+  color: green;
+}
+.coin-card .change.negative {
+  color: red;
+}
+
+dialog {
+  background: #111;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 20px;
+  width: 300px;
+}
+
+dialog button {
+  padding: 8px 12px;
+  border: none;
+  background-color: #444;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+dialog button:hover {
+  background-color: #666;
+}

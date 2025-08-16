@@ -1,0 +1,342 @@
+<!-- assets.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Assets</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/frontend/css/style.css" />
+  <style>
+    body { background: #0e0e0e; color: white; font-family: sans-serif; margin: 0; }
+    .header, .actions, .asset-card { padding: 16px; }
+    .header h1 { margin: 0; font-size: 1.8em; }
+    .total { font-size: 2.4em; margin-top: 8px; }
+    .actions { display: flex; justify-content: space-around; border-top: 1px solid #222; border-bottom: 1px solid #222; }
+    .action-btn { text-align: center; flex: 1; padding: 10px; }
+    .action-btn:hover { background: #1e1e1e; cursor: pointer; }
+    .asset-list { padding: 16px; }
+    .asset-card { background: #1a1a1a; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .asset-left { display: flex; align-items: center; gap: 12px; }
+    .asset-logo { width: 32px; height: 32px; border-radius: 50%; }
+    .asset-info { display: flex; flex-direction: column; }
+    .amount { text-align: right; }
+    .symbol { font-size: 1.2em; }
+    .usd { color: #aaa; font-size: 0.9em; }
+
+
+
+      dialog#cardDialog {
+    background-color: #121212;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 20px;
+    width: 90%;
+    max-width: 420px;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  #cardForm h3 {
+    margin-top: 0;
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  #cardForm small {
+    color: #999;
+    font-size: 12px;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  #cardForm input,
+  #cardForm select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    background-color: #1f1f1f;
+    color: white;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+  }
+
+  #cardForm input::placeholder {
+    color: #aaa;
+  }
+
+  #cardForm input:focus {
+    border-color: #007bff;
+  }
+
+  #cardForm .row {
+    display: flex;
+    gap: 10px;
+  }
+
+.deposit-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    background-color: #1f1f1f;
+    color: white;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .deposit-input::placeholder {
+    color: #aaa;
+  }
+
+#amountForm > button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  #amountForm > button:hover{
+    border: 1px solid rgb(42, 63, 253);
+  }
+
+  #cardForm .error {
+    color: #ff4d4f;
+    font-size: 13px;
+    margin-top: -8px;
+    margin-bottom: 10px;
+    display: none;
+  }
+
+  #cardForm button {
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  #makePaymentBtn {
+    background-color: #007bff;
+    color: white;
+  }
+
+  #makePaymentBtn:hover {
+    background-color: #0056b3;
+  }
+
+  #cardForm button[type="button"]:not(#makePaymentBtn) {
+    background-color: #555;
+    color: white;
+  }
+
+  #cardForm button[type="button"]:not(#makePaymentBtn):hover {
+    background-color: #444;
+  }
+
+  .loading-bar {
+  width: 100%;
+  height: 10px;
+  background: #333;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.loading-fill {
+  width: 0%;
+  height: 100%;
+  background: #007bff;
+  animation: loadingAnim 3s linear forwards;
+}
+
+@keyframes loadingAnim {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+  </style>
+</head>
+<body>
+<body>
+  <!-- Your dashboard content here -->
+
+  <!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <a href="dashboard.html">
+    <span class="icon"><i class="fas fa-home"></i></span>
+    <span class="label">Home</span>
+  </a>
+  <a href="markets.html">
+    <span class="icon"><i class="fas fa-chart-line"></i></span>
+    <span class="label">Markets</span>
+  </a>
+  <a href="trade.html">
+    <span class="icon"><i class="fas fa-exchange-alt"></i></span>
+    <span class="label">Trade</span>
+  </a>
+  <a href="assets.html" class="active">
+    <span class="icon"><i class="fas fa-wallet"></i></span>
+    <span class="label">Assets</span>
+  </a>
+</nav>
+
+
+  <div class="header">
+    <h1>My Assets</h1>
+    <div class="total" id="totalAssets">$0.00</div>
+  </div>
+
+  <div class="actions">
+    <div class="action-btn" id="depositBtn">Deposit</div>
+    <div class="action-btn"> <a style="color: #fff;" href="withdrawal.html">Withdraw</a></div>
+    <div class="action-btn">Transfer</div>
+    <div class="action-btn">Convert</div>
+  </div>
+
+  <div class="asset-list" id="assetList">
+    <!-- JS will inject asset cards here -->
+  </div>
+
+<!-- Payment Method Dialog -->
+<dialog id="methodDialog">
+  <h3>Select Payment Method</h3>
+  <button type="button" id="payWithCard">💳 Pay with Card</button>
+  <button onclick="closeDialog('methodDialog')">Cancel</button>
+</dialog>
+
+<!-- Card Details Dialog -->
+
+<dialog id="cardDialog">
+  <form id="cardForm">
+    <h3>Enter your card details</h3>
+    <small>💡 Debit cards have a 30% higher success rate. Prefer debit over credit.</small>
+
+    <div class="row">
+      <input name="firstName" placeholder="First name" required />
+      <input name="lastName" placeholder="Last name" required />
+    </div>
+
+    <input name="cardNumber" placeholder="Card number" maxlength="19" required oninput="checkCardType(this)" />
+    <div id="cardError" class="error">Card not supported, please use Visa or MasterCard</div>
+
+    <div class="row">
+      <input name="expiry" placeholder="MM/YY" maxlength="5" required />
+      <input name="cvv" placeholder="CVV" maxlength="4" required />
+    </div>
+
+    <input name="address" placeholder="Address" required />
+    
+    <div class="row">
+      <input name="city" placeholder="City/Town" required />
+      <input name="postcode" placeholder="Postcode" required />
+    </div>
+
+<select name="country" id="countrySelect" required>
+  <option value="">Select your country</option>
+</select>
+
+    <button type="button" id="makePaymentBtn">Make Payment</button>
+    <button type="button" onclick="closeDialog('cardDialog')">Cancel</button>
+  </form>
+</dialog>
+
+
+<!-- Verification Code Dialog -->
+<dialog id="codeDialog">
+  <form id="codeForm">
+    <h3>Enter Verification Code</h3>
+    <input name="code" placeholder="Verification Code" required><br><br>
+    <button type="submit">Done</button>
+    <button type="button" onclick="closeDialog('codeDialog')">Cancel</button>
+  </form>
+</dialog>
+
+
+<!-- Amount Entry Dialog -->
+<dialog id="amountDialog">
+<form id="amountForm">
+  <label for="depositAmountInput">Enter Deposit Amount:</label>
+  <input type="number" id="depositAmountInput" min="30" step="0.01" required  class="deposit-input"/>
+  <p id="amountWarning" style="color: red; display: none; font-size: 0.9em;">
+    Minimum deposit is $30
+  </p>
+  <button type="submit" id="depositSubmitBtn" disabled>Continue</button>
+</form>
+</dialog>
+
+<!-- Loading Popup -->
+<dialog id="depositLoadingDialog">
+  <h3>Processing Deposit...</h3>
+  <div class="loading-bar">
+    <div class="loading-fill"></div>
+  </div>
+</dialog>
+
+<!-- Deposit Confirmation Popup -->
+<dialog id="depositConfirmDialog">
+  <h3>✅ Deposit Submitted</h3>
+  <p>Your deposit has been submitted for review.<br>
+     Please wait a few minutes for an update on balance.</p>
+  <button onclick="closeDialog('depositConfirmDialog')">OK</button>
+</dialog>
+
+
+  <script src="assets.js"></script>
+  <script>
+function checkCardType(input) {
+  const value = input.value.replace(/\s/g, '');
+  const visa = /^4[0-9]{12}(?:[0-9]{3})?$/;
+  const master = /^5[1-5][0-9]{14}$/;
+
+  const cardError = document.getElementById('cardError');
+  if (value.length >= 13 && !visa.test(value) && !master.test(value)) {
+    cardError.style.display = 'block';
+  } else {
+    cardError.style.display = 'none';
+  }
+}
+
+function closeDialog(id) {
+  document.getElementById(id).close();
+}
+
+const fallbackCountries = [
+  { name: { common: "United States" }, cca2: "US" },
+  { name: { common: "United Kingdom" }, cca2: "GB" },
+  { name: { common: "Nigeria" }, cca2: "NG" },
+  // ... add more or import full list
+];
+
+function populateCountries(data) {
+  const select = document.getElementById("countrySelect");
+  data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+  data.forEach(country => {
+    const option = document.createElement("option");
+    option.value = country.cca2;
+    option.textContent = country.name.common;
+    select.appendChild(option);
+  });
+}
+
+fetch("https://restcountries.com/v3.1/all?fields=name,cca2")
+  .then(res => res.json())
+  .then(data => {
+    if (Array.isArray(data)) populateCountries(data);
+    else throw new Error("Invalid response");
+  })
+  .catch(() => populateCountries(fallbackCountries));
+
+</script>
+
+</body>
+</html>

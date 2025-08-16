@@ -1,0 +1,238 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trade - Crypto Broker</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      background-color: #0d0d0d;
+      color: rgb(255, 254, 254);
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: auto;
+      padding: 1rem;
+    }
+
+    .trade-box {
+      background-color: #363636;
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-top: 1rem;
+    }
+
+    .tabs {
+      display: flex;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .tabs button {
+      flex: 1;
+      padding: 10px;
+      font-weight: bold;
+      background: #363636;
+      color: rgb(204, 202, 202);
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .tabs button.active {
+      background: white;
+      color: black;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .input-box {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      background: #2b2b2b;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+    }
+
+    .input-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .input-row span {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-left: 10px;
+    }
+
+    .percent-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin: 1rem 0;
+    }
+
+    .percent-buttons button {
+      flex: 1;
+      margin: 0 4px;
+      padding: 8px;
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 0.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .buy-button {
+      width: 100%;
+      margin-top: 1.2rem;
+      background-color: #00cc66;
+      color: black;
+      padding: 14px;
+      font-weight: bold;
+      border-radius: 10px;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    select {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      background: #2b2b2b;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <body>
+  <!-- Your dashboard content here -->
+
+  <!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <a href="dashboard.html">
+    <span class="icon"><i class="fas fa-home"></i></span>
+    <span class="label">Home</span>
+  </a>
+  <a href="markets.html">
+    <span class="icon"><i class="fas fa-chart-line"></i></span>
+    <span class="label">Markets</span>
+  </a>
+  <a href="trade.html" class="active">
+    <span class="icon"><i class="fas fa-exchange-alt"></i></span>
+    <span class="label">Trade</span>
+  </a>
+  <a href="assets.html">
+    <span class="icon"><i class="fas fa-wallet"></i></span>
+    <span class="label">Assets</span>
+  </a>
+</nav>
+
+
+  <div class="container">
+    <div class="trade-box">
+      <h2>Trade</h2>
+      <p>Instantly buy or sell assets.</p>
+
+      <div class="tabs">
+        <button id="buyTab" class="active" onclick="setTradeType('buy')">Buy</button>
+        <button id="sellTab" onclick="setTradeType('sell')">Sell</button>
+      </div>
+
+      <label for="coinSelect">Coin</label>
+      <select id="coinSelect">
+        <option value="BTC">Bitcoin (BTC)</option>
+        <option value="ETH">Ethereum (ETH)</option>
+      </select>
+
+      <label for="priceDisplay">Price (USD)</label>
+      <div class="input-row">
+        <span id="priceDisplay">Loading...</span>
+        <span>Market</span>
+      </div>
+
+      <label for="amountInput">Amount</label>
+      <input type="number" id="amountInput" class="input-box" step="0.0001" min="0">
+
+      <div class="summary-row">
+        <span>Total</span>
+        <span>$0.00</span>
+      </div>
+      <button class="buy-button" onclick="placeTrade(tradeType)">Submit</button>
+    </div>
+
+    <div style="margin-top: 2rem;">
+      <p id="userInfo">Loading user...</p>
+
+      <h3>Your Portfolio</h3>
+      <ul id="portfolioList"></ul>
+
+      <h3>Trade History</h3>
+      <ul id="historyList"></ul>
+
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <script src="js/trade.js"></script>
+  <script>
+    let tradeType = 'buy';
+
+    function setTradeType(type) {
+      tradeType = type;
+      document.getElementById('buyTab').classList.remove('active');
+      document.getElementById('sellTab').classList.remove('active');
+      document.getElementById(type + 'Tab').classList.add('active');
+    }
+
+    async function checkAuth() {
+      const res = await fetch('${API_URL}/auth/me', {
+        credentials: 'include'
+      });
+
+      if (res.status === 401) {
+        alert('You must log in first.');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const data = await res.json();
+      document.getElementById('userInfo').textContent = `Logged in as ${data.user.username}`;
+    }
+
+    async function logout() {
+      await fetch('${API_URL}/auth/logout`', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      window.location.href = 'login.html';
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!-- convert.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convert / Transfer</title>
+  <link rel="stylesheet" href="/frontend/css/style.css" />
+  <style>
+    body { background: #0e0e0e; color: white; font-family: sans-serif; padding: 20px; }
+    .box { background: #1e1e1e; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: none; }
+    button { padding: 10px 20px; margin-top: 10px; background: orange; border: none; border-radius: 6px; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <h2 id="coinTitle">Loading...</h2>
+  <div class="box">
+    <p>Balance: <span id="coinBalance">-</span></p>
+    <p>Value in USD: <span id="usdValue">-</span></p>
+  </div>
+
+  <div class="box">
+    <h3>Convert</h3>
+    <select id="targetCoin"></select>
+    <input type="number" id="convertAmount" placeholder="Amount in USD to convert" />
+    <button onclick="handleConvert()">Convert</button>
+  </div>
+
+  <div class="box">
+    <h3>Transfer</h3>
+    <input type="text" id="recipient" placeholder="Recipient username/email" />
+    <input type="number" id="transferAmount" placeholder="Amount to transfer" />
+    <button onclick="handleTransfer()">Transfer</button>
+  </div>
+
+  <script src="convert.js"></script>
+</body>
+</html>

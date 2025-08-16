@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markets - Crypto Broker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background: #0d0d0d;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      margin: 0;
+      padding-bottom: 80px; /* for bottom nav */
+    }
+
+    /* Market Sentiment Widget */
+    .sentiment-card {
+      background: #1a1a1a;
+      margin: 15px;
+      padding: 15px;
+      border-radius: 14px;
+      text-align: center;
+    }
+    .sentiment-value {
+      font-size: 36px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .sentiment-gauge {
+      width: 100%;
+      height: 10px;
+      background: linear-gradient(to right, #00c853, #ff5252);
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+
+    /* Hot Sectors Grid */
+    .sector-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px,1fr));
+      gap: 12px;
+      margin: 20px;
+    }
+    .sector-card {
+      background: #1b1b1b;
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+      transition: 0.2s;
+    }
+    .sector-card:hover {
+      background: #262626;
+    }
+    .positive { color: #00c853; }
+    .negative { color: #ff5252; }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: space-around;
+      background: #111;
+      padding: 10px 0;
+      border-top: 1px solid #222;
+      z-index: 1000;
+    }
+    .bottom-nav a {
+      text-decoration: none;
+      color: #ccc;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .bottom-nav a.active {
+      color: #ffd600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Market Sentiment -->
+  <section class="sentiment-card card">
+    <h3>📊 Market Sentiment</h3>
+    <div class="sentiment-gauge" style="height: 8px; border-radius: 4px; margin: 10px 0; background: #333;"></div>
+    <p class="sentiment-value">Loading...</p>
+  </section>
+
+<!-- Hot Sectors / Top Movers -->
+  <section>
+    <h3>🔥 Hot Sectors</h3>
+    <div class="sector-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 10px;"></div>
+  </section>
+
+  <!-- Gainers / Losers Table -->
+  <section>
+    <h3>📈 Top Movers</h3>
+    <table class="movers-table" style="width:100%; text-align:center; margin-top:10px;">
+      <thead>
+        <tr style="background:#1a1a1a;">
+          <th>Coin</th>
+          <th>Price (USD)</th>
+          <th>24H %</th>
+          <th>7D Trend</th>
+        </tr>
+      </thead>
+      <tbody id="moversBody"></tbody>
+    </table>
+</section>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <a href="dashboard.html">
+    <span class="icon"><i class="fas fa-home"></i></span>
+    <span class="label">Home</span>
+  </a>
+  <a href="markets.html" class="active">
+    <span class="icon"><i class="fas fa-chart-line"></i></span>
+    <span class="label">Markets</span>
+  </a>
+  <a href="trade.html">
+    <span class="icon"><i class="fas fa-exchange-alt"></i></span>
+    <span class="label">Trade</span>
+  </a>
+  <a href="assets.html">
+    <span class="icon"><i class="fas fa-wallet"></i></span>
+    <span class="label">Assets</span>
+  </a>
+</nav>
+
+
+<script>
+const API_URL = (location.hostname.includes('localhost') || location.hostname.includes('127.'))
+  ? 'http://localhost:3000/api'
+  : 'https://krypt-broker.onrender.com/api';
+
+async function fetchWithCache(key, url, ttl = 30000) {
+  const cached = localStorage.getItem(key);
+  const cachedTime = localStorage.getItem(key + '_time');
+  const now = Date.now();
+
+  if (cached && cachedTime && now - cachedTime < ttl) {
+    return JSON.parse(cached);
+  }
+
+  const res = await fetch(url);
+  const data = await res.json();
+  localStorage.setItem(key, JSON.stringify(data));
+  localStorage.setItem(key + '_time', now);
+  return data;
+}
+
+async function loadMarketsPage() {
+  try {
+    // 1️⃣ Fetch market data
+    const coins = await fetchWithCache('marketsData', `${API_URL}/coin/markets`);
+
+    // Market Sentiment
+    const gainers = coins.filter(c => c.price_change_percentage_24h > 0).length;
+    const sentiment = Math.round((gainers / coins.length) * 100);
+    document.querySelector('.sentiment-value').innerText =
+      sentiment > 55 ? `${sentiment}% Bullish` :
+      sentiment < 45 ? `${sentiment}% Bearish` :
+      `${sentiment}% Neutral`;
+    document.querySelector('.sentiment-gauge').style.background =
+      `linear-gradient(to right, #00c853 ${sentiment}%, #ff5252 ${sentiment}%)`;
+
+    // 2️⃣ Hot Sectors / Top Movers
+    const movers = coins
+      .sort((a, b) => Math.abs(b.price_change_percentage_24h) - Math.abs(a.price_change_percentage_24h))
+      .slice(0, 6);
+    const sectorGrid = document.querySelector('.sector-grid');
+    sectorGrid.innerHTML = '';
+    movers.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'sector-card card';
+      div.style.cursor = 'pointer';
+      div.innerHTML = `
+        <h4>${c.symbol.toUpperCase()}</h4>
+        <p style="color:${c.price_change_percentage_24h >= 0 ? '#00c853':'#ff5252'};">
+          ${c.price_change_percentage_24h.toFixed(2)}%
+        </p>
+        <small>$${c.current_price.toLocaleString()}</small>
+      `;
+      div.onclick = () => window.location.href = `coin.html?coinId=${c.id}`;
+      sectorGrid.appendChild(div);
+    });
+
+    // 3️⃣ Top Movers Table
+    const moversBody = document.getElementById('moversBody');
+    moversBody.innerHTML = '';
+    const topGainers = coins.slice().sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5);
+    const topLosers = coins.slice().sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0, 5);
+    const topCombined = [...topGainers, ...topLosers];
+
+    topCombined.forEach(async (c, index) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${c.symbol.toUpperCase()}</td>
+        <td>$${c.current_price.toLocaleString()}</td>
+        <td style="color:${c.price_change_percentage_24h >= 0 ? '#00c853':'#ff5252'};">
+          ${c.price_change_percentage_24h.toFixed(2)}%
+        </td>
+        <td><canvas id="spark-${index}" width="80" height="30"></canvas></td>
+      `;
+      moversBody.appendChild(row);
+
+      // 4️⃣ Fetch sparkline chart
+      const chartData = await fetchWithCache(
+        `spark-${c.id}`,
+        `${API_URL}/coin/chart/${c.id}?days=7`,
+        3600000
+      );
+      const prices = chartData.prices.map(p => p[1]);
+
+      new Chart(document.getElementById(`spark-${index}`), {
+        type: 'line',
+        data: {
+          labels: prices.map((_, i) => i),
+          datasets: [{
+            data: prices,
+            borderColor: c.price_change_percentage_24h >= 0 ? '#00c853':'#ff5252',
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { display: false }, y: { display: false } }
+        }
+      });
+    });
+
+  } catch (err) {
+    console.error('❌ Market page load failed:', err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadMarketsPage);
+</script>
+
+
+</body>
+</html>

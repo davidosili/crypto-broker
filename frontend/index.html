@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="6B9yo2rr8YA5HvtlTG2VlQ3vWrAY4UbKd0oWmdPLhXM" />
+    <title>Krypt - Crypto Landing Page</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+<header>
+    <div class="container nav-container">
+        <div class="logo" tabindex="0" aria-label="Krypt Home">
+            <img src="logo.svg" alt="Krypt Logo" class="logo-img" />
+            <span class="logo-text">Krypt</span>
+        </div>
+        
+        <!-- ✅ Hamburger Button -->
+        <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <nav aria-label="Main Navigation">
+            <ul class="ul">
+                <li class="li"><a href="#features" tabindex="0">Features</a></li>
+                <li class="li"><a href="#benefits" tabindex="0">Benefits</a></li>
+                <li class="li"><a href="#about" tabindex="0">About</a></li>
+                <li class="li"><a href="#contact" tabindex="0">Contact</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+    <main id="main-content" tabindex="-1">
+    <section class="hero">
+        <div class="crypto-bg"></div>
+        <div id="three-network-container"></div>
+        <div class="container">
+            <h1 class="typewriter" id="hero-typewriter"></h1>
+            <p>Your gateway to the future of cryptocurrency. Secure. Fast. Reliable.</p>
+            <div class="ticker" id="crypto-ticker">
+                <span>BTC: <span id="btc-price">...</span></span>
+                <span>ETH: <span id="eth-price">...</span></span>
+                <span>SOL: <span id="sol-price">...</span></span>
+            </div>
+            <a href="register.html" class="cta-btn glow">Get Started</a>
+        </div>
+    </section>
+    <section id="features" class="features reveal-on-scroll">
+        <svg class="section-divider" viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M0 80C360 0 1080 160 1440 80V0H0V80Z" fill="#181a20"/></svg>
+        <div class="container">
+            <h2>Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fa fa-lock"></i>
+                    <h3>Secure Wallet</h3>
+                    <p>State-of-the-art security for your digital assets.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fa fa-bolt"></i>
+                    <h3>Instant Transactions</h3>
+                    <p>Lightning-fast crypto transfers worldwide.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fa fa-chart-line"></i>
+                    <h3>Real-time Analytics</h3>
+                    <p>Track your portfolio and the market in real time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="benefits" class="benefits reveal-on-scroll">
+        <svg class="section-divider" viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M0 0C360 80 1080 -80 1440 0V80H0V0Z" fill="#1a1d23"/></svg>
+        <div class="container">
+            <h2>Benefits of Crypto Trading</h2>
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <i class="fa fa-globe"></i>
+                    <h3>Global Access</h3>
+                    <p>Trade anytime, anywhere, without borders or restrictions.</p>
+                </div>
+                <div class="benefit-card">
+                    <i class="fa fa-shield-alt"></i>
+                    <h3>Decentralized Security</h3>
+                    <p>Enjoy the safety of blockchain technology and decentralized finance.</p>
+                </div>
+                <div class="benefit-card">
+                    <i class="fa fa-money-bill-trend-up"></i>
+                    <h3>High Potential Returns</h3>
+                    <p>Take advantage of market volatility and new investment opportunities.</p>
+                </div>
+                <div class="benefit-card">
+                    <i class="fa fa-clock"></i>
+                    <h3>24/7 Market</h3>
+                    <p>Crypto markets never sleep, so you can trade at your convenience.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="about" class="about reveal-on-scroll">
+        <div class="container">
+            <h2>About Krypt</h2>
+            <p>Krypt is designed for both beginners and experts, offering a seamless and secure crypto experience. Join us and be part of the revolution.</p>
+        </div>
+    </section>
+    <section id="contact" class="contact reveal-on-scroll">
+        <div class="container">
+            <h2>Contact Us</h2>
+            <form id="contact-form">
+                <input type="text" placeholder="Your Name" required>
+                <input type="email" placeholder="Your Email" required>
+                <textarea placeholder="Your Message" required></textarea>
+                <button type="submit">Send Message</button>
+            </form>
+        </div>
+    </section>
+    <section class="community reveal-on-scroll">
+        <div class="container">
+            <h2>Join the Krypt Community</h2>
+            <div class="social-icons">
+                <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" title="Discord"><i class="fab fa-discord"></i></a>
+                <a href="#" title="Telegram"><i class="fab fa-telegram"></i></a>
+            </div>
+            <form class="newsletter-form">
+                <input type="email" placeholder="Enter your email for updates" required>
+                <button type="submit">Subscribe</button>
+            </form>
+        </div>
+    </section>
+    <section class="testimonials reveal-on-scroll">
+        <div class="container">
+            <h2>What Our Users Say</h2>
+            <div class="testimonial-slider" id="testimonial-slider">
+                <div class="testimonial active">
+                    <p>"Krypt is the most secure and user-friendly crypto platform I've ever used!"</p>
+                    <span>- Jane D., Crypto Investor</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="partners reveal-on-scroll">
+        <div class="container">
+            <h2>Our Partners</h2>
+            <div class="partners-logos">
+                <img src="partner-binance.svg" alt="Binance" />
+                <img src="partner-coinbase.svg" alt="Coinbase" />
+                <img src="partner-kraken.svg" alt="Kraken" />
+                <img src="partner-coindesk.svg" alt="Coindesk" />
+            </div>
+        </div>
+    </section>
+    <section class="stats reveal-on-scroll">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number" data-target="120000">0</span>
+                    <span class="stat-label">Users</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" data-target="3500000">0</span>
+                    <span class="stat-label">Transactions</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" data-target="99.99">0</span>
+                    <span class="stat-label">Uptime %</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Krypt. All rights reserved.</p>
+        </div>
+    </footer>
+    <button id="backToTop" aria-label="Back to top" class="back-to-top" tabindex="0">↑</button>
+    <div id="scroll-progress" class="scroll-progress" aria-hidden="true"></div>
+    <button id="chat-fab" class="fab" aria-label="Chat with us" tabindex="0"><i class="fa fa-comments"></i></button>
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+        <url>
+            <loc>https://krypto-broker.onrender.com</loc>
+            <changefreq>weekly</changefreq>
+            <priority>1.0</priority>
+        </url>
+    </urlset>
+</body>
+</html>

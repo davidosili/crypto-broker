@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Crypto Broker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #0d0d0d;
+    }
+
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #1e1e1e;
+      padding: 10px 15px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+/* Sidebar starts hidden off-screen */
+.sidebar {
+  left: -300px; /* hide it */
+  top: 0;
+  height: 100%;
+  width: 280px;
+  color: white;
+  padding: 15px;
+  transition: left 0.3s ease;
+  z-index: 1000;
+}
+
+/* When active, it slides in */
+.sidebar.active {
+  left: 0;
+}
+
+/* Toggle button */
+#sidebarToggle {
+  font-size: 24px;
+  cursor: pointer;
+  color: white;
+  border-radius: 6px;
+  z-index: 1100;
+}
+
+    #coinSearch {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      outline: none;
+    }
+
+    #searchResults {
+      position: absolute;
+      top: 38px;
+      width: 100%;
+      background: #fff;
+      color: #000;
+      border-radius: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1001;
+    }
+
+    #searchResults li {
+      padding: 6px 10px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .content {
+      padding: 80px 15px 15px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: space-around;
+      background: #1e1e1e;
+      border-radius: 8px;
+    }
+
+    .button-row button {
+      background: none;
+      color: #ccc;
+      border: none;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .button-row button.active {
+      color: #fff;
+      border-bottom: 2px solid yellow;
+    }
+
+    .list-cover {
+      margin-top: 10px;
+    }
+
+    .coin-row {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+
+    .coin-row span {
+      flex: 1;
+      text-align: center;
+    }
+
+    .green {
+      color: #00c853;
+    }
+
+    .red {
+      color: #ff5252;
+    }
+.center{
+  display: flex;
+  justify-content: space-between;
+  width: 100vw;
+}
+.profile-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #222;
+  padding: 5px;
+}
+
+#logoutBtn{
+  position: absolute;
+  bottom: 50px;
+  right: 0;
+  background: rgb(3, 3, 255);
+}
+
+  </style>
+</head>
+<body>
+  <div>
+    <p><a href="create-strategy.html">create-strategy</a></p>
+  </div>
+  <div class="top-bar">
+<div class="sidebar-Toggle">
+<!-- Bottom Navigation  remeber to comback and make some changes to this minly profile -->
+ <div id="sidebar" class="sidebar">
+  <h2>Dashboard</h2>
+  <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Profile" class="profile-icon">
+
+  <p id="userInfo">Welcome ...</p>
+  <button id="logoutBtn" style="margin-top: 10px;">Logout</button>
+  </div>
+<nav class="bottom-nav">
+  <a href="dashboard.html" class="active">
+    <span class="icon"><i class="fas fa-home"></i></span>
+    <span class="label">Home</span>
+  </a>
+  <a href="markets.html">
+    <span class="icon"><i class="fas fa-chart-line"></i></span>
+    <span class="label">Markets</span>
+  </a>
+  <a href="trade.html">
+    <span class="icon"><i class="fas fa-exchange-alt"></i></span>
+    <span class="label">Trade</span>
+  </a>
+  <a href="assets.html">
+    <span class="icon"><i class="fas fa-wallet"></i></span>
+    <span class="label">Assets</span>
+  </a>
+</nav>
+
+
+</div>
+<div class="center">
+    <div id="sidebarToggle">☰</div>
+      <input type="text" id="coinSearch" placeholder="Enter coin name or symbol..." class=" #searchResults"> 
+      <ul id="searchResults"></ul>
+    </div>
+  </div>
+
+<div class=" chart-wrapper" style="height: 350px;" id="margin-top">
+  <p id="currentCoinLabel">Loading...</p>
+  <div class="canvas-container">
+    <canvas id="coinChart"></canvas>
+  </div>
+</div>
+
+
+
+  <div class="card">
+    <h3>Portfolio View</h3>
+        <p>Value: <span class="total-value" id="totalValue">--</span> USD</p>
+    <div id="portfolioBreakdown">
+      <div id="portfolioSpinner" style="display: none; text-align: center; margin: 1rem 0;">
+  <div class="spinner"></div>
+  <p>Loading portfolio...</p>
+</div>
+    </div>
+    <hr />
+    
+
+  </div>
+
+<div class="button-row">
+  <button onclick="toggleRising()">🔼 Gainers</button>
+  <button onclick="toggleFalling()">🔽 Losers</button>
+  <button onclick="window.location.href='trade.html'">🪙 Trade Page</button>
+</div>
+<div id="risingList" style="display: none; opacity: 0; transition: opacity 0.3s ease;" class="list-cover">
+    <a href="rising.html" class="list-bottom" style="font-size: 10px; ;">🔗 See More </a>
+</div>
+
+<div id="fallingList" style="display: none; opacity: 0; transition: opacity 0.3s ease;" class="list-cover">
+    <a href="losing.html" class="list-bottom" style="font-size: 10px;">🔗 See More </a>
+</div>
+
+
+<section>
+  <h3>🔥 Trending Coins</h3>
+  <div id="trendingCoins" class="coin-grid" ></div>
+</section>
+
+
+
+<iframe class="card" width="100%" scrolling="yes" allowtransparency="true" frameborder="0" src="https://cryptopanic.com/widgets/news/?bg_color=FFFFFF&amp;font_family=sans&amp;header_bg_color=30343B&amp;header_text_color=FFFFFF&amp;link_color=0091C2&amp;news_feed=recent&amp;text_color=333333&amp;title=Latest%20News" height="350px"></iframe>
+  <script>
+            const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
+  ? 'http://localhost:3000/api'
+  : 'https://krypt-broker.onrender.com/api';
+
+  window.alert = function(message) {
+  console.warn("🔔 ALERT:", message);
+};
+
+    const portfolioEl = document.getElementById('portfolioBreakdown');
+    const totalValueEl = document.getElementById('totalValue');
+
+    const coinMap = { BTC: 'bitcoin', ETH: 'ethereum' };
+
+    async function fetchUserInfo() {
+      const res = await fetch(`${API_URL}/auth/me`, {
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.user) {
+        document.getElementById('userInfo').textContent = `Logged in as ${data.user.username}`;
+      } else {
+        alert("Please log in again");
+        window.location.href = "login.html";
+      }
+    }
+
+    async function fetchPortfolioValue() {
+  const cached = getCachedData('portfolioValue', 60000); // 60s cache
+  if (cached && cached.total && cached.html) {
+    totalValueEl.textContent = cached.total;
+    portfolioEl.innerHTML = cached.html;
+    return;
+  }
+
+  portfolioEl.innerHTML = '<p>Loading portfolio...</p>';
+
+  try {
+    const portfolioRes = await fetch(`${API_URL}/trade/portfolio`, { credentials: 'include' });
+    const portfolioData = await portfolioRes.json();
+    const portfolio = portfolioData.portfolio;
+
+    const marketRes = await fetch(`${API_URL}/coin/markets`);
+    const marketCoins = await marketRes.json();
+
+    const symbolToIdMap = {};
+    marketCoins.forEach(c => {
+      symbolToIdMap[c.symbol.toUpperCase()] = c.id;
+    });
+
+    portfolioEl.innerHTML = '';
+    let totalUSD = 0;
+    let highestValue = 0;
+    let highestCoin = null;
+
+    for (const [symbol, amount] of Object.entries(portfolio)) {
+      const coinId = symbolToIdMap[symbol.toUpperCase()];
+      if (!coinId) continue;
+
+      const priceRes = await fetch(`${API_URL}/coin/price?ids=${coinId}&vs_currencies=usd`);
+      const priceData = await priceRes.json();
+      const usdPrice = priceData[coinId]?.usd || 0;
+
+      const coinValue = amount * usdPrice;
+      totalUSD += coinValue;
+
+      if (coinValue > highestValue) {
+        highestValue = coinValue;
+        highestCoin = {
+          symbol,
+          amount,
+          usdPrice,
+          coinValue,
+          data: marketCoins.find(c => c.symbol.toUpperCase() === symbol.toUpperCase())
+        };
+      }
+    }
+
+    if (highestCoin && highestCoin.data) {
+      const coin = highestCoin.data;
+      const row = document.createElement('div');
+      row.className = 'coin-row';
+      row.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <img src="${coin.image}" alt="${highestCoin.symbol}" style="width: 24px; height: 24px;" />
+          <div>
+            <strong>${coin.name}</strong> (${highestCoin.symbol})<br>
+            <small>${highestCoin.amount.toFixed(8)} coins</small>
+          </div>
+        </div>
+        <div><strong>$${highestCoin.coinValue.toFixed(2)}</strong></div>
+      `;
+      portfolioEl.appendChild(row);
+    }
+
+    totalValueEl.textContent = totalUSD.toFixed(2);
+
+    // ✅ Cache the result
+    setCachedData('portfolioValue', {
+      total: totalUSD.toFixed(2),
+      html: portfolioEl.innerHTML
+    });
+
+  } catch (err) {
+    console.error("❌ Failed to load portfolio", err);
+    portfolioEl.innerHTML = '<p style="color:red;">Error loading portfolio</p>';
+  }
+}
+
+
+async function fetchTrendingCoins() {
+  try {
+    let coins = getCachedData('coinMarkets');
+if (!coins) {
+  const res = await fetch(`${API_URL}/coin/markets`);
+  coins = await res.json();
+  setCachedData('coinMarkets', coins);
+}
+
+
+    if (!Array.isArray(coins)) {
+      console.error("❌ Unexpected response from /coin/markets:", coins);
+      throw new Error("Expected array of coins");
+    }
+
+    const rising = coins
+      .filter(c => c.price_change_percentage_24h > 0)
+      .sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)
+      .slice(0, 5);
+
+    const falling = coins
+      .filter(c => c.price_change_percentage_24h < 0)
+      .sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h)
+      .slice(0, 5);
+
+    const risingList = document.getElementById('risingList');
+    const fallingList = document.getElementById('fallingList');
+
+    risingList.innerHTML = '';
+    fallingList.innerHTML = '';
+
+    rising.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'coin-item';
+      div.innerHTML = `<a href="coin.html?coinId=${c.id}" style= "background-color: #1e1e1e; color: green">🚀 ${c.name} (${c.symbol.toUpperCase()}) ↑ ${c.price_change_percentage_24h.toFixed(2)}%</a>`;
+      risingList.appendChild(div);
+    });
+
+    falling.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'coin-item';
+      div.innerHTML = `<a href="coin.html?coinId=${c.id}" style= "background-color: #1e1e1e; color: red">📉 ${c.name} (${c.symbol.toUpperCase()}) ↓ ${Math.abs(c.price_change_percentage_24h).toFixed(2)}%</a>`;
+      fallingList.appendChild(div);
+    });
+
+    // Add See More links
+    const risingMore = document.createElement('a');
+    risingMore.href = 'rising.html';
+    risingMore.className = 'list-bottom';
+    risingMore.textContent = '🔗 See More';
+    risingMore.style.fontSize = '10px';
+    risingList.appendChild(risingMore);
+
+    const fallingMore = document.createElement('a');
+    fallingMore.href = 'losing.html';
+    fallingMore.className = 'list-bottom';
+    fallingMore.textContent = '🔗 See More';
+    fallingMore.style.fontSize = '10px';
+    fallingList.appendChild(fallingMore);
+
+  } catch (err) {
+    console.error("❌ Failed to fetch trending coins:", err);
+  }
+}
+
+
+
+function showSection(sectionToShowId, sectionToHideId) {
+  const toShow = document.getElementById(sectionToShowId);
+  const toHide = document.getElementById(sectionToHideId);
+
+  // If the section to show is already visible, hide it
+  if (toShow.style.display === 'block') {
+    fadeOut(toShow);
+    return;
+  }
+
+  // Hide the other section if it's open
+  if (toHide.style.display === 'block') {
+    fadeOut(toHide);
+  }
+
+  // Show the target section
+  toShow.style.display = 'block';
+  setTimeout(() => {
+    toShow.style.opacity = '1';
+  }, 10);
+}
+
+function fadeOut(element) {
+  element.style.opacity = '0';
+  setTimeout(() => {
+    element.style.display = 'none';
+  }, 300); // match the transition duration
+}
+
+function toggleRising() {
+  showSection('risingList', 'fallingList');
+}
+
+function toggleFalling() {
+  showSection('fallingList', 'risingList');
+}
+
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      window.location.href = 'login.html';
+    });
+
+    let searchTimeout = null;
+
+document.getElementById('coinSearch').addEventListener('input', function (e) {
+  clearTimeout(searchTimeout);
+  const query = e.target.value.trim().toLowerCase();
+
+  if (!query) {
+    document.getElementById('searchResults').innerHTML = '';
+    return;
+  }
+
+  searchTimeout = setTimeout(() => searchCoins(query), 400); // debounce
+});
+
+async function searchCoins(query) {
+  try {
+    let coins = getCachedData('coinMarkets');
+if (!coins) {
+  const res = await fetch(`${API_URL}/coin/markets`);
+  coins = await res.json();
+  setCachedData('coinMarkets', coins);
+}
+
+
+    if (!Array.isArray(coins)) {
+      console.error("❌ Unexpected response from /coin/markets:", coins);
+      return;
+    }
+
+    const matches = coins.filter(c =>
+      c.name.toLowerCase().includes(query) || c.symbol.toLowerCase().includes(query)
+    );
+
+    const resultEl = document.getElementById('searchResults');
+    resultEl.innerHTML = '';
+
+    if (matches.length === 0) {
+      resultEl.innerHTML = '<li>No matching coins found</li>';
+      return;
+    }
+
+    matches.slice(0, 10).forEach(c => {
+      const li = document.createElement('li');
+      li.innerHTML = `<a href="coin.html?coinId=${c.id}">${c.name} (${c.symbol.toUpperCase()}) - $${c.current_price.toLocaleString()}</a>`;
+      resultEl.appendChild(li);
+    });
+
+  } catch (err) {
+    console.error("❌ Search failed:", err);
+  }
+}
+
+
+async function loadPortfolioChart() {
+  const res = await fetch(`${API_URL}/trade/portfolio-history`, { credentials: 'include' });
+  const data = await res.json();
+
+  const labels = data.history.map(h => new Date(h.date).toLocaleDateString());
+  const values = data.history.map(h => h.totalValue);
+
+if (!data.history || !Array.isArray(data.history)) {
+  console.error('No portfolio history data');
+  return;
+}
+
+
+  const ctx = document.getElementById('portfolioChart').getContext('2d');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [{
+      label: `Portfolio Value (USD)`,
+      data: values,
+      borderColor: 'rgba(255, 99, 132, 1)',
+      backgroundColor: 'rgba(255, 99, 132, 0.2)',
+      fill: true,
+      tension: 0.4, // smoother curve
+      borderWidth: 3,
+      pointRadius: 0,         // no circles at points
+      pointHoverRadius: 4     // show point on hover
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+scales: {
+  x: {
+    ticks: {
+      display: false, // ✅ Hide X-axis ticks (date labels)
+    },
+    grid: {
+      display: false  // ✅ Optional: hide grid lines too
+    }
+  },
+  y: {
+    beginAtZero: false,
+    ticks: {
+      callback: value => `$${value.toLocaleString()}`,
+      color: 'white'
+    }
+  }
+},
+
+    plugins: {
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          label: ctx => `Price: $${ctx.raw.toLocaleString()}`
+        }
+      },
+      legend: {
+        display: true,
+        labels: {
+          color: '#333',
+          font: { size: 14 }
+        }
+      }
+    }
+  }
+});
+
+}
+
+const coinChartCtx = document.getElementById('coinChart').getContext('2d');
+const labelEl = document.getElementById('currentCoinLabel');
+const coins = [
+  { id: 'bitcoin', symbol: 'BTC' },
+  { id: 'ethereum', symbol: 'ETH' },
+  { id: 'tether', symbol: 'USDT' }
+];
+let currentIndex = 0;
+let chartInstance;
+let isFetchingChart = false;
+
+
+async function fetchChartData(coinId) {
+  let cached = getCachedData(`chart-${coinId}`);
+  if (cached) return cached.map(([timestamp, price]) => ({
+    time: new Date(timestamp).toLocaleDateString(),
+    price
+  }));
+
+  const res = await fetch(`${API_URL}/coin/chart/${coinId}?vs_currency=usd&days=7`);
+  const data = await res.json();
+
+  setCachedData(`chart-${coinId}`, data.prices);
+  return data.prices.map(([timestamp, price]) => ({
+    time: new Date(timestamp).toLocaleDateString(),
+    price
+  }));
+}
+
+
+async function updateChart() {
+  const coin = coins[currentIndex];
+  labelEl.textContent = ''; // hides the label..`;
+
+
+  try {
+    const chartData = await fetchChartData(coin.id);
+    const labels = chartData.map(d => d.time);
+    const prices = chartData.map(d => d.price);
+
+    if (chartInstance) chartInstance.destroy();
+
+chartInstance = new Chart(coinChartCtx, {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [{
+      label: `${coin.symbol} Price Chart`,
+      data: prices,
+      borderColor: 'white',
+
+      fill: true,
+      tension: 0.4, // smoother curve
+      borderWidth: 2,
+      pointRadius: 0,         // no circles at points
+      pointHoverRadius: 4 
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,  // ✅ This is important
+    animation: {
+      duration: 500,
+      easing: 'easeInOutQuad'
+    },
+scales: {
+  x: {
+    ticks: {
+      display: false, // ✅ Hide X-axis ticks (date labels)
+    },
+    grid: {
+      display: false  // ✅ Optional: hide grid lines too
+    }
+  },
+  y: {
+    beginAtZero: false,
+    ticks: {
+      callback: value => `$${value.toLocaleString()}`,
+      color: 'white'
+    }
+  }
+},
+
+    plugins: {
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          label: ctx => `Price: $${ctx.raw.toLocaleString()}`
+        }
+      },
+      legend: {
+        display: true,
+        labels: {
+          color: 'white',
+          font: { size: 14 }
+        }
+      }
+    }
+  }
+});
+
+
+    currentIndex = (currentIndex + 1) % coins.length;
+  } catch (err) {
+labelEl.textContent = '';
+// Optional: keep the console log for debugging
+console.error(`❌ Error loading ${coin.symbol}:`, err);
+
+  }
+}
+
+function getCachedData(key, ttl = 30000) {
+  const cached = localStorage.getItem(key);
+  if (!cached) return null;
+
+  try {
+    const { data, timestamp } = JSON.parse(cached);
+    const now = Date.now();
+    return now - timestamp < ttl ? data : null;
+  } catch {
+    localStorage.removeItem(key); // corrupt JSON fix
+    return null;
+  }
+}
+getCachedData('coinMarkets', 60000); // 60s in some cases
+
+
+function setCachedData(key, data) {
+  localStorage.setItem(key, JSON.stringify({
+    data,
+    timestamp: Date.now()
+  }));
+}
+
+
+
+
+async function loadTrendingCoins() {
+  const container = document.getElementById('trendingCoins');
+
+  try {
+    const res = await fetch(`${API_URL}/coin/markets`);
+    const coins = await res.json();
+
+    // Filter top 10 gainers (price_change_percentage_24h)
+    const trending = coins
+      .filter(c => typeof c.price_change_percentage_24h === 'number')
+      .sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)
+      .slice(0, 10); // Top 10 gainers
+
+    container.innerHTML = '';
+
+    trending.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'coin-card';
+      div.onclick = () => {
+        window.location.href = `coin.html?coinId=${c.id}`;
+      };
+
+      const change = c.price_change_percentage_24h.toFixed(2);
+      const changeClass = c.price_change_percentage_24h >= 0 ? 'positive' : 'negative';
+
+      div.innerHTML = `
+        <h4 style = "color: white">${c.name}</h4>
+        <p class="price">$${parseFloat(c.current_price).toFixed(4)}</p>
+        <p class="change ${changeClass}">${change}%</p>
+      `;
+
+      container.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error('❌ Error loading trending coins:', err);
+    container.innerHTML = '<p>Failed to load trending coins. Reload after 10seconds</p>';
+  }
+}
+
+
+  
+// Start the chart rotation
+document.addEventListener('DOMContentLoaded', async () => {
+  const res = await fetch(`${API_URL}/auth/me`, { credentials: 'include' });
+  const data = await res.json();
+
+  if (!data.user) {
+    console.warn("User not logged in. Skipping API calls.");
+    return;
+  }
+
+  // Safe to call the rest
+  fetchUserInfo();
+  fetchPortfolioValue();
+  fetchTrendingCoins();
+  loadPortfolioChart();
+  updateChart();
+  setInterval(updateChart, 10000);
+  loadTrendingCoins();
+});
+
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('active');
+});
+
+
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
