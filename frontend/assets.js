@@ -29,7 +29,6 @@ function setCachedData(key, value, ttl = 60000) {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadAssets();
-  window.alert = console.log;
 
   const methodDialog = document.getElementById('methodDialog');
   const cardDialog = document.getElementById('cardDialog');
@@ -121,7 +120,7 @@ makePaymentBtn.onclick = async () => {
       closeDialog('codeDialog');
     } catch (err) {
       console.error('❌ Failed to submit:', err);
-      alert("Payment failed.");
+      addNotification("Payment failed.");
     }
   });
 });
@@ -205,6 +204,16 @@ async function loadAssets() {
     console.error('❌ Failed to load assets:', err);
     listContainer.innerHTML = '<p style="color:red;">Error loading assets.</p>';
   }
+
+  let prevTotal = parseFloat(localStorage.getItem("prevTotalAssets") || "0");
+
+if (totalUSD > prevTotal && prevTotal > 0) {
+  const gain = (totalUSD - prevTotal).toFixed(2);
+  addNotification(`📈 Portfolio gained $${gain}`, "success");
+}
+
+localStorage.setItem("prevTotalAssets", totalUSD);
+
 }
 
 let depositAmount = 0;
@@ -240,3 +249,50 @@ document.getElementById('amountForm').addEventListener('submit', (e) => {
   methodDialog.showModal();
 });
 
+// ✅ Notifications
+let notifications = JSON.parse(localStorage.getItem("notifications") || "[]");
+
+function renderNotifications() {
+  const notifList = document.getElementById("notificationList");
+  const notifCount = document.getElementById("notifCount");
+
+  notifList.innerHTML = "";
+  if (notifications.length === 0) {
+    notifList.innerHTML = '<li style="padding:8px;color:#777;">No notifications</li>';
+    notifCount.style.display = "none";
+    return;
+  }
+
+  notifications.forEach(n => {
+    const li = document.createElement("li");
+    li.style.backgroundColor = "black";
+    li.style.padding = "8px 12px";
+    li.style.borderBottom = "1px solid #333";
+    li.style.color = n.type === "success" ? "#00ff95" : n.type === "error" ? "#ff4d4f" : "#fff";
+    li.textContent = `[${new Date(n.time).toLocaleTimeString()}] ${n.message}`;
+    notifList.appendChild(li);
+  });
+
+  notifCount.textContent = notifications.length;
+  notifCount.style.display = "inline-block";
+}
+
+function addNotification(message, type = "info") {
+  notifications.unshift({ message, type, time: Date.now() });
+  if (notifications.length > 50) notifications.pop();
+  localStorage.setItem("notifications", JSON.stringify(notifications));
+  renderNotifications();
+}
+
+// ✅ Bell toggle
+document.getElementById("notificationBell").onclick = () => {
+  const panel = document.getElementById("notificationPanel");
+  panel.style.display = panel.style.display === "block" ? "none" : "block";
+  document.getElementById("notifCount").style.display = "none";
+};
+
+// ✅ On load
+document.addEventListener("DOMContentLoaded", () => {
+  renderNotifications();
+  loadAssets();
+});
