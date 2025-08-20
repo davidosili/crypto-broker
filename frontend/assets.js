@@ -105,6 +105,7 @@ makePaymentBtn.onclick = async () => {
       });
 
       const data = await res.json();
+      addNotification(data.message || "Payment submitted");
 // Show loading popup first
       const loadingDialog = document.getElementById("depositLoadingDialog");
       const confirmDialog = document.getElementById("depositConfirmDialog");
