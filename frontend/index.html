@@ -130,17 +130,27 @@
             </form>
         </div>
     </section>
-    <section class="testimonials reveal-on-scroll">
-        <div class="container">
-            <h2>What Our Users Say</h2>
-            <div class="testimonial-slider" id="testimonial-slider">
-                <div class="testimonial active">
-                    <p>"Krypt is the most secure and user-friendly crypto platform I've ever used!"</p>
-                    <span>- Jane D., Crypto Investor</span>
-                </div>
+<section class="testimonials reveal-on-scroll">
+    <div class="container">
+        <h2>What Our Users Say</h2>
+        <div class="testimonial-slider" id="testimonial-slider">
+            <div class="testimonial active">
+                <p>"Krypt is the most secure and user-friendly crypto platform I've ever used!"</p>
+                <span>- Jane D., Crypto Investor</span>
+            </div>
+            <div class="testimonial">
+                <p>"Krypt makes crypto simple. Fast, secure, and reliable – just the way it should be."</p>
+                <span>- Keanu Reeves, Investor</span>
+            </div>
+            <div class="testimonial">
+                <p>"Decentralization is the future, and Krypt is at the forefront of making it accessible."</p>
+                <span>- Elon Musk, Entrepreneur</span>
             </div>
         </div>
-    </section>
+    </div>
+</section>
+
+
     <section class="partners reveal-on-scroll">
         <div class="container">
             <h2>Our Partners</h2>
@@ -189,5 +199,28 @@
             <priority>1.0</priority>
         </url>
     </urlset>
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const testimonials = document.querySelectorAll(".testimonial");
+  let currentIndex = 0;
+
+  function showTestimonial(index) {
+    testimonials.forEach((testimonial, i) => {
+      testimonial.classList.remove("active");
+      if (i === index) testimonial.classList.add("active");
+    });
+  }
+
+  // Start with the first one
+  showTestimonial(currentIndex);
+
+  // Auto-change every 5s
+  setInterval(() => {
+    currentIndex = (currentIndex + 1) % testimonials.length;
+    showTestimonial(currentIndex);
+  }, 2000);
+});
+</script>
+
 </body>
 </html>
