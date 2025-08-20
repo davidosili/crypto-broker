@@ -28,8 +28,6 @@ function setCachedData(key, value, ttl = 60000) {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadAssets();
-
   const methodDialog = document.getElementById('methodDialog');
   const cardDialog = document.getElementById('cardDialog');
   const codeDialog = document.getElementById('codeDialog');
