@@ -1,2 +1,15 @@
 node_modules/
+<<<<<<< HEAD
 .env
+=======
+# Env files (do not commit secrets)
+.env
+*.env
+**/.env
+backend/.env
+backend/*.env
+
+# OS / editor files
+.DS_Store
+thumbs.db
+>>>>>>> d354c08 (Your commit message without .env)
