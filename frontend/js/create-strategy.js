@@ -162,7 +162,7 @@ DOM.submitBtn.onclick = async () => {
 // --- UTILS ---
 window.copyCode = function() {
   const code = DOM.codeDisplay.innerText;
-  const url = `${window.location.origin}/copytrade.html?code=${code}`;
+  const url = `${window.location.origin}/frontend/copytrade.html?code=${code}`;
   
   if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(() => {
