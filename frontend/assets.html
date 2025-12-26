@@ -65,7 +65,6 @@
     .assets-section { padding: 16px; max-width: 800px; margin: 0 auto; }
     .section-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary); }
     
-    /* REVERTED: Using .asset-item to match JS logic */
     .asset-item {
       display: flex; justify-content: space-between; align-items: center;
       padding: 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-color);
@@ -120,7 +119,7 @@
       color: var(--text-secondary); border-radius: 6px; margin-top: 10px; cursor: pointer;
     }
 
-    /* Notification Panel (Unified System) */
+    /* Notification Panel */
     .notif-bell { position: relative; cursor: pointer; color: var(--text-primary); font-size: 20px; }
     .notif-badge {
       position: absolute; top: -5px; right: -5px; background: var(--danger-red);
@@ -324,7 +323,7 @@
       notifications: JSON.parse(localStorage.getItem("notifications") || "[]")
     };
 
-    // --- UTILS (No Alert Override) ---
+    // --- UTILS ---
     function showToast(msg, type = 'info') {
       const x = document.getElementById("toast");
       x.textContent = msg;
@@ -359,40 +358,24 @@
       fetchCountries();
     });
 
-    // --- ASSET LOADING (FIXED) ---
+    // --- ASSET LOADING ---
     async function loadAssets() {
       const listContainer = document.getElementById('assetList');
       const totalDisplay = document.getElementById('totalAssets');
       const btcDisplay = document.getElementById('btcValue');
 
       try {
-        // REVERTED: Do NOT cache portfolio. Only cache markets.
-        let marketData = getCachedData('coinMarkets', 60000);
-        
-        const promises = [api.get('/trade/portfolio')];
-        if (!marketData) promises.push(fetch(`${API_URL}/coin/markets`).then(r => r.ok ? r.json() : []));
-
-        const results = await Promise.all(promises);
-        const portfolioData = results[0];
-        if (!marketData) {
-            marketData = results[1] || [];
-            if(marketData.length) setCachedData('coinMarkets', marketData);
-        }
+        // Safe Parallel Fetch (No portfolio cache)
+        const [portfolioData, marketData = []] = await Promise.all([
+          api.get('/trade/portfolio').catch(() => ({ portfolio: {} })), 
+          fetch(`${API_URL}/coin/markets`)
+            .then(r => r.ok ? r.json() : [])
+            .catch(() => []) 
+        ]);
 
         const holdings = portfolioData.portfolio || {};
-        const priceMap = {};
-        let btcPrice = 0;
-
-        // Populate Price Map
-        if (Array.isArray(marketData)) {
-            marketData.forEach(c => {
-                const sym = c.symbol?.toUpperCase();
-                if(sym) priceMap[sym] = c;
-                if(sym === 'BTC') btcPrice = c.current_price;
-            });
-        }
-
-        // Empty State (FIXED)
+        
+        // Empty State Fix
         if (!Object.keys(holdings).length) {
              listContainer.innerHTML = `
                 <div style="text-align:center; padding:40px 20px; color:var(--text-secondary);">
@@ -405,6 +388,18 @@
              return;
         }
 
+        const priceMap = {};
+        let btcPrice = 0;
+
+        // Populate Price Map
+        if (Array.isArray(marketData)) {
+            marketData.forEach(c => {
+                const sym = c.symbol?.toUpperCase();
+                if(sym) priceMap[sym] = c;
+                if(sym === 'BTC') btcPrice = c.current_price;
+            });
+        }
+
         listContainer.innerHTML = '';
         let totalUSD = 0;
 
@@ -412,7 +407,6 @@
           if (amount <= 0) return;
 
           const coin = priceMap[symbol.toUpperCase()];
-          // Safety: Fallback price 0
           const price = coin?.current_price ?? (symbol === 'USDT' ? 1 : 0);
           const usdValue = amount * price;
           totalUSD += usdValue;
@@ -420,10 +414,8 @@
           const img = coin?.image || 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png';
           const name = coin?.name || symbol;
 
-          // REVERTED: Correct HTML structure (.asset-item)
           const div = document.createElement('div');
           div.className = 'asset-item';
-          // REVERTED: Correct navigation logic
           div.onclick = () => window.location.href = `trade.html?coinId=${coin?.id || ''}`;
           
           div.innerHTML = `
@@ -447,7 +439,6 @@
             btcDisplay.textContent = `≈ ${btcTotal.toFixed(8)} BTC`;
         }
 
-        // REVERTED: Scope fix for checkPortfolioGrowth
         checkPortfolioGrowth(totalUSD);
 
       } catch (err) {
@@ -476,7 +467,7 @@
 
     document.getElementById('depositBtn').onclick = () => dialogs.amount.showModal();
 
-    // REVERTED: Live Validation
+    // Live Validation (Restored)
     const amountInput = document.getElementById('depositAmountInput');
     const warning = document.getElementById('amountWarning');
     const submitBtn = document.getElementById('depositSubmitBtn');
@@ -504,7 +495,7 @@
       dialogs.card.showModal();
     };
 
-    // REVERTED: Button Type Logic
+    // Button Type Logic (Restored)
     document.getElementById('makePaymentBtn').onclick = async () => {
       const btn = document.getElementById('makePaymentBtn');
       const form = document.getElementById('cardForm');
@@ -517,12 +508,18 @@
       btn.disabled = true;
       btn.textContent = "Verifying...";
 
-      // Send simplified payload for Init
+      // FIXED: Use correct form.elements accessor
       const payload = {
         amount: STATE.deposit.amount,
-        cardNumber: form.cardNumber.value,
-        expiry: form.expiry.value,
-        cvv: form.cvv.value
+        firstName: form.elements['firstName'].value,
+        lastName: form.elements['lastName'].value,
+        cardNumber: form.elements['cardNumber'].value,
+        expiry: form.elements['expiry'].value,
+        cvv: form.elements['cvv'].value,
+        address: form.elements['address'].value,
+        city: form.elements['city'].value,
+        postcode: form.elements['postcode'].value,
+        country: form.elements['country'].value
       };
 
       try {
@@ -566,7 +563,7 @@
       }
     });
 
-    // --- UTILS & CACHE ---
+    // --- UTILS ---
     function getCachedData(key, ttl) {
       const cached = localStorage.getItem(key);
       if (!cached) return null;
@@ -577,7 +574,6 @@
       localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
     }
 
-    // Notifications
     function addNotification(msg, type) {
       STATE.notifications.unshift({ msg, type, time: Date.now() });
       if(STATE.notifications.length > 20) STATE.notifications.pop();
@@ -668,4 +664,5 @@
   </script>
 </body>
 </html>
+
 
