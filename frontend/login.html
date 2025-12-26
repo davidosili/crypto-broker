@@ -2,222 +2,478 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Crypto Broker</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Login - Krypt</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
   <style>
-    /* Full-page dark gradient background */
+    :root {
+      --bg-dark: #0b0e11;
+      --bg-card: #15181e;
+      --primary: #00ffe7;
+      --primary-hover: #00bfae;
+      --text-main: #ffffff;
+      --text-muted: #848e9c;
+      --border-color: #2b3139;
+      --input-bg: #1e2329;
+      --font-heading: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --danger: #f6465d;
+      --success: #0ecb81;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #0a0a0f, #101020, #1a1a2f);
+      font-family: var(--font-body);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden; /* Prevent scroll on desktop */
+    }
+
+    /* --- LAYOUT --- */
+    .auth-container {
       display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-      color: #fff;
+      height: 100%;
     }
 
-    .container {
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-    }
-
-    /* Title Section */
-    .welcome {
-      margin-bottom: 25px;
-    }
-
-    .welcome h2 {
-      margin: 0;
-      font-weight: 600;
-      font-size: 28px;
-      color: #fff;
-    }
-
-    .welcome p {
-      font-size: 14px;
-      color: #aaa;
-      margin-top: 5px;
-    }
-
-    /* Input Fields */
-    .input-group {
+    .auth-panel {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      margin-bottom: 15px;
+      justify-content: center;
     }
 
-    .input-group input {
-      background: #1c1c2b;
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 14px;
-      color: #fff;
-      font-size: 15px;
-      outline: none;
-      transition: 0.3s;
+    /* Left Panel (Form) */
+    .left-panel {
+      background: var(--bg-dark);
+      padding: 40px 60px;
+      max-width: 600px;
+      overflow-y: auto;
+      position: relative;
+      z-index: 10;
     }
 
-    .input-group input:focus {
-      border-color: #6a5acd;
-      background: #23233b;
+    .auth-header {
+      margin-bottom: 40px;
     }
 
-    /* Gradient Login Button */
-    .btn {
-      width: 100%;
-      padding: 14px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      color: white;
-      background: linear-gradient(90deg, #6a5acd, #9b59b6);
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .btn:hover {
-      filter: brightness(1.2);
-      transform: translateY(-2px);
-    }
-
-    /* Forgot Password */
-    .forgot {
-      text-align: center;
-      font-size: 14px;
-      color: #aaa;
-      margin-top: 12px;
-      margin-bottom: 18px;
-      cursor: pointer;
-    }
-
-    /* Social Login Buttons */
-    .social-login {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .social-login button {
-      flex: 1;
-      padding: 12px;
-      border: 1px solid #333;
-      border-radius: 12px;
-      background: #1c1c2b;
-      color: white;
-      font-size: 14px;
-      cursor: pointer;
+    .logo {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: 0.3s;
-    }
-
-    .social-login button:hover {
-      background: #2c2c3b;
-    }
-
-    .footer-text {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #aaa;
-    }
-
-    .footer-text a {
-      color: #9b59b6;
+      gap: 10px;
       text-decoration: none;
     }
 
-    /* Loading Overlay */
-    #loadingOverlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.5);
-      display: none;
+    .logo-text {
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .form-wrapper {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .text-block h1 {
+      font-family: var(--font-heading);
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .text-block p {
+      color: var(--text-muted);
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+
+    /* --- INPUTS --- */
+    .input-group {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 16px 16px 16px 45px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .input-group input:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(0, 255, 231, 0.1);
+    }
+
+    /* Floating Label Logic */
+    .input-group label {
+      position: absolute;
+      left: 45px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: 0.3s ease;
+      font-size: 15px;
+    }
+
+    .input-group input:focus + label,
+    .input-group input:not(:placeholder-shown) + label {
+      top: -10px;
+      left: 10px;
+      font-size: 12px;
+      color: var(--primary);
+      background: var(--bg-dark);
+      padding: 0 5px;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      transition: 0.3s;
+    }
+
+    .input-group input:focus ~ .input-icon { color: var(--primary); }
+
+    .toggle-password {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .toggle-password:hover { color: var(--text-main); }
+
+    .forgot-link {
+      display: block;
+      text-align: right;
+      color: var(--text-muted);
+      font-size: 13px;
+      text-decoration: none;
+      margin-top: -15px;
+      margin-bottom: 20px;
+    }
+    .forgot-link:hover { color: var(--primary); }
+
+    /* --- BUTTONS --- */
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+      position: relative;
+      display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 9999;
     }
 
-    .spinner {
-      border: 6px solid rgba(255,255,255,0.2);
-      border-top: 6px solid #9b59b6;
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 4px 15px rgba(0, 255, 231, 0.3);
+    }
+
+    .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .loader {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(0,0,0,0.1);
+      border-top-color: #000;
       border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
+      animation: spin 0.8s linear infinite;
+      margin-left: 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* --- SOCIAL & FOOTER --- */
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 30px 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; border-bottom: 1px solid var(--border-color);
+    }
+    .divider span { padding: 0 15px; }
+
+    .social-login { display: flex; gap: 15px; margin-bottom: 30px; }
+
+    .social-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: 500;
+    }
+    .social-btn img { width: 20px; }
+    .social-btn:hover { border-color: var(--text-muted); background: #252a30; }
+
+    .auth-footer { text-align: center; font-size: 14px; color: var(--text-muted); }
+    .highlight-link { color: var(--primary); font-weight: 600; text-decoration: none; }
+
+    /* --- RIGHT PANEL (VISUALS) --- */
+    .right-panel {
+      background: radial-gradient(circle at bottom left, #1a1e26, #0b0e11);
+      position: relative;
+      align-items: center;
+      overflow: hidden;
     }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 50px;
+      border-radius: 24px;
+      max-width: 450px;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
     }
 
-    /* Mobile Responsive */
-    @media (max-width: 480px) {
-      .welcome h2 { font-size: 24px; }
-      .input-group input { font-size: 14px; }
-      .btn { font-size: 15px; }
+    .visual-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(0, 255, 231, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: var(--primary);
+      margin-bottom: 25px;
     }
 
-    .input-group input.error-input {
-  border-color: #e74c3c !important;
-  background: #2b1c1c;
-}
+    .right-panel h2 { font-family: var(--font-heading); font-size: 32px; margin-bottom: 15px; }
+    .right-panel p { color: var(--text-muted); line-height: 1.6; margin-bottom: 40px; }
 
-.error {
-  color: #e74c3c;
-  font-size: 13px;
-  margin-top: 5px;
-  text-align: left;
-  display: none;
-}
+    .glow-sphere {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0, 255, 231, 0.15) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      pointer-events: none;
+    }
 
+    /* --- TOAST --- */
+    #toast {
+      visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
+      border-radius: 4px; padding: 14px 20px; position: fixed; z-index: 3000; left: 50%; bottom: 30px;
+      transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 900px) {
+      .right-panel { display: none; }
+      .left-panel { max-width: 100%; align-items: center; background: radial-gradient(circle at top right, #1a1e26, #0b0e11); }
+      body { overflow: auto; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="welcome">
-      <h2>Welcome Back</h2>
-      <p>Enter your login details to continue</p>
+  <div id="toast"></div>
+
+  <div class="auth-container">
+    
+    <div class="auth-panel left-panel">
+      <div class="auth-header">
+        <a href="index.html" class="logo">
+          <img src="logo.svg" alt="Krypt" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+          <span class="logo-text">Krypt</span>
+        </a>
+      </div>
+
+      <div class="form-wrapper">
+        <div class="text-block">
+          <h1>Welcome Back</h1>
+          <p>Securely access your portfolio and trade.</p>
+        </div>
+
+        <form id="loginForm" autocomplete="off">
+          
+          <div class="input-group">
+            <input type="text" id="username" name="username" required placeholder=" " autocomplete="username">
+            <label for="username">Username</label>
+            <i class="fas fa-user input-icon"></i>
+          </div>
+
+          <div class="input-group">
+            <input type="password" id="password" name="password" required placeholder=" " autocomplete="current-password">
+            <label for="password">Password</label>
+            <i class="fas fa-lock input-icon"></i>
+            <i class="fas fa-eye toggle-password" id="togglePassword"></i>
+          </div>
+
+          <a href="#" class="forgot-link">Forgot password?</a>
+
+          <button type="submit" class="btn-primary" id="submitBtn">
+            <span>Log In</span>
+            <div class="loader" id="btnLoader"></div>
+          </button>
+
+        </form>
+
+        <div class="divider">
+          <span>Or login with</span>
+        </div>
+
+        <div class="social-login">
+          <button class="social-btn">
+            <img src="https://www.svgrepo.com/show/303108/google-icon-logo.svg" alt="Google">
+            Google
+          </button>
+          <button class="social-btn">
+            <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook">
+            Facebook
+          </button>
+        </div>
+
+        <div class="auth-footer">
+          New to Krypt? <a href="register.html" class="highlight-link">Create Account</a>
+        </div>
+      </div>
     </div>
 
-<form id="loginForm">
-  <div class="input-group">
-    <input type="text" name="username" placeholder="Username" required />
-    <small class="error"></small>
-  </div>
-  <div class="input-group">
-    <input type="password" name="password" placeholder="Password" required />
-    <small class="error"></small>
-  </div>
-  <button class="btn" type="submit">Sign In</button>
-</form>
-
-    <div class="forgot">Forgot your password?</div>
-
-    <div class="social-login">
-      <button><img src="https://www.svgrepo.com/show/303108/google-icon-logo.svg" width="18" alt="google"> Google</button>
-      <button><img src="https://www.svgrepo.com/show/475647/facebook-color.svg" width="18" alt="facebook"> Facebook</button>
+    <div class="auth-panel right-panel">
+      <div class="glass-card visual-content">
+        <div class="visual-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <h2>Real-Time Analytics</h2>
+        <p>Monitor the markets with our advanced charting tools. Low latency data for high precision trading.</p>
+        
+        <div class="stats-row" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; display:flex; justify-content:space-between;">
+          <div style="text-align:center;">
+            <strong style="display:block; font-size:18px; color:white; margin-bottom:5px;">BTC</strong>
+            <span style="color:#0ecb81; font-size:14px;">+2.4%</span>
+          </div>
+          <div style="text-align:center;">
+            <strong style="display:block; font-size:18px; color:white; margin-bottom:5px;">ETH</strong>
+            <span style="color:#f6465d; font-size:14px;">-0.8%</span>
+          </div>
+          <div style="text-align:center;">
+            <strong style="display:block; font-size:18px; color:white; margin-bottom:5px;">SOL</strong>
+            <span style="color:#0ecb81; font-size:14px;">+5.1%</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glow-sphere"></div>
     </div>
 
-    <div class="footer-text">
-      Don't have an account? <a href="register.html">Register</a>
-    </div>
   </div>
 
-  <!-- Loading Spinner -->
-  <div id="loadingOverlay"><div class="spinner"></div></div>
+  <script>
+    const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
+      ? 'http://localhost:3000/api'
+      : 'https://krypt-broker.onrender.com/api';
 
-  <script src="js/auth.js"></script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('loginForm');
+      const passwordInput = document.getElementById('password');
+      const toggleIcon = document.getElementById('togglePassword');
+      const btn = document.getElementById('submitBtn');
+      const loader = document.getElementById('btnLoader');
+      
+      // 1. Password Toggle
+      toggleIcon.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        toggleIcon.classList.toggle('fa-eye');
+        toggleIcon.classList.toggle('fa-eye-slash');
+      });
+
+      // 2. Form Submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Disable Button & Show Loader
+        btn.disabled = true;
+        loader.style.display = 'inline-block';
+        btn.querySelector('span').style.opacity = '0.5';
+
+        const username = document.getElementById('username').value.trim();
+        const password = passwordInput.value;
+
+        try {
+          const res = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            showToast("✅ Login Successful!", "success");
+            setTimeout(() => window.location.href = 'dashboard.html', 1000);
+          } else {
+            throw new Error(data.message || 'Invalid credentials');
+          }
+
+        } catch (err) {
+          showToast("❌ " + err.message, "error");
+          btn.disabled = false;
+          loader.style.display = 'none';
+          btn.querySelector('span').style.opacity = '1';
+        }
+      });
+    });
+
+    function showToast(msg, type) {
+      const x = document.getElementById("toast");
+      x.textContent = msg;
+      x.style.backgroundColor = type === 'error' ? '#f6465d' : '#0ecb81';
+      x.className = "show";
+      setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+    }
+  </script>
 </body>
 </html>
