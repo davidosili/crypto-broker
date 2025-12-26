@@ -1,238 +1,503 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Trade - Crypto Broker</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Trade - ProTrade</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
   <style>
-    body {
-      margin: 0;
-      background-color: #0d0d0d;
-      color: rgb(255, 254, 254);
-      font-family: Arial, sans-serif;
+    :root {
+      --bg-body: #121212;
+      --bg-card: #1E2329;
+      --bg-input: #2B3139;
+      --border-color: #2B3139;
+      --primary-yellow: #F7A600;
+      --text-primary: #EAECEF;
+      --text-secondary: #848E9C;
+      --success-green: #2EBD85;
+      --danger-red: #F6465D;
+      --font-main: 'IBM Plex Sans', sans-serif;
     }
 
-    .container {
-      max-width: 480px;
-      margin: auto;
-      padding: 1rem;
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: var(--font-main); background-color: var(--bg-body); color: var(--text-primary); padding-bottom: 80px; }
+
+    /* --- LAYOUT --- */
+    .trade-container { max-width: 600px; margin: 0 auto; padding: 16px; padding-top: 20px; }
+    .header-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* --- TRADING CARD --- */
+    .trade-card {
+      background: var(--bg-card); border-radius: 12px; padding: 20px;
+      border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
-    .trade-box {
-      background-color: #363636;
-      border-radius: 12px;
-      padding: 1.2rem;
-      margin-top: 1rem;
+    /* Tabs (Buy/Sell) */
+    .trade-tabs { display: flex; background: var(--bg-input); border-radius: 8px; padding: 4px; margin-bottom: 20px; }
+    .tab-btn {
+      flex: 1; border: none; background: transparent; padding: 10px; color: var(--text-secondary);
+      font-weight: 600; cursor: pointer; border-radius: 6px; transition: 0.2s;
     }
+    .tab-btn.active.buy { background: var(--success-green); color: white; }
+    .tab-btn.active.sell { background: var(--danger-red); color: white; }
 
-    .tabs {
-      display: flex;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 1rem;
-    }
-
-    .tabs button {
-      flex: 1;
-      padding: 10px;
-      font-weight: bold;
-      background: #363636;
-      color: rgb(204, 202, 202);
-      border: none;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-
-    .tabs button.active {
-      background: white;
-      color: black;
-    }
-
-    label {
-      display: block;
-      margin-top: 1rem;
-      font-size: 0.9rem;
-    }
-
-    .input-box {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      background: #2b2b2b;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-size: 1rem;
-    }
-
-    .input-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .input-row span {
-      font-size: 0.85rem;
-      color: #aaa;
-      margin-left: 10px;
-    }
-
-    .percent-buttons {
-      display: flex;
-      justify-content: space-between;
-      margin: 1rem 0;
-    }
-
-    .percent-buttons button {
-      flex: 1;
-      margin: 0 4px;
-      padding: 8px;
-      background: #333;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      margin: 0.5rem 0;
-      font-size: 0.95rem;
-    }
-
-    .buy-button {
-      width: 100%;
-      margin-top: 1.2rem;
-      background-color: #00cc66;
-      color: black;
-      padding: 14px;
-      font-weight: bold;
-      border-radius: 10px;
-      border: none;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-
+    /* Coin Selector */
+    .coin-select-wrapper { position: relative; margin-bottom: 16px; }
+    .coin-select-wrapper label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; display: block; }
     select {
-      width: 100%;
-      margin-top: 10px;
-      padding: 10px;
-      background: #2b2b2b;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-size: 1rem;
+      width: 100%; padding: 14px; background: var(--bg-input); color: white; border: 1px solid transparent;
+      border-radius: 8px; font-size: 16px; appearance: none; cursor: pointer;
     }
+    select:focus { outline: none; border-color: var(--primary-yellow); }
+    .select-arrow { position: absolute; right: 14px; top: 38px; color: var(--text-secondary); pointer-events: none; }
+
+    /* Inputs */
+    .input-wrapper { margin-bottom: 16px; }
+    .input-label-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; color: var(--text-secondary); }
+    .trade-input {
+      width: 100%; background: var(--bg-input); border: 1px solid transparent;
+      padding: 14px; color: white; font-size: 18px; border-radius: 8px; font-family: monospace;
+    }
+    .trade-input:focus { outline: none; border-color: var(--primary-yellow); }
+    .trade-input:disabled { color: var(--text-secondary); opacity: 0.8; }
+
+    /* Percent Buttons */
+    .pct-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .pct-btn {
+      flex: 1; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-secondary);
+      padding: 8px; border-radius: 4px; font-size: 12px; cursor: pointer;
+    }
+    .pct-btn:hover { background: #363c45; }
+
+    /* Action Button */
+    .action-btn {
+      width: 100%; padding: 16px; border: none; border-radius: 8px;
+      font-size: 16px; font-weight: 700; color: white; cursor: pointer; transition: opacity 0.2s;
+    }
+    .action-btn.buy { background: var(--success-green); }
+    .action-btn.sell { background: var(--danger-red); }
+    .action-btn:active { opacity: 0.9; }
+    .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* --- HISTORY SECTION --- */
+    .history-section { margin-top: 30px; }
+    .section-header { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+    
+    .history-card { background: var(--bg-card); border-radius: 8px; overflow: hidden; }
+    .history-item {
+      padding: 14px; border-bottom: 1px solid var(--border-color);
+      display: flex; justify-content: space-between; align-items: center; font-size: 14px;
+    }
+    .history-item:last-child { border-bottom: none; }
+    
+    .h-left { display: flex; flex-direction: column; gap: 4px; }
+    .h-pair { font-weight: 600; color: var(--text-primary); }
+    .h-date { font-size: 11px; color: var(--text-secondary); }
+    
+    .h-right { text-align: right; }
+    .h-amount { font-weight: 500; font-family: monospace; }
+    .h-type.buy { color: var(--success-green); text-transform: uppercase; font-size: 11px; font-weight: 700; }
+    .h-type.sell { color: var(--danger-red); text-transform: uppercase; font-size: 11px; font-weight: 700; }
+
+    /* --- BOTTOM NAV --- */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
+      background: var(--bg-card); border-top: 1px solid var(--border-color);
+      display: flex; justify-content: space-around; align-items: center;
+      z-index: 1000; padding-bottom: 5px;
+    }
+    .bottom-nav a {
+      display: flex; flex-direction: column; align-items: center;
+      color: var(--text-secondary); font-size: 10px; gap: 6px; width: 25%;
+    }
+    .bottom-nav a.active { color: var(--primary-yellow); }
+    .bottom-nav i { font-size: 20px; }
+
+    /* Msg Box */
+    .msg-box { text-align: center; margin-top: 10px; font-size: 13px; min-height: 20px; }
+
+    .pulse-green { animation: flashGreen 1s; }
+    .pulse-red { animation: flashRed 1s; }
+    @keyframes flashGreen { 0% { color: white; } 50% { color: var(--success-green); } 100% { color: white; } }
+    @keyframes flashRed { 0% { color: white; } 50% { color: var(--danger-red); } 100% { color: white; } }
+
   </style>
 </head>
 <body>
-  <body>
-  <!-- Your dashboard content here -->
 
-  <!-- Bottom Navigation -->
-<nav class="bottom-nav">
-  <a href="dashboard.html">
-    <span class="icon"><i class="fas fa-home"></i></span>
-    <span class="label">Home</span>
-  </a>
-  <a href="markets.html">
-    <span class="icon"><i class="fas fa-chart-line"></i></span>
-    <span class="label">Markets</span>
-  </a>
-  <a href="trade.html" class="active">
-    <span class="icon"><i class="fas fa-exchange-alt"></i></span>
-    <span class="label">Trade</span>
-  </a>
-  <a href="assets.html">
-    <span class="icon"><i class="fas fa-wallet"></i></span>
-    <span class="label">Assets</span>
-  </a>
-</nav>
-
-
-  <div class="container">
-    <div class="trade-box">
-      <h2>Trade</h2>
-      <p>Instantly buy or sell assets.</p>
-
-      <div class="tabs">
-        <button id="buyTab" class="active" onclick="setTradeType('buy')">Buy</button>
-        <button id="sellTab" onclick="setTradeType('sell')">Sell</button>
-      </div>
-
-      <label for="coinSelect">Coin</label>
-      <select id="coinSelect">
-        <option value="BTC">Bitcoin (BTC)</option>
-        <option value="ETH">Ethereum (ETH)</option>
-      </select>
-
-      <label for="priceDisplay">Price (USD)</label>
-      <div class="input-row">
-        <span id="priceDisplay">Loading...</span>
-        <span>Market</span>
-      </div>
-
-      <label for="amountInput">Amount</label>
-      <input type="number" id="amountInput" class="input-box" step="0.0001" min="0">
-
-      <div class="summary-row">
-        <span>Total</span>
-        <span>$0.00</span>
-      </div>
-      <button class="buy-button" onclick="placeTrade(tradeType)">Submit</button>
+  <div class="trade-container">
+    <div class="header-title">
+      Spot Trade
+      <span style="font-size:12px; color:var(--text-secondary); font-weight:400" id="lastUpdated"></span>
     </div>
 
-    <div style="margin-top: 2rem;">
-      <p id="userInfo">Loading user...</p>
+    <div class="trade-card">
+      
+      <div class="trade-tabs">
+        <button class="tab-btn active buy" onclick="setTradeType('buy')">Buy</button>
+        <button class="tab-btn sell" onclick="setTradeType('sell')">Sell</button>
+      </div>
 
-      <h3>Your Portfolio</h3>
-      <ul id="portfolioList"></ul>
+      <div class="coin-select-wrapper">
+        <label>Select Asset</label>
+        <select id="coinSelect" onchange="handleCoinChange()">
+          <option value="" disabled selected>Loading market data...</option>
+        </select>
+        <i class="fas fa-chevron-down select-arrow"></i>
+      </div>
 
-      <h3>Trade History</h3>
-      <ul id="historyList"></ul>
+      <div class="input-wrapper">
+        <div class="input-label-row">
+          <span>Market Price</span>
+          <span style="color: var(--success-green)">● Live</span>
+        </div>
+        <input type="text" id="priceInput" class="trade-input" value="0.00" disabled>
+      </div>
 
-      <button onclick="logout()">Logout</button>
+      <div class="input-wrapper">
+        <div class="input-label-row">
+          <span id="amountLabel">Amount (USDT)</span>
+          <span>Avail: <span id="availBalance" style="color: var(--text-primary); cursor:pointer;" onclick="setPercent(100)">0.00</span></span>
+        </div>
+        <input type="number" id="amountInput" class="trade-input" placeholder="0.00">
+      </div>
+
+      <div class="pct-row">
+        <button class="pct-btn" onclick="setPercent(25)">25%</button>
+        <button class="pct-btn" onclick="setPercent(50)">50%</button>
+        <button class="pct-btn" onclick="setPercent(75)">75%</button>
+        <button class="pct-btn" onclick="setPercent(100)">Max</button>
+      </div>
+
+      <button id="submitBtn" class="action-btn buy" onclick="executeTrade()">Buy</button>
+      
+      <div id="msgBox" class="msg-box"></div>
     </div>
+
+    <div class="history-section">
+      <div class="section-header">Recent Trades</div>
+      <div class="history-card" id="historyList">
+        <div style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 13px;">
+          <i class="fas fa-spinner fa-spin"></i> Loading history...
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <script src="js/trade.js"></script>
-  <script>
-    let tradeType = 'buy';
+  <nav class="bottom-nav">
+    <a href="dashboard.html">
+      <i class="fas fa-home"></i><span>Home</span>
+    </a>
+    <a href="markets.html">
+      <i class="fas fa-chart-bar"></i><span>Markets</span>
+    </a>
+    <a href="trade.html" class="active">
+      <i class="fas fa-exchange-alt"></i><span>Trade</span>
+    </a>
+    <a href="assets.html">
+      <i class="fas fa-wallet"></i><span>Assets</span>
+    </a>
+  </nav>
 
-    function setTradeType(type) {
-      tradeType = type;
-      document.getElementById('buyTab').classList.remove('active');
-      document.getElementById('sellTab').classList.remove('active');
-      document.getElementById(type + 'Tab').classList.add('active');
+  <script>
+    const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
+      ? 'http://localhost:3000/api'
+      : 'https://krypt-broker.onrender.com/api';
+
+    // Global State
+    let STATE = {
+      tradeType: 'buy',
+      currentCoin: null, // { symbol: 'BTC', price: 50000, id: 'bitcoin' }
+      portfolio: {},
+      marketData: []
+    };
+
+    // --- INIT ---
+    async function init() {
+      await checkAuth();
+      await fetchMarketData(true); // true = build dropdown
+      await fetchPortfolio();
+      await fetchHistory();
+      
+      // 🛡️ CRITICAL: Live Price Refresh (Every 15s)
+      setInterval(() => fetchMarketData(false), 15000); 
     }
 
+    // 1. Auth Check
     async function checkAuth() {
-      const res = await fetch('${API_URL}/auth/me', {
-        credentials: 'include'
-      });
+      try {
+        const res = await fetch(`${API_URL}/auth/me`, { credentials: 'include' });
+        if (res.status === 401) window.location.href = 'login.html';
+      } catch (e) { console.error("Auth check failed"); }
+    }
 
-      if (res.status === 401) {
-        alert('You must log in first.');
-        window.location.href = 'login.html';
+    // 2. Fetch Market Data
+    async function fetchMarketData(buildDropdown = false) {
+      try {
+        const res = await fetch(`${API_URL}/coin/markets`);
+        const data = await res.json();
+        STATE.marketData = data;
+
+        const select = document.getElementById('coinSelect');
+
+        if (buildDropdown) {
+          select.innerHTML = '';
+          data.forEach(coin => {
+            const opt = document.createElement('option');
+            opt.value = coin.symbol.toUpperCase();
+            opt.text = `${coin.name} (${coin.symbol.toUpperCase()})`;
+            opt.dataset.id = coin.id;
+            select.appendChild(opt);
+          });
+          // 🛡️ CRITICAL: Explicitly select first if none selected
+          if (select.options.length > 0) select.selectedIndex = 0;
+          handleCoinChange(); // Initial Update
+        } else {
+            // Smart Update: Just update current price without rebuilding dropdown
+            if(STATE.currentCoin) {
+                const updatedCoin = data.find(c => c.symbol.toUpperCase() === STATE.currentCoin.symbol);
+                if(updatedCoin) {
+                    STATE.currentCoin.price = updatedCoin.current_price;
+                    updatePriceDisplay();
+                }
+            }
+        }
+        
+        // Show last updated time
+        const now = new Date();
+        document.getElementById('lastUpdated').textContent = `Updated ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      } catch (err) { console.error("Market fetch failed", err); }
+    }
+
+    // 3. Fetch User Portfolio
+    async function fetchPortfolio() {
+      try {
+        const res = await fetch(`${API_URL}/trade/portfolio`, { credentials: 'include' });
+        if(res.ok) {
+          const data = await res.json();
+          STATE.portfolio = data.portfolio || {};
+          updateBalanceDisplay();
+        }
+      } catch (err) { console.error("Portfolio fetch failed"); }
+    }
+
+    // --- UI LOGIC ---
+
+    function setTradeType(type) {
+      STATE.tradeType = type;
+      
+      const buyBtn = document.querySelector('.tab-btn.buy');
+      const sellBtn = document.querySelector('.tab-btn.sell');
+      const actionBtn = document.getElementById('submitBtn');
+      const amountLabel = document.getElementById('amountLabel');
+
+      if (type === 'buy') {
+        buyBtn.classList.add('active');
+        sellBtn.classList.remove('active');
+        actionBtn.className = 'action-btn buy';
+        actionBtn.textContent = `Buy ${STATE.currentCoin?.symbol || 'Coin'}`;
+        amountLabel.textContent = 'Amount (USDT)';
+      } else {
+        sellBtn.classList.add('active');
+        buyBtn.classList.remove('active');
+        actionBtn.className = 'action-btn sell';
+        actionBtn.textContent = `Sell ${STATE.currentCoin?.symbol || 'Coin'}`;
+        amountLabel.textContent = `Amount (${STATE.currentCoin?.symbol || 'Coin'})`;
+      }
+      
+      updateBalanceDisplay();
+      document.getElementById('amountInput').value = '';
+    }
+
+    function handleCoinChange() {
+      const select = document.getElementById('coinSelect');
+      const selectedOpt = select.options[select.selectedIndex];
+      
+      if (!selectedOpt) return;
+      
+      // Find full coin object from STATE.marketData for accuracy
+      const coinObj = STATE.marketData.find(c => c.symbol.toUpperCase() === selectedOpt.value);
+      
+      if(coinObj) {
+          STATE.currentCoin = {
+            symbol: coinObj.symbol.toUpperCase(),
+            price: coinObj.current_price,
+            id: coinObj.id
+          };
+          updatePriceDisplay();
+          
+          // Update Button Text
+          const btn = document.getElementById('submitBtn');
+          btn.textContent = `${STATE.tradeType === 'buy' ? 'Buy' : 'Sell'} ${STATE.currentCoin.symbol}`;
+          
+          updateBalanceDisplay();
+      }
+    }
+
+    function updatePriceDisplay() {
+        if(!STATE.currentCoin) return;
+        const input = document.getElementById('priceInput');
+        input.value = `$${STATE.currentCoin.price.toLocaleString()}`;
+        // Flash animation
+        input.classList.remove('pulse-green', 'pulse-red');
+        void input.offsetWidth; // trigger reflow
+        input.classList.add('pulse-green');
+    }
+
+    function updateBalanceDisplay() {
+      const el = document.getElementById('availBalance');
+      if (!STATE.currentCoin) return;
+
+      if (STATE.tradeType === 'buy') {
+        const bal = STATE.portfolio['USDT'] || 0;
+        el.textContent = `${bal.toFixed(2)}`;
+      } else {
+        const bal = STATE.portfolio[STATE.currentCoin.symbol] || 0;
+        el.textContent = `${bal.toFixed(6)}`;
+      }
+    }
+
+    function setPercent(pct) {
+      if (!STATE.currentCoin) return;
+      const input = document.getElementById('amountInput');
+
+      if (STATE.tradeType === 'buy') {
+        const bal = STATE.portfolio['USDT'] || 0;
+        input.value = ((bal * pct) / 100).toFixed(2);
+      } else {
+        const bal = STATE.portfolio[STATE.currentCoin.symbol] || 0;
+        input.value = ((bal * pct) / 100).toFixed(6);
+      }
+    }
+
+    // --- TRADE EXECUTION ---
+
+    async function executeTrade() {
+      const amountInput = parseFloat(document.getElementById('amountInput').value);
+      const btn = document.getElementById('submitBtn');
+
+      if (!amountInput || amountInput <= 0) {
+        showMsg("Please enter a valid amount", false);
         return;
       }
 
-      const data = await res.json();
-      document.getElementById('userInfo').textContent = `Logged in as ${data.user.username}`;
+      // 🛡️ CRITICAL: Frontend Balance Validation
+      if (STATE.tradeType === 'buy') {
+        const usdtBal = STATE.portfolio['USDT'] || 0;
+        if (amountInput > usdtBal) {
+            showMsg(`Insufficient USDT Balance: $${usdtBal.toFixed(2)}`, false);
+            return;
+        }
+      } else {
+        const coinBal = STATE.portfolio[STATE.currentCoin.symbol] || 0;
+        if (amountInput > coinBal) {
+            showMsg(`Insufficient ${STATE.currentCoin.symbol} Balance`, false);
+            return;
+        }
+      }
+
+      // Calculate Backend Amount (Coin Quantity)
+      let finalAmount = amountInput;
+      if (STATE.tradeType === 'buy') {
+         finalAmount = amountInput / STATE.currentCoin.price;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Processing...";
+
+      try {
+        const res = await fetch(`${API_URL}/trade/place`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            type: STATE.tradeType,
+            coin: STATE.currentCoin.symbol,
+            amount: finalAmount, 
+            price: STATE.currentCoin.price
+          })
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+          showMsg("✅ Order Successful!", true);
+          document.getElementById('amountInput').value = '';
+          fetchPortfolio(); 
+          fetchHistory(); 
+        } else {
+          showMsg(`❌ ${result.message}`, false);
+        }
+
+      } catch (err) {
+        showMsg("Network Error", false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = `${STATE.tradeType === 'buy' ? 'Buy' : 'Sell'} ${STATE.currentCoin.symbol}`;
+      }
     }
 
-    async function logout() {
-      await fetch('${API_URL}/auth/logout`', {
-        method: 'POST',
-        credentials: 'include'
-      });
-      window.location.href = 'login.html';
+    function showMsg(text, success) {
+      const el = document.getElementById('msgBox');
+      el.textContent = text;
+      el.style.color = success ? 'var(--success-green)' : 'var(--danger-red)';
+      setTimeout(() => el.textContent = '', 3000);
     }
 
-    checkAuth();
+    // --- HISTORY LOGIC ---
+    async function fetchHistory() {
+      const container = document.getElementById('historyList');
+      try {
+        const res = await fetch(`${API_URL}/trade/history`, { credentials: 'include' });
+        
+        if (!res.ok) throw new Error("No history endpoint");
+        
+        const data = await res.json();
+        const trades = data.history || [];
+
+        container.innerHTML = '';
+
+        if (trades.length === 0) {
+           container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-secondary)">No trades yet.</div>';
+           return;
+        }
+
+        trades.slice(0, 5).forEach(trade => {
+            const isBuy = trade.type === 'buy';
+            const total = (trade.amount * trade.price).toFixed(2);
+            const date = new Date(trade.date).toLocaleDateString();
+            
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <div class="h-left">
+                    <div class="h-pair">${trade.coin}/USDT</div>
+                    <div class="h-date">${date}</div>
+                </div>
+                <div class="h-right">
+                    <div class="h-amount">$${total}</div>
+                    <div class="h-type ${isBuy ? 'buy' : 'sell'}">${isBuy ? 'Buy' : 'Sell'}</div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+
+      } catch (err) {
+         // Fallback if endpoint doesn't exist
+         container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-secondary)">No recent trades.</div>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
+
