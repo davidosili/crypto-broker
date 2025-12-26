@@ -65,6 +65,7 @@
     .assets-section { padding: 16px; max-width: 800px; margin: 0 auto; }
     .section-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary); }
     
+    /* REVERTED: Using .asset-item to match JS logic */
     .asset-item {
       display: flex; justify-content: space-between; align-items: center;
       padding: 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-color);
@@ -113,13 +114,13 @@
       width: 100%; padding: 14px; border: none; border-radius: 6px;
       font-size: 15px; font-weight: 600; cursor: pointer; background: var(--primary-yellow); color: #000;
     }
-    .full-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .full-btn:disabled { opacity: 0.6; cursor: not-allowed; background: var(--bg-input); color: var(--text-secondary); }
     .secondary-btn {
       width: 100%; padding: 14px; border: 1px solid var(--border-color); background: transparent;
       color: var(--text-secondary); border-radius: 6px; margin-top: 10px; cursor: pointer;
     }
 
-    /* Notification Panel */
+    /* Notification Panel (Unified System) */
     .notif-bell { position: relative; cursor: pointer; color: var(--text-primary); font-size: 20px; }
     .notif-badge {
       position: absolute; top: -5px; right: -5px; background: var(--danger-red);
@@ -135,7 +136,7 @@
     .notif-item.success { border-left: 3px solid var(--success-green); }
     .notif-item.error { border-left: 3px solid var(--danger-red); }
 
-    /* Toast Notification (Replaces Alert) */
+    /* Toast Notification (Replaces Global Alert) */
     #toast {
       visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
       border-radius: 4px; padding: 16px; position: fixed; z-index: 3000; left: 50%; bottom: 80px;
@@ -225,7 +226,8 @@
         <label class="form-label">Amount (USD)</label>
         <input type="number" id="depositAmountInput" class="form-input" placeholder="Min $30.00" min="30" step="0.01" required>
       </div>
-      <button type="submit" class="full-btn">Continue</button>
+      <p id="amountWarning" style="color: var(--danger-red); font-size: 12px; margin-top: -10px; display: none;">Minimum deposit is $30</p>
+      <button type="submit" id="depositSubmitBtn" class="full-btn" disabled>Continue</button>
     </form>
   </dialog>
 
@@ -254,6 +256,7 @@
       </div>
       <div class="form-group">
         <input name="cardNumber" class="form-input" placeholder="Card Number" maxlength="19" required oninput="checkCardType(this)">
+        <div id="cardError" style="color:var(--danger-red); font-size:11px; display:none; margin-top:4px;">Unsupported card type</div>
       </div>
       <div class="form-group" style="display:flex; gap:10px;">
         <input name="expiry" class="form-input" placeholder="MM/YY" maxlength="5" required>
@@ -271,7 +274,7 @@
           <option value="">Select Country</option>
         </select>
       </div>
-      <button type="submit" class="full-btn">Pay Now</button>
+      <button type="button" id="makePaymentBtn" class="full-btn">Pay Now</button>
     </form>
   </dialog>
 
@@ -315,15 +318,20 @@
       ? 'http://localhost:3000/api'
       : 'https://krypt-broker.onrender.com/api';
 
-    // ARCHITECTURE: Centralized State
+    // State
     const STATE = {
-      portfolio: {},
-      market: [],
       deposit: { amount: 0, txnId: null },
       notifications: JSON.parse(localStorage.getItem("notifications") || "[]")
     };
 
-    // ARCHITECTURE: Central API Helper
+    // --- UTILS (No Alert Override) ---
+    function showToast(msg, type = 'info') {
+      const x = document.getElementById("toast");
+      x.textContent = msg;
+      x.className = "show";
+      setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
+    }
+
     const api = {
       async get(endpoint) {
         const res = await fetch(`${API_URL}${endpoint}`, { credentials: 'include' });
@@ -351,44 +359,51 @@
       fetchCountries();
     });
 
-    // --- ASSET LOADING ---
+    // --- ASSET LOADING (FIXED) ---
     async function loadAssets() {
       const listContainer = document.getElementById('assetList');
+      const totalDisplay = document.getElementById('totalAssets');
+      const btcDisplay = document.getElementById('btcValue');
+
       try {
-        // Parallel Fetch with Safe Failures
-        const [portfolioData, marketData = []] = await Promise.all([
-          api.get('/trade/portfolio').catch(() => ({ portfolio: {} })), 
-          fetch(`${API_URL}/coin/markets`)
-            .then(r => r.ok ? r.json() : [])
-            .catch(() => []) 
-        ]);
+        // REVERTED: Do NOT cache portfolio. Only cache markets.
+        let marketData = getCachedData('coinMarkets', 60000);
+        
+        const promises = [api.get('/trade/portfolio')];
+        if (!marketData) promises.push(fetch(`${API_URL}/coin/markets`).then(r => r.ok ? r.json() : []));
 
-        const holdings = portfolioData.portfolio || {};
-        const hasAssets = Object.keys(holdings).length > 0;
-
-        // Empty State Check
-        if (!hasAssets) {
-             listContainer.innerHTML = `
-                <div style="text-align:center; padding:40px 20px; color:var(--text-secondary);">
-                    <i class="fas fa-wallet" style="font-size:48px; margin-bottom:16px; opacity:0.5;"></i>
-                    <p>No assets found.</p>
-                    <button class="secondary-btn" onclick="document.getElementById('depositBtn').click()" style="width:auto; margin-top:10px;">Deposit Funds</button>
-                </div>
-             `;
-             // Reset totals
-             document.getElementById('totalAssets').textContent = "$0.00";
-             document.getElementById('btcValue').textContent = "≈ 0.00000000 BTC";
-             return;
+        const results = await Promise.all(promises);
+        const portfolioData = results[0];
+        if (!marketData) {
+            marketData = results[1] || [];
+            if(marketData.length) setCachedData('coinMarkets', marketData);
         }
 
+        const holdings = portfolioData.portfolio || {};
         const priceMap = {};
         let btcPrice = 0;
 
-        marketData.forEach(c => {
-            const sym = c.symbol?.toUpperCase();
-            if(sym) priceMap[sym] = c;
-            if(sym === 'BTC') btcPrice = c.current_price;
-        });
+        // Populate Price Map
+        if (Array.isArray(marketData)) {
+            marketData.forEach(c => {
+                const sym = c.symbol?.toUpperCase();
+                if(sym) priceMap[sym] = c;
+                if(sym === 'BTC') btcPrice = c.current_price;
+            });
+        }
+
+        // Empty State (FIXED)
+        if (!Object.keys(holdings).length) {
+             listContainer.innerHTML = `
+                <div style="text-align:center; padding:40px 20px; color:var(--text-secondary);">
+                    <i class="fas fa-wallet" style="font-size:48px; margin-bottom:16px; opacity:0.5;"></i>
+                    <p>No assets yet. Make your first deposit or trade.</p>
+                    <button class="secondary-btn" onclick="document.getElementById('depositBtn').click()" style="width:auto; margin-top:10px;">Deposit Funds</button>
+                </div>
+             `;
+             totalDisplay.textContent = "$0.00";
+             return;
+        }
 
         listContainer.innerHTML = '';
         let totalUSD = 0;
@@ -397,7 +412,7 @@
           if (amount <= 0) return;
 
           const coin = priceMap[symbol.toUpperCase()];
-          // SAFETY: Fallback price 0 to prevent NaN
+          // Safety: Fallback price 0
           const price = coin?.current_price ?? (symbol === 'USDT' ? 1 : 0);
           const usdValue = amount * price;
           totalUSD += usdValue;
@@ -405,12 +420,15 @@
           const img = coin?.image || 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png';
           const name = coin?.name || symbol;
 
+          // REVERTED: Correct HTML structure (.asset-item)
           const div = document.createElement('div');
           div.className = 'asset-item';
+          // REVERTED: Correct navigation logic
           div.onclick = () => window.location.href = `trade.html?coinId=${coin?.id || ''}`;
+          
           div.innerHTML = `
             <div class="asset-left">
-              <img src="${img}" class="coin-icon">
+              <img src="${img}" class="coin-icon" onerror="this.src='https://via.placeholder.com/32'">
               <div class="coin-info"><h4>${symbol}</h4><span>${name}</span></div>
             </div>
             <div class="asset-right">
@@ -421,15 +439,16 @@
           listContainer.appendChild(div);
         });
 
-        document.getElementById('totalAssets').textContent = `$${totalUSD.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        // Update Header
+        totalDisplay.textContent = `$${totalUSD.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
         
-        // Update BTC Counter
         if (btcPrice > 0) {
             const btcTotal = totalUSD / btcPrice;
-            document.getElementById('btcValue').textContent = `≈ ${btcTotal.toFixed(8)} BTC`;
+            btcDisplay.textContent = `≈ ${btcTotal.toFixed(8)} BTC`;
         }
 
-        trackGrowth(totalUSD);
+        // REVERTED: Scope fix for checkPortfolioGrowth
+        checkPortfolioGrowth(totalUSD);
 
       } catch (err) {
         console.error(err);
@@ -437,13 +456,13 @@
       }
     }
 
-    function trackGrowth(current) {
+    function checkPortfolioGrowth(current) {
       const prev = parseFloat(localStorage.getItem("prevTotal") || "0");
       if (prev > 0 && current > prev) addNotification(`Portfolio up $${(current - prev).toFixed(2)}`, 'success');
       localStorage.setItem("prevTotal", current);
     }
 
-    // --- DEPOSIT FLOW (Secure Simulation) ---
+    // --- DEPOSIT FLOW ---
     const dialogs = {
       amount: document.getElementById('amountDialog'),
       method: document.getElementById('methodDialog'),
@@ -457,56 +476,70 @@
 
     document.getElementById('depositBtn').onclick = () => dialogs.amount.showModal();
 
-    // 1. Amount Submit
+    // REVERTED: Live Validation
+    const amountInput = document.getElementById('depositAmountInput');
+    const warning = document.getElementById('amountWarning');
+    const submitBtn = document.getElementById('depositSubmitBtn');
+
+    amountInput.addEventListener('input', () => {
+      const val = parseFloat(amountInput.value);
+      if (val >= 30) {
+        warning.style.display = 'none';
+        submitBtn.disabled = false;
+      } else {
+        warning.style.display = 'block';
+        submitBtn.disabled = true;
+      }
+    });
+
     document.getElementById('amountForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      STATE.deposit.amount = parseFloat(document.getElementById('depositAmountInput').value);
+      STATE.deposit.amount = parseFloat(amountInput.value);
       dialogs.amount.close();
       dialogs.method.showModal();
     });
 
-    // 2. Select Method
     document.getElementById('payWithCard').onclick = () => {
       dialogs.method.close();
       dialogs.card.showModal();
     };
 
-    // 3. Card Submit (Simulate Init)
-    document.getElementById('cardForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const btn = form.querySelector('button[type="submit"]');
+    // REVERTED: Button Type Logic
+    document.getElementById('makePaymentBtn').onclick = async () => {
+      const btn = document.getElementById('makePaymentBtn');
+      const form = document.getElementById('cardForm');
       
-      btn.disabled = true; btn.textContent = "Verifying...";
+      if(!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
 
-      // NOTE: In production, send tokenized data, not raw fields.
+      btn.disabled = true;
+      btn.textContent = "Verifying...";
+
+      // Send simplified payload for Init
       const payload = {
         amount: STATE.deposit.amount,
-        // Assuming backend expects these for demo. Ideally use Stripe Elements/Tokens.
         cardNumber: form.cardNumber.value,
         expiry: form.expiry.value,
         cvv: form.cvv.value
       };
 
       try {
-        // SECURITY: Separate Init Step
-        const res = await api.post('/payment/deposit', payload); // Assume this is Init
-        
-        // Clear sensitive data from DOM immediately
-        form.reset(); 
-        
-        STATE.deposit.txnId = res.transactionId || 'demo_id'; // Save ID for next step
-        
+        const res = await api.post('/payment/deposit', payload);
+        form.reset(); // Clear sensitive data
+        STATE.deposit.txnId = res.transactionId || 'demo_id';
         dialogs.card.close();
         dialogs.code.showModal();
       } catch (err) {
-        showToast(err.message);
+        showToast(err.message, 'error');
       } finally {
-        btn.disabled = false; btn.textContent = "Pay Now";
+        btn.disabled = false;
+        btn.textContent = "Pay Now";
       }
-    });
+    };
 
-    // 4. OTP Submit (Confirm)
+    // OTP Submit
     document.getElementById('codeForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const code = e.target.code.value;
@@ -515,7 +548,6 @@
       dialogs.loading.showModal();
 
       try {
-        // SECURITY: Confirm with ID + OTP (No card data re-sent)
         await api.post('/payment/deposit', { 
             amount: STATE.deposit.amount,
             code: code,
@@ -530,21 +562,25 @@
 
       } catch (err) {
         dialogs.loading.close();
-        showToast("Verification Failed");
+        showToast("Verification Failed", 'error');
       }
     });
 
-    // --- NOTIFICATIONS & UI UTILS ---
-    function showToast(msg) {
-      const x = document.getElementById("toast");
-      x.textContent = msg;
-      x.className = "show";
-      setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
+    // --- UTILS & CACHE ---
+    function getCachedData(key, ttl) {
+      const cached = localStorage.getItem(key);
+      if (!cached) return null;
+      try { const { data, timestamp } = JSON.parse(cached); return Date.now() - timestamp < ttl ? data : null; } catch { return null; }
+    }
+    
+    function setCachedData(key, data) {
+      localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
     }
 
+    // Notifications
     function addNotification(msg, type) {
       STATE.notifications.unshift({ msg, type, time: Date.now() });
-      if(STATE.notifications.length > 20) STATE.notifications.pop(); // Limit size
+      if(STATE.notifications.length > 20) STATE.notifications.pop();
       localStorage.setItem("notifications", JSON.stringify(STATE.notifications));
       renderNotifications();
     }
@@ -557,7 +593,6 @@
       if(STATE.notifications.length > 0) {
         count.style.display = 'block';
         count.textContent = STATE.notifications.length;
-        
         STATE.notifications.forEach(n => {
           const div = document.createElement('div');
           div.className = `notif-item ${n.type}`;
@@ -574,10 +609,46 @@
       el.style.display = el.style.display === 'block' ? 'none' : 'block';
     };
 
-    // Card Type UI
-    window.checkCardType = (input) => {
-      // Basic UI feedback logic...
-    };
+    function checkCardType(input) {
+      const val = input.value.replace(/\s/g, '');
+      const err = document.getElementById('cardError');
+      if (val.length > 1 && !/^4|^5[1-5]/.test(val)) err.style.display = 'block';
+      else err.style.display = 'none';
+    }
+
+    // REVERTED: Fallback Country List
+    const fallbackCountries = [
+      { name: { common: "United States" }, cca2: "US" },
+      { name: { common: "United Kingdom" }, cca2: "GB" },
+      { name: { common: "Canada" }, cca2: "CA" }
+    ];
+
+    async function fetchCountries() {
+      const select = document.getElementById('countrySelect');
+      const cached = localStorage.getItem('countries');
+      
+      if(cached) return populateCountries(JSON.parse(cached));
+      
+      try {
+        const res = await fetch("https://restcountries.com/v3.1/all?fields=name,cca2");
+        if(!res.ok) throw new Error();
+        const data = await res.json();
+        localStorage.setItem('countries', JSON.stringify(data));
+        populateCountries(data);
+      } catch(e) {
+        populateCountries(fallbackCountries);
+      }
+    }
+
+    function populateCountries(data) {
+      const select = document.getElementById("countrySelect");
+      data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+      data.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.cca2; opt.text = c.name.common;
+        select.appendChild(opt);
+      });
+    }
 
     // Privacy Toggle
     let hidden = false;
@@ -594,29 +665,7 @@
       }
     };
 
-    // Cache Countries
-    async function fetchCountries() {
-      const cached = localStorage.getItem('countries');
-      if(cached) return populateCountries(JSON.parse(cached));
-      
-      try {
-        const res = await fetch("https://restcountries.com/v3.1/all?fields=name,cca2");
-        const data = await res.json();
-        localStorage.setItem('countries', JSON.stringify(data));
-        populateCountries(data);
-      } catch(e) {}
-    }
-
-    function populateCountries(data) {
-      const select = document.getElementById("countrySelect");
-      data.sort((a, b) => a.name.common.localeCompare(b.name.common));
-      data.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c.cca2; opt.text = c.name.common;
-        select.appendChild(opt);
-      });
-    }
-
   </script>
 </body>
 </html>
+
