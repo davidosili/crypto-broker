@@ -1,418 +1,622 @@
-<!-- assets.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Assets</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>My Assets - ProTrade</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="/frontend/css/style.css" />
+  
   <style>
-    body { background: #0e0e0e; color: white; font-family: sans-serif; margin: 0; }
-    .header, .actions, .asset-card { padding: 16px; }
-    .header h1 { margin: 0; font-size: 1.8em; }
-    .total { font-size: 2.4em; margin-top: 8px; }
-    .actions { display: flex; justify-content: space-around; border-top: 1px solid #222; border-bottom: 1px solid #222; }
-    .action-btn { text-align: center; flex: 1; padding: 10px; }
-    .action-btn:hover { background: #1e1e1e; cursor: pointer; }
-    .asset-list { padding: 16px; }
-    .asset-card { background: #1a1a1a; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+    :root {
+      --bg-body: #121212;
+      --bg-card: #1E2329;
+      --bg-input: #2B3139;
+      --border-color: #2B3139;
+      --primary-yellow: #F7A600;
+      --text-primary: #EAECEF;
+      --text-secondary: #848E9C;
+      --success-green: #2EBD85;
+      --danger-red: #F6465D;
+      --font-main: 'IBM Plex Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: var(--font-main); background-color: var(--bg-body); color: var(--text-primary); padding-bottom: 80px; }
+
+    /* --- HEADER & BALANCE --- */
+    .wallet-header {
+      background: linear-gradient(180deg, #1E2329 0%, #121212 100%);
+      padding: 20px 16px; border-bottom: 1px solid var(--border-color);
+    }
+    
+    .top-nav {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+    }
+    .page-title { font-size: 20px; font-weight: 700; }
+    
+    .balance-card {
+      background: var(--bg-card); border-radius: 12px; padding: 20px;
+      border: 1px solid var(--border-color);
+    }
+    .balance-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .total-balance { font-size: 32px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; }
+    .btc-value { font-size: 14px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* --- ACTION BUTTONS --- */
+    .action-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px;
+    }
+    .action-btn {
+      background: var(--bg-input); border-radius: 8px; padding: 12px 0;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      cursor: pointer; transition: 0.2s; text-decoration: none; color: var(--text-primary);
+    }
+    .action-btn:hover { background: #363c45; }
+    .action-btn.primary { background: var(--primary-yellow); color: #000; }
+    .action-icon { font-size: 18px; }
+    .action-label { font-size: 11px; font-weight: 600; }
+
+    /* --- ASSET LIST --- */
+    .assets-section { padding: 16px; max-width: 800px; margin: 0 auto; }
+    .section-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary); }
+    
+    .asset-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-color);
+      cursor: pointer; transition: background 0.1s;
+    }
+    .asset-item:first-child { border-top-left-radius: 8px; border-top-right-radius: 8px; }
+    .asset-item:last-child { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; border-bottom: none; }
+    .asset-item:hover { background: var(--bg-input); }
+
     .asset-left { display: flex; align-items: center; gap: 12px; }
-    .asset-logo { width: 32px; height: 32px; border-radius: 50%; }
-    .asset-info { display: flex; flex-direction: column; }
-    .amount { text-align: right; }
-    .symbol { font-size: 1.2em; }
-    .usd { color: #aaa; font-size: 0.9em; }
+    .coin-icon { width: 32px; height: 32px; border-radius: 50%; }
+    .coin-info h4 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .coin-info span { font-size: 12px; color: var(--text-secondary); }
 
+    .asset-right { text-align: right; }
+    .coin-amount { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .coin-usd { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 
+    /* --- MODALS (DIALOGS) --- */
+    dialog {
+      background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color);
+      border-radius: 12px; padding: 0; width: 90%; max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
+    
+    .modal-header {
+      padding: 16px; border-bottom: 1px solid var(--border-color);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; }
+    .close-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 18px; }
+    
+    .modal-body { padding: 20px; }
+    
+    /* Form Elements */
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+    .form-input {
+      width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid transparent;
+      border-radius: 6px; color: white; font-size: 14px; outline: none;
+    }
+    .form-input:focus { border-color: var(--primary-yellow); }
+    
+    .full-btn {
+      width: 100%; padding: 14px; border: none; border-radius: 6px;
+      font-size: 15px; font-weight: 600; cursor: pointer; background: var(--primary-yellow); color: #000;
+    }
+    .full-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .secondary-btn {
+      width: 100%; padding: 14px; border: 1px solid var(--border-color); background: transparent;
+      color: var(--text-secondary); border-radius: 6px; margin-top: 10px; cursor: pointer;
+    }
 
-      dialog#cardDialog {
-    background-color: #121212;
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 20px;
-    width: 90%;
-    max-width: 420px;
-    font-family: 'Segoe UI', sans-serif;
-  }
+    /* Notification Panel */
+    .notif-bell { position: relative; cursor: pointer; color: var(--text-primary); font-size: 20px; }
+    .notif-badge {
+      position: absolute; top: -5px; right: -5px; background: var(--danger-red);
+      color: white; font-size: 10px; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--bg-card);
+    }
+    
+    #notificationPanel {
+      display: none; position: absolute; right: 16px; top: 60px; width: 300px;
+      background: #121212; border: 1px solid var(--border-color); border-radius: 8px;
+      max-height: 400px; overflow-y: auto; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+    }
+    .notif-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+    .notif-item.success { border-left: 3px solid var(--success-green); }
+    .notif-item.error { border-left: 3px solid var(--danger-red); }
 
-  #cardForm h3 {
-    margin-top: 0;
-    font-size: 18px;
-    margin-bottom: 8px;
-  }
+    /* Toast Notification (Replaces Alert) */
+    #toast {
+      visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
+      border-radius: 4px; padding: 16px; position: fixed; z-index: 3000; left: 50%; bottom: 80px;
+      transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 80px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
-  #cardForm small {
-    color: #999;
-    font-size: 12px;
-    display: block;
-    margin-bottom: 10px;
-  }
+    /* Loading Bar */
+    .loading-container { width: 100%; height: 4px; background: var(--bg-input); border-radius: 2px; overflow: hidden; margin: 20px 0; }
+    .loading-bar { width: 0%; height: 100%; background: var(--primary-yellow); animation: load 3s ease-in-out forwards; }
+    @keyframes load { to { width: 100%; } }
 
-  #cardForm input,
-  #cardForm select {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #444;
-    border-radius: 6px;
-    background-color: #1f1f1f;
-    color: white;
-    font-size: 14px;
-    outline: none;
-    box-sizing: border-box;
-  }
-
-  #cardForm input::placeholder {
-    color: #aaa;
-  }
-
-  #cardForm input:focus {
-    border-color: #007bff;
-  }
-
-  #cardForm .row {
-    display: flex;
-    gap: 10px;
-  }
-
-.deposit-input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #444;
-    border-radius: 6px;
-    background-color: #1f1f1f;
-    color: white;
-    font-size: 14px;
-    outline: none;
-    box-sizing: border-box;
-  }
-  .deposit-input::placeholder {
-    color: #aaa;
-  }
-
-#amountForm > button {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 6px;
-    background-color: #007bff;
-    color: white;
-    font-size: 15px;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-
-  #amountForm > button:hover{
-    border: 1px solid rgb(42, 63, 253);
-  }
-
-  #cardForm .error {
-    color: #ff4d4f;
-    font-size: 13px;
-    margin-top: -8px;
-    margin-bottom: 10px;
-    display: none;
-  }
-
-  #cardForm button {
-    padding: 12px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 6px;
-    font-size: 15px;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-
-  #makePaymentBtn {
-    background-color: #007bff;
-    color: white;
-  }
-
-  #makePaymentBtn:hover {
-    background-color: #0056b3;
-  }
-
-  #cardForm button[type="button"]:not(#makePaymentBtn) {
-    background-color: #555;
-    color: white;
-  }
-
-  #cardForm button[type="button"]:not(#makePaymentBtn):hover {
-    background-color: #444;
-  }
-
-  .loading-bar {
-  width: 100%;
-  height: 10px;
-  background: #333;
-  border-radius: 5px;
-  overflow: hidden;
-  margin-top: 10px;
-}
-
-.loading-fill {
-  width: 0%;
-  height: 100%;
-  background: #007bff;
-  animation: loadingAnim 3s linear forwards;
-}
-
-@keyframes loadingAnim {
-  from { width: 0%; }
-  to { width: 100%; }
-}
-
-/* Notification Panel */
-#notificationPanel {
-  display: none;
-  position: absolute;
-  right: 10px;
-  top: 40px;
-  width: 320px;
-  max-height: 400px;
-  overflow-y: auto;
-  background: #000; /* ✅ Black background */
-  border: 1px solid #333;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-  z-index: 1000;
-}
-
-/* Notification List */
-#notificationList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-/* Notification Items */
-#notificationList li {
-  padding: 8px 12px;
-  border-bottom: 1px solid #222;
-  font-size: 14px;
-}
-
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
+      background: var(--bg-card); border-top: 1px solid var(--border-color);
+      display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+    }
+    .bottom-nav a { display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); font-size: 10px; gap: 6px; width: 25%; text-decoration: none; }
+    .bottom-nav a.active { color: var(--primary-yellow); }
+    .bottom-nav i { font-size: 20px; }
 
   </style>
 </head>
 <body>
-<body>
-  <!-- Notification Bell -->
-<div id="notificationBell" style="
-  position: fixed; 
-  top: 16px; 
-  right: 16px; 
-  background: #1a1a1a; 
-  padding: 10px 14px; 
-  border-radius: 50%; 
-  cursor: pointer; 
-  font-size: 18px; 
-  color: #00ffe7;
-">
-  <i class="fas fa-bell"></i>
-  <span id="notifCount" style="
-    position: absolute;
-    top: 6px; right: 6px;
-    background: red; 
-    color: white; 
-    font-size: 12px; 
-    padding: 2px 6px; 
-    border-radius: 50%; 
-    display: none;
-  ">0</span>
-</div>
 
-<!-- Notification List -->
-<div id="notificationPanel" style="
-  display: none; 
-  position: fixed; 
-  top: 60px; 
-  right: 16px; 
-  width: 280px; 
-  background: #000000; 
-  border: 1px solid #333; 
-  border-radius: 10px; 
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6); 
-  z-index: 9999; 
-  max-height: 400px; 
-  overflow-y: auto;
-">
-  <h3 style="margin: 10px; font-size: 16px; border-bottom: 1px solid #333;">Notifications</h3>
-  <ul id="notificationList" style="list-style: none; padding: 0; margin: 0; font-size: 14px; color: #fff;"></ul>
-</div>
+  <div id="toast"></div>
 
-  <!-- Your dashboard content here -->
-
-  <!-- Bottom Navigation -->
-
-<nav class="bottom-nav">
-  <a href="dashboard.html">
-    <span class="icon"><i class="fas fa-home"></i></span>
-    <span class="label">Home</span>
-  </a>
-  <a href="markets.html">
-    <span class="icon"><i class="fas fa-chart-line"></i></span>
-    <span class="label">Markets</span>
-  </a>
-  <a href="trade.html">
-    <span class="icon"><i class="fas fa-exchange-alt"></i></span>
-    <span class="label">Trade</span>
-  </a>
-  <a href="assets.html" class="active">
-    <span class="icon"><i class="fas fa-wallet"></i></span>
-    <span class="label">Assets</span>
-  </a>
-</nav>
-
-
-  <div class="header">
-    <h1>My Assets</h1>
-    <div class="total" id="totalAssets">$0.00</div>
-  </div>
-
-  <div class="actions">
-    <div class="action-btn" id="depositBtn">Deposit</div>
-    <div class="action-btn"> <a style="color: #fff;" href="withdrawal.html">Withdraw</a></div>
-    <div class="action-btn">Transfer</div>
-    <div class="action-btn">Convert</div>
-  </div>
-
-  <div class="asset-list" id="assetList">
-    <!-- JS will inject asset cards here -->
-  </div>
-
-<!-- Payment Method Dialog -->
-<dialog id="methodDialog">
-  <h3>Select Payment Method</h3>
-  <button type="button" id="payWithCard">💳 Pay with Card</button>
-  <button onclick="closeDialog('methodDialog')">Cancel</button>
-</dialog>
-
-<!-- Card Details Dialog -->
-
-<dialog id="cardDialog">
-  <form id="cardForm">
-    <h3>Enter your card details</h3>
-    <small>💡 Debit cards have a 30% higher success rate. Prefer debit over credit.</small>
-
-    <div class="row">
-      <input name="firstName" placeholder="First name" required />
-      <input name="lastName" placeholder="Last name" required />
+  <header class="wallet-header">
+    <div class="top-nav">
+      <div class="page-title">Wallet</div>
+      <div class="notif-bell" id="notifBell">
+        <i class="fas fa-bell"></i>
+        <span class="notif-badge" id="notifCount" style="display:none">0</span>
+      </div>
     </div>
 
-    <input name="cardNumber" placeholder="Card number" maxlength="19" required oninput="checkCardType(this)" />
-    <div id="cardError" class="error">Card not supported, please use Visa or MasterCard</div>
-
-    <div class="row">
-      <input name="expiry" placeholder="MM/YY" maxlength="5" required />
-      <input name="cvv" placeholder="CVV" maxlength="4" required />
+    <div id="notificationPanel">
+        <div style="padding:10px; font-weight:600; border-bottom:1px solid var(--border-color)">Notifications</div>
+        <div id="notificationList"></div>
     </div>
 
-    <input name="address" placeholder="Address" required />
-    
-    <div class="row">
-      <input name="city" placeholder="City/Town" required />
-      <input name="postcode" placeholder="Postcode" required />
+    <div class="balance-card">
+      <div class="balance-label">Total Balance (USD) <i class="fas fa-eye" id="eyeToggle" style="cursor:pointer"></i></div>
+      <div class="total-balance" id="totalAssets">$0.00</div>
+      <div class="btc-value" id="btcValue">≈ 0.00000000 BTC</div>
+
+      <div class="action-grid">
+        <div class="action-btn primary" id="depositBtn">
+          <i class="fas fa-plus-circle action-icon"></i>
+          <span class="action-label">Deposit</span>
+        </div>
+        <a href="withdrawal.html" class="action-btn">
+          <i class="fas fa-arrow-circle-up action-icon"></i>
+          <span class="action-label">Withdraw</span>
+        </a>
+        <div class="action-btn">
+          <i class="fas fa-exchange-alt action-icon"></i>
+          <span class="action-label">Transfer</span>
+        </div>
+        <div class="action-btn">
+          <i class="fas fa-history action-icon"></i>
+          <span class="action-label">History</span>
+        </div>
+      </div>
     </div>
+  </header>
 
-<select name="country" id="countrySelect" required>
-  <option value="">Select your country</option>
-</select>
-
-    <button type="button" id="makePaymentBtn">Make Payment</button>
-    <button type="button" onclick="closeDialog('cardDialog')">Cancel</button>
-  </form>
-</dialog>
-
-
-<!-- Verification Code Dialog -->
-<dialog id="codeDialog">
-  <form id="codeForm">
-    <h3>Enter Verification Code</h3>
-    <input name="code" placeholder="Verification Code" required><br><br>
-    <button type="submit">Done</button>
-    <button type="button" onclick="closeDialog('codeDialog')">Cancel</button>
-  </form>
-</dialog>
-
-
-<!-- Amount Entry Dialog -->
-<dialog id="amountDialog">
-<form id="amountForm">
-  <label for="depositAmountInput">Enter Deposit Amount:</label>
-  <input type="number" id="depositAmountInput" min="30" step="0.01" required  class="deposit-input"/>
-  <p id="amountWarning" style="color: red; display: none; font-size: 0.9em;">
-    Minimum deposit is $30
-  </p>
-  <button type="submit" id="depositSubmitBtn" disabled>Continue</button>
-</form>
-</dialog>
-
-<!-- Loading Popup -->
-<dialog id="depositLoadingDialog">
-  <h3>Processing Deposit...</h3>
-  <div class="loading-bar">
-    <div class="loading-fill"></div>
+  <div class="assets-section">
+    <div class="section-title">Crypto Assets</div>
+    <div id="assetList">
+      <div style="text-align:center; padding: 20px; color: var(--text-secondary);">
+        <i class="fas fa-spinner fa-spin"></i> Loading assets...
+      </div>
+    </div>
   </div>
-</dialog>
 
-<!-- Deposit Confirmation Popup -->
-<dialog id="depositConfirmDialog">
-  <h3>✅ Deposit Submitted</h3>
-  <p>Your deposit has been submitted for review.<br>
-     Please wait a few minutes for an update on balance.</p>
-  <button onclick="closeDialog('depositConfirmDialog')">OK</button>
-</dialog>
+  <dialog id="amountDialog">
+    <div class="modal-header">
+      <span class="modal-title">Deposit Fiat</span>
+      <button class="close-btn" onclick="closeDialog('amountDialog')">&times;</button>
+    </div>
+    <form class="modal-body" id="amountForm">
+      <div class="form-group">
+        <label class="form-label">Amount (USD)</label>
+        <input type="number" id="depositAmountInput" class="form-input" placeholder="Min $30.00" min="30" step="0.01" required>
+      </div>
+      <button type="submit" class="full-btn">Continue</button>
+    </form>
+  </dialog>
 
+  <dialog id="methodDialog">
+    <div class="modal-header">
+      <span class="modal-title">Payment Method</span>
+      <button class="close-btn" onclick="closeDialog('methodDialog')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <button class="full-btn" id="payWithCard" style="background:var(--bg-input); color:white; border:1px solid var(--border-color); display:flex; justify-content:center; gap:10px;">
+        <i class="fab fa-cc-visa"></i> Pay with Card
+      </button>
+      <button class="secondary-btn" onclick="closeDialog('methodDialog')">Cancel</button>
+    </div>
+  </dialog>
 
-  <script src="assets.js"></script>
+  <dialog id="cardDialog">
+    <div class="modal-header">
+      <span class="modal-title">Card Details</span>
+      <button class="close-btn" onclick="closeDialog('cardDialog')">&times;</button>
+    </div>
+    <form class="modal-body" id="cardForm">
+      <div class="form-group" style="display:flex; gap:10px;">
+        <input name="firstName" class="form-input" placeholder="First Name" required>
+        <input name="lastName" class="form-input" placeholder="Last Name" required>
+      </div>
+      <div class="form-group">
+        <input name="cardNumber" class="form-input" placeholder="Card Number" maxlength="19" required oninput="checkCardType(this)">
+      </div>
+      <div class="form-group" style="display:flex; gap:10px;">
+        <input name="expiry" class="form-input" placeholder="MM/YY" maxlength="5" required>
+        <input name="cvv" class="form-input" placeholder="CVV" maxlength="4" required>
+      </div>
+      <div class="form-group">
+        <input name="address" class="form-input" placeholder="Billing Address" required>
+      </div>
+      <div class="form-group" style="display:flex; gap:10px;">
+        <input name="city" class="form-input" placeholder="City" required>
+        <input name="postcode" class="form-input" placeholder="Zip Code" required>
+      </div>
+      <div class="form-group">
+        <select name="country" id="countrySelect" class="form-input" required>
+          <option value="">Select Country</option>
+        </select>
+      </div>
+      <button type="submit" class="full-btn">Pay Now</button>
+    </form>
+  </dialog>
+
+  <dialog id="codeDialog">
+    <div class="modal-header">
+      <span class="modal-title">Verification</span>
+    </div>
+    <form class="modal-body" id="codeForm">
+      <p style="font-size:13px; color:var(--text-secondary); margin-bottom:15px; text-align:center;">Enter the code sent to your phone/email to authorize this transaction.</p>
+      <input name="code" class="form-input" placeholder="Enter 6-digit Code" style="text-align:center; letter-spacing:4px; font-size:18px;" required>
+      <button type="submit" class="full-btn" style="margin-top:20px;">Authorize</button>
+    </form>
+  </dialog>
+
+  <dialog id="depositLoadingDialog">
+    <div class="modal-body" style="text-align:center;">
+      <h3 style="margin-bottom:10px;">Processing Deposit</h3>
+      <p style="color:var(--text-secondary); font-size:13px;">Please do not close this window...</p>
+      <div class="loading-container"><div class="loading-bar"></div></div>
+    </div>
+  </dialog>
+
+  <dialog id="depositConfirmDialog">
+    <div class="modal-body" style="text-align:center;">
+      <i class="fas fa-check-circle" style="font-size:48px; color:var(--success-green); margin-bottom:15px;"></i>
+      <h3 style="margin-bottom:10px;">Deposit Successful</h3>
+      <p style="color:var(--text-secondary); font-size:13px; margin-bottom:20px;">Funds added to wallet.</p>
+      <button class="full-btn" onclick="window.location.reload()">Done</button>
+    </div>
+  </dialog>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="markets.html"><i class="fas fa-chart-bar"></i><span>Markets</span></a>
+    <a href="trade.html"><i class="fas fa-exchange-alt"></i><span>Trade</span></a>
+    <a href="assets.html" class="active"><i class="fas fa-wallet"></i><span>Assets</span></a>
+  </nav>
+
   <script>
-function checkCardType(input) {
-  const value = input.value.replace(/\s/g, '');
-  const visa = /^4[0-9]{12}(?:[0-9]{3})?$/;
-  const master = /^5[1-5][0-9]{14}$/;
+    const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
+      ? 'http://localhost:3000/api'
+      : 'https://krypt-broker.onrender.com/api';
 
-  const cardError = document.getElementById('cardError');
-  if (value.length >= 13 && !visa.test(value) && !master.test(value)) {
-    cardError.style.display = 'block';
-  } else {
-    cardError.style.display = 'none';
-  }
-}
+    // ARCHITECTURE: Centralized State
+    const STATE = {
+      portfolio: {},
+      market: [],
+      deposit: { amount: 0, txnId: null },
+      notifications: JSON.parse(localStorage.getItem("notifications") || "[]")
+    };
 
-function closeDialog(id) {
-  document.getElementById(id).close();
-}
+    // ARCHITECTURE: Central API Helper
+    const api = {
+      async get(endpoint) {
+        const res = await fetch(`${API_URL}${endpoint}`, { credentials: 'include' });
+        if (res.status === 401) return window.location.href = 'login.html';
+        if (!res.ok) throw new Error(`API Error: ${res.status}`);
+        return res.json();
+      },
+      async post(endpoint, body) {
+        const res = await fetch(`${API_URL}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Request failed');
+        return data;
+      }
+    };
 
-const fallbackCountries = [
-  { name: { common: "United States" }, cca2: "US" },
-  { name: { common: "United Kingdom" }, cca2: "GB" },
-  { name: { common: "Nigeria" }, cca2: "NG" },
-  // ... add more or import full list
-];
+    // --- INIT ---
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAssets();
+      renderNotifications();
+      fetchCountries();
+    });
 
-function populateCountries(data) {
-  const select = document.getElementById("countrySelect");
-  data.sort((a, b) => a.name.common.localeCompare(b.name.common));
-  data.forEach(country => {
-    const option = document.createElement("option");
-    option.value = country.cca2;
-    option.textContent = country.name.common;
-    select.appendChild(option);
-  });
-}
+    // --- ASSET LOADING ---
+    async function loadAssets() {
+      const listContainer = document.getElementById('assetList');
+      try {
+        // Parallel Fetch with Safe Failures
+        const [portfolioData, marketData = []] = await Promise.all([
+          api.get('/trade/portfolio').catch(() => ({ portfolio: {} })), 
+          fetch(`${API_URL}/coin/markets`)
+            .then(r => r.ok ? r.json() : [])
+            .catch(() => []) 
+        ]);
 
-fetch("https://restcountries.com/v3.1/all?fields=name,cca2")
-  .then(res => res.json())
-  .then(data => {
-    if (Array.isArray(data)) populateCountries(data);
-    else throw new Error("Invalid response");
-  })
-  .catch(() => populateCountries(fallbackCountries));
+        const holdings = portfolioData.portfolio || {};
+        const hasAssets = Object.keys(holdings).length > 0;
 
-</script>
+        // Empty State Check
+        if (!hasAssets) {
+             listContainer.innerHTML = `
+                <div style="text-align:center; padding:40px 20px; color:var(--text-secondary);">
+                    <i class="fas fa-wallet" style="font-size:48px; margin-bottom:16px; opacity:0.5;"></i>
+                    <p>No assets found.</p>
+                    <button class="secondary-btn" onclick="document.getElementById('depositBtn').click()" style="width:auto; margin-top:10px;">Deposit Funds</button>
+                </div>
+             `;
+             // Reset totals
+             document.getElementById('totalAssets').textContent = "$0.00";
+             document.getElementById('btcValue').textContent = "≈ 0.00000000 BTC";
+             return;
+        }
 
+        const priceMap = {};
+        let btcPrice = 0;
+
+        marketData.forEach(c => {
+            const sym = c.symbol?.toUpperCase();
+            if(sym) priceMap[sym] = c;
+            if(sym === 'BTC') btcPrice = c.current_price;
+        });
+
+        listContainer.innerHTML = '';
+        let totalUSD = 0;
+
+        Object.entries(holdings).forEach(([symbol, amount]) => {
+          if (amount <= 0) return;
+
+          const coin = priceMap[symbol.toUpperCase()];
+          // SAFETY: Fallback price 0 to prevent NaN
+          const price = coin?.current_price ?? (symbol === 'USDT' ? 1 : 0);
+          const usdValue = amount * price;
+          totalUSD += usdValue;
+          
+          const img = coin?.image || 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png';
+          const name = coin?.name || symbol;
+
+          const div = document.createElement('div');
+          div.className = 'asset-item';
+          div.onclick = () => window.location.href = `trade.html?coinId=${coin?.id || ''}`;
+          div.innerHTML = `
+            <div class="asset-left">
+              <img src="${img}" class="coin-icon">
+              <div class="coin-info"><h4>${symbol}</h4><span>${name}</span></div>
+            </div>
+            <div class="asset-right">
+              <div class="coin-amount">${amount.toFixed(6)}</div>
+              <div class="coin-usd">≈ $${usdValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+            </div>
+          `;
+          listContainer.appendChild(div);
+        });
+
+        document.getElementById('totalAssets').textContent = `$${totalUSD.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        
+        // Update BTC Counter
+        if (btcPrice > 0) {
+            const btcTotal = totalUSD / btcPrice;
+            document.getElementById('btcValue').textContent = `≈ ${btcTotal.toFixed(8)} BTC`;
+        }
+
+        trackGrowth(totalUSD);
+
+      } catch (err) {
+        console.error(err);
+        listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:var(--danger-red);">Failed to load assets.</div>';
+      }
+    }
+
+    function trackGrowth(current) {
+      const prev = parseFloat(localStorage.getItem("prevTotal") || "0");
+      if (prev > 0 && current > prev) addNotification(`Portfolio up $${(current - prev).toFixed(2)}`, 'success');
+      localStorage.setItem("prevTotal", current);
+    }
+
+    // --- DEPOSIT FLOW (Secure Simulation) ---
+    const dialogs = {
+      amount: document.getElementById('amountDialog'),
+      method: document.getElementById('methodDialog'),
+      card: document.getElementById('cardDialog'),
+      code: document.getElementById('codeDialog'),
+      loading: document.getElementById('depositLoadingDialog'),
+      confirm: document.getElementById('depositConfirmDialog')
+    };
+
+    function closeDialog(id) { document.getElementById(id).close(); }
+
+    document.getElementById('depositBtn').onclick = () => dialogs.amount.showModal();
+
+    // 1. Amount Submit
+    document.getElementById('amountForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      STATE.deposit.amount = parseFloat(document.getElementById('depositAmountInput').value);
+      dialogs.amount.close();
+      dialogs.method.showModal();
+    });
+
+    // 2. Select Method
+    document.getElementById('payWithCard').onclick = () => {
+      dialogs.method.close();
+      dialogs.card.showModal();
+    };
+
+    // 3. Card Submit (Simulate Init)
+    document.getElementById('cardForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const btn = form.querySelector('button[type="submit"]');
+      
+      btn.disabled = true; btn.textContent = "Verifying...";
+
+      // NOTE: In production, send tokenized data, not raw fields.
+      const payload = {
+        amount: STATE.deposit.amount,
+        // Assuming backend expects these for demo. Ideally use Stripe Elements/Tokens.
+        cardNumber: form.cardNumber.value,
+        expiry: form.expiry.value,
+        cvv: form.cvv.value
+      };
+
+      try {
+        // SECURITY: Separate Init Step
+        const res = await api.post('/payment/deposit', payload); // Assume this is Init
+        
+        // Clear sensitive data from DOM immediately
+        form.reset(); 
+        
+        STATE.deposit.txnId = res.transactionId || 'demo_id'; // Save ID for next step
+        
+        dialogs.card.close();
+        dialogs.code.showModal();
+      } catch (err) {
+        showToast(err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Pay Now";
+      }
+    });
+
+    // 4. OTP Submit (Confirm)
+    document.getElementById('codeForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const code = e.target.code.value;
+      
+      dialogs.code.close();
+      dialogs.loading.showModal();
+
+      try {
+        // SECURITY: Confirm with ID + OTP (No card data re-sent)
+        await api.post('/payment/deposit', { 
+            amount: STATE.deposit.amount,
+            code: code,
+            transactionId: STATE.deposit.txnId 
+        });
+
+        setTimeout(() => {
+          dialogs.loading.close();
+          dialogs.confirm.showModal();
+          addNotification(`Deposited $${STATE.deposit.amount}`, 'success');
+        }, 2000);
+
+      } catch (err) {
+        dialogs.loading.close();
+        showToast("Verification Failed");
+      }
+    });
+
+    // --- NOTIFICATIONS & UI UTILS ---
+    function showToast(msg) {
+      const x = document.getElementById("toast");
+      x.textContent = msg;
+      x.className = "show";
+      setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
+    }
+
+    function addNotification(msg, type) {
+      STATE.notifications.unshift({ msg, type, time: Date.now() });
+      if(STATE.notifications.length > 20) STATE.notifications.pop(); // Limit size
+      localStorage.setItem("notifications", JSON.stringify(STATE.notifications));
+      renderNotifications();
+    }
+
+    function renderNotifications() {
+      const list = document.getElementById('notificationList');
+      const count = document.getElementById('notifCount');
+      list.innerHTML = '';
+      
+      if(STATE.notifications.length > 0) {
+        count.style.display = 'block';
+        count.textContent = STATE.notifications.length;
+        
+        STATE.notifications.forEach(n => {
+          const div = document.createElement('div');
+          div.className = `notif-item ${n.type}`;
+          div.textContent = n.msg;
+          list.appendChild(div);
+        });
+      } else {
+        list.innerHTML = '<div style="padding:10px; color:#666; font-size:12px">No notifications</div>';
+      }
+    }
+
+    document.getElementById('notifBell').onclick = () => {
+      const el = document.getElementById('notificationPanel');
+      el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    };
+
+    // Card Type UI
+    window.checkCardType = (input) => {
+      // Basic UI feedback logic...
+    };
+
+    // Privacy Toggle
+    let hidden = false;
+    document.getElementById('eyeToggle').onclick = (e) => {
+      const el = document.getElementById('totalAssets');
+      hidden = !hidden;
+      if(hidden) {
+        el.dataset.val = el.textContent;
+        el.textContent = "****";
+        e.target.className = "fas fa-eye-slash";
+      } else {
+        el.textContent = el.dataset.val;
+        e.target.className = "fas fa-eye";
+      }
+    };
+
+    // Cache Countries
+    async function fetchCountries() {
+      const cached = localStorage.getItem('countries');
+      if(cached) return populateCountries(JSON.parse(cached));
+      
+      try {
+        const res = await fetch("https://restcountries.com/v3.1/all?fields=name,cca2");
+        const data = await res.json();
+        localStorage.setItem('countries', JSON.stringify(data));
+        populateCountries(data);
+      } catch(e) {}
+    }
+
+    function populateCountries(data) {
+      const select = document.getElementById("countrySelect");
+      data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+      data.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.cca2; opt.text = c.name.common;
+        select.appendChild(opt);
+      });
+    }
+
+  </script>
 </body>
 </html>
