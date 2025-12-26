@@ -1,321 +1,337 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fiat Withdrawal</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Fiat Withdrawal - ProTrade</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
   <style>
-    body {
-      background: #000;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
+    :root {
+      --bg-body: #121212;
+      --bg-card: #1E2329;
+      --bg-input: #2B3139;
+      --border-color: #2B3139;
+      --primary-yellow: #F7A600;
+      --text-primary: #EAECEF;
+      --text-secondary: #848E9C;
+      --success-green: #2EBD85;
+      --danger-red: #F6465D;
+      --font-main: 'IBM Plex Sans', sans-serif;
     }
 
-    .header {
-      display: flex;
-      align-items: center;
-      padding: 15px;
-      font-size: 18px;
-      font-weight: bold;
-      border-bottom: 1px solid #222;
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: var(--font-main); background-color: var(--bg-body); color: var(--text-primary); padding-bottom: 80px; }
+
+    /* --- HEADER --- */
+    .page-header {
+      background: var(--bg-card); padding: 16px; border-bottom: 1px solid var(--border-color);
+      display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100;
+    }
+    .page-title { font-size: 18px; font-weight: 600; }
+    .back-btn { color: var(--text-secondary); font-size: 18px; cursor: pointer; border: none; background: none; }
+
+    /* --- CONTENT --- */
+    .content-wrapper { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+    /* Withdrawal Card */
+    .withdraw-card {
+      background: var(--bg-card); border-radius: 12px; padding: 20px;
+      border: 1px solid var(--border-color); margin-bottom: 20px;
+    }
+    .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600; }
+
+    /* Input Group */
+    .input-wrapper {
+      background: var(--bg-input); border-radius: 8px; padding: 12px 16px;
+      display: flex; align-items: center; border: 1px solid transparent; transition: border-color 0.2s;
+    }
+    .input-wrapper:focus-within { border-color: var(--primary-yellow); }
+    
+    .amount-input {
+      flex: 1; background: transparent; border: none; color: white;
+      font-size: 18px; font-weight: 600; outline: none; font-family: inherit; /* Consistent font */
+    }
+    /* Hide number arrows */
+    .amount-input::-webkit-outer-spin-button, .amount-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .amount-input { -moz-appearance: textfield; }
+
+    .currency-tag { font-size: 14px; color: var(--text-secondary); margin-right: 10px; }
+    
+    .max-btn {
+      color: var(--primary-yellow); font-size: 12px; font-weight: 700;
+      cursor: pointer; padding: 4px 8px; border-radius: 4px; background: rgba(247, 166, 0, 0.1);
+      transition: background 0.2s;
+    }
+    .max-btn:hover { background: rgba(247, 166, 0, 0.2); }
+    .max-btn.disabled { opacity: 0.5; cursor: default; }
+
+    .balance-info {
+      font-size: 12px; color: var(--text-secondary); margin-top: 8px; text-align: right;
     }
 
-    .back {
-      margin-right: 10px;
-      cursor: pointer;
+    /* Payment Method */
+    .method-item {
+      background: var(--bg-input); border-radius: 8px; padding: 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; border: 1px solid transparent; transition: 0.2s;
+    }
+    .method-item:hover { background: #363c45; }
+    .method-item.selected { border-color: var(--primary-yellow); background: rgba(247, 166, 0, 0.05); }
+
+    .method-left { display: flex; flex-direction: column; gap: 4px; }
+    .method-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .method-desc { font-size: 11px; color: var(--text-secondary); }
+    
+    .badge {
+      background: rgba(46, 189, 133, 0.1); color: var(--success-green);
+      font-size: 10px; padding: 2px 6px; border-radius: 4px; width: fit-content; font-weight: 600;
     }
 
-    .container {
-      padding: 20px;
+    .radio-circle {
+      width: 20px; height: 20px; border: 2px solid var(--text-secondary); border-radius: 50%;
+      position: relative; transition: 0.2s;
+    }
+    .method-item.selected .radio-circle { border-color: var(--primary-yellow); }
+    .method-item.selected .radio-circle::after {
+      content: ''; position: absolute; top: 3px; left: 3px; width: 10px; height: 10px;
+      background: var(--primary-yellow); border-radius: 50%;
     }
 
-    .label {
-      font-size: 14px;
-      color: #aaa;
-      margin-bottom: 8px;
+    /* Submit Button */
+    .submit-btn {
+      width: 100%; padding: 16px; border: none; border-radius: 8px; margin-top: 20px;
+      font-size: 16px; font-weight: 700; cursor: pointer; background: var(--primary-yellow); color: #000;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; background: var(--bg-input); color: var(--text-secondary); }
+    .submit-btn:active { transform: scale(0.98); }
+
+    .footer-note {
+      text-align: center; font-size: 11px; color: var(--text-secondary); margin-top: 20px; padding: 0 20px; line-height: 1.4;
     }
 
-    .input-group {
-      display: flex;
-      align-items: center;
-      background: #111;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 15px;
+    /* --- MODAL --- */
+    dialog {
+      background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color);
+      border-radius: 12px; padding: 24px; width: 90%; max-width: 350px; text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
     }
+    dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
+    
+    .modal-icon { font-size: 40px; color: var(--primary-yellow); margin-bottom: 16px; }
+    .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .modal-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5; }
+    
+    .modal-btn {
+      width: 100%; padding: 12px; border: none; border-radius: 6px;
+      font-size: 14px; font-weight: 600; cursor: pointer; background: var(--bg-input); color: var(--text-primary);
+    }
+    .modal-btn:hover { background: #363c45; }
 
-    .input-group input {
-      flex: 1;
-      background: none;
-      border: none;
-      outline: none;
-      color: #fff;
-      font-size: 16px;
+    /* --- TOAST --- */
+    #toast {
+      visibility: hidden; min-width: 250px; text-align: center; border-radius: 4px; padding: 12px 16px;
+      position: fixed; z-index: 3000; left: 50%; bottom: 90px; transform: translateX(-50%);
+      font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
+    #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+    .toast-error { background-color: var(--danger-red); color: white; }
+    .toast-info { background-color: #333; color: white; }
+    .toast-success { background-color: var(--success-green); color: white; }
 
-    .input-group span {
-      color: #f7931a;
-      margin-left: 10px;
-      cursor: pointer;
-    }
+    @keyframes fadein { from {bottom: 40px; opacity: 0;} to {bottom: 90px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 90px; opacity: 1;} to {bottom: 40px; opacity: 0;} }
 
-    .balance {
-      font-size: 13px;
-      color: #777;
-      margin-bottom: 20px;
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
+      background: var(--bg-card); border-top: 1px solid var(--border-color);
+      display: flex; justify-content: space-around; align-items: center; z-index: 1000;
     }
+    .bottom-nav a { display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); font-size: 10px; gap: 6px; flex: 1; text-decoration: none; }
+    .bottom-nav a.active { color: var(--primary-yellow); }
+    .bottom-nav i { font-size: 20px; }
 
-    .payment-method {
-      background: #111;
-      border-radius: 8px;
-      padding: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      margin-bottom: 20px;
-    }
-
-    .payment-method .details {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .payment-method .title {
-      font-size: 15px;
-      font-weight: bold;
-    }
-
-    .payment-method .subtitle {
-      font-size: 12px;
-      color: #aaa;
-    }
-
-    .payment-method .badge {
-      background: #f7931a;
-      color: #000;
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 5px;
-      margin-top: 5px;
-      width: fit-content;
-    }
-
-    .radio {
-      width: 18px;
-      height: 18px;
-      border: 2px solid #fff;
-      border-radius: 50%;
-      position: relative;
-    }
-
-    .radio.active::after {
-      content: "";
-      width: 10px;
-      height: 10px;
-      background: #f7931a;
-      border-radius: 50%;
-      position: absolute;
-      top: 2px;
-      left: 2px;
-    }
-
-    .btn {
-      background: #444;
-      color: #999;
-      padding: 15px;
-      text-align: center;
-      border-radius: 25px;
-      font-weight: bold;
-      margin: 0 20px 20px 20px;
-      cursor: not-allowed;
-      transition: 0.3s;
-    }
-
-    .btn.active {
-      background: #a56527;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 12px;
-      color: #777;
-      margin-bottom: 20px;
-    }
-
-    /* ✅ Popup Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal-content {
-      background: #111;
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
-      width: 80%;
-      max-width: 400px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
-    }
-
-    .modal-content h2 {
-      margin-bottom: 15px;
-      color: #f7931a;
-    }
-
-    .modal-content button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      background: #a56527;
-      color: #fff;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <a style= "text-decoration: none; color:#fff;" href="assets.html"><span class="back">←</span></a> Fiat Withdrawal
-  </div>
 
-  <div class="container">
-    <div class="label">Withdrawal Amount</div>
-    <div class="input-group">
-      <input type="number" placeholder="5000.00 - 1,200,000.00" id="amountInput">
-      <span>Max</span>
+  <div id="toast"></div>
+
+  <header class="page-header">
+    <a href="assets.html" class="back-btn" aria-label="Back"><i class="fas fa-arrow-left"></i></a>
+    <div class="page-title">Fiat Withdrawal</div>
+    <div style="width: 20px;"></div>
+  </header>
+
+  <div class="content-wrapper">
+    
+    <div class="withdraw-card">
+      <div class="label">Withdrawal Amount</div>
+      <div class="input-wrapper">
+        <span class="currency-tag">USD</span>
+        <input type="number" id="amountInput" class="amount-input" placeholder="0.00" min="0" step="0.01">
+        <span class="max-btn" id="maxBtn">MAX</span>
+      </div>
+      <div class="balance-info">Available: <span id="usdtBalance" style="color:var(--text-primary); font-weight:600">--</span> USDT</div>
     </div>
-    <div class="balance">USDT Balance: <span id="usdtBalance">Loading...</span></div>
 
-    <div class="label">Payment Method</div>
-    <div class="payment-method" onclick="selectPayment(this)">
-      <div class="details">
-        <span class="title">Bank Transfer – Fixed CVU</span>
-        <span class="subtitle">Estimated 15 Minutes</span>
+    <div class="label" style="margin-left: 4px;">Payment Method</div>
+    
+    <div class="method-item" onclick="selectPayment(this)" id="bankMethod">
+      <div class="method-left">
+        <span class="method-title">Bank Transfer (Swift/SEPA)</span>
+        <span class="method-desc">Estimated arrival: 1-3 Business Days</span>
         <span class="badge">Zero Fees</span>
       </div>
-      <div class="radio"></div>
+      <div class="radio-circle"></div>
     </div>
+
+    <button id="continueBtn" class="submit-btn" disabled>Continue</button>
+    
+    <div class="footer-note">
+      <i class="fas fa-shield-alt" style="color:var(--success-green)"></i> Secure withdrawal processing by Luzpay SAS.
+    </div>
+
   </div>
 
-  <!-- Continue Button -->
-  <div class="btn" id="continueBtn">Continue</div>
-  <div class="footer">This service is provided by Luzpay SAS.</div>
+  <dialog id="popupModal">
+    <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+    <div class="modal-title">Withdrawal Notice</div>
+    <p class="modal-desc">
+      For security reasons, withdrawals for new accounts are processed after a mandatory <strong>14-day trading period</strong>.
+    </p>
+    <button class="modal-btn" onclick="document.getElementById('popupModal').close()" autofocus>Understood</button>
+  </dialog>
 
-  <!-- ✅ Popup Modal -->
-  <div class="modal" id="popupModal">
-    <div class="modal-content">
-      <h2>⚠️ Notice</h2>
-      <p>Withdrawal takes place after two weeks of trading.</p>
-      <button onclick="closeModal()">OK</button>
-    </div>
-  </div>
+  <nav class="bottom-nav">
+    <a href="dashboard.html"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="markets.html"><i class="fas fa-chart-bar"></i><span>Markets</span></a>
+    <a href="trade.html"><i class="fas fa-exchange-alt"></i><span>Trade</span></a>
+    <a href="assets.html" class="active"><i class="fas fa-wallet"></i><span>Assets</span></a>
+  </nav>
 
-<script>
-const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
-  ? 'http://localhost:3000/api'
-  : 'https://krypt-broker.onrender.com/api';
+  <script>
+    const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
+      ? 'http://localhost:3000/api'
+      : 'https://krypt-broker.onrender.com/api';
 
-let currentUSDTBalance = 0; 
-let paymentSelected = false;
+    // State
+    const STATE = {
+      balance: 0,
+      selected: false
+    };
 
-function getCachedData(key, ttl = 60000) {
-  const cached = localStorage.getItem(key);
-  if (!cached) return null;
-
-  const { value, expiry } = JSON.parse(cached);
-  if (Date.now() > expiry) {
-    localStorage.removeItem(key);
-    return null;
-  }
-  return value;
-}
-
-function setCachedData(key, value, ttl = 60000) {
-  const expiry = Date.now() + ttl;
-  localStorage.setItem(key, JSON.stringify({ value, expiry }));
-}
-
-function selectPayment(el) {
-  document.querySelectorAll('.radio').forEach(r => r.classList.remove('active'));
-  el.querySelector('.radio').classList.add('active');
-  paymentSelected = true;
-  checkFormValidity();
-}
-
-function submitWithdrawal() {
-  document.getElementById("popupModal").style.display = "flex";
-}
-
-function closeModal() {
-  document.getElementById("popupModal").style.display = "none";
-}
-
-async function loadUSDTBalance() {
-  try {
-    let holdingsData = getCachedData('userPortfolio', 60000);
-
-    if (!holdingsData) {
-      const res = await fetch(`${API_URL}/trade/portfolio`, { credentials: 'include' });
-      const data = await res.json();
-      holdingsData = data.portfolio || data.holdings || {};
-      setCachedData('userPortfolio', holdingsData);
-    }
-
-    currentUSDTBalance = holdingsData['USDT'] || 0;
+    // --- DOM Elements ---
+    const amountInput = document.getElementById('amountInput');
+    const maxBtn = document.getElementById('maxBtn');
     const balanceEl = document.getElementById('usdtBalance');
-    if (balanceEl) {
-      balanceEl.textContent = `${currentUSDTBalance.toFixed(2)} USDT`;
-    }
-  } catch (err) {
-    console.error("❌ Failed to load USDT balance:", err);
-    const balanceEl = document.getElementById('usdtBalance');
-    if (balanceEl) balanceEl.textContent = "Error";
-  }
-}
+    const continueBtn = document.getElementById('continueBtn');
+    const modal = document.getElementById('popupModal');
 
-function checkFormValidity() {
-  const amount = parseFloat(document.getElementById("amountInput").value) || 0;
-  const continueBtn = document.getElementById("continueBtn");
-
-  if (amount > 0 && paymentSelected) {
-    continueBtn.classList.add("active");
-    continueBtn.onclick = submitWithdrawal;
-  } else {
-    continueBtn.classList.remove("active");
-    continueBtn.onclick = null;
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  loadUSDTBalance();
-
-  const maxBtn = document.querySelector(".input-group span");
-  const amountInput = document.getElementById("amountInput");
-
-  if (maxBtn && amountInput) {
-    maxBtn.addEventListener("click", () => {
-      amountInput.value = currentUSDTBalance.toFixed(2);
-      checkFormValidity();
+    // --- INIT ---
+    document.addEventListener('DOMContentLoaded', () => {
+      loadBalance();
     });
-  }
 
-  amountInput.addEventListener("input", checkFormValidity);
-});
-</script>
+    async function loadBalance() {
+      try {
+        const res = await fetch(`${API_URL}/trade/portfolio`, { credentials: 'include' });
+        if(!res.ok) return; 
+        
+        const data = await res.json();
+        STATE.balance = data.portfolio?.USDT || 0;
+        
+        balanceEl.textContent = STATE.balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+        
+        // UX: Disable MAX if 0
+        if(STATE.balance <= 0) {
+            maxBtn.classList.add('disabled');
+            maxBtn.style.pointerEvents = 'none';
+        }
+      } catch (err) {
+        console.error(err);
+        balanceEl.textContent = "0.00";
+      }
+    }
+
+    // --- INTERACTIONS ---
+    
+    window.selectPayment = function(el) {
+      document.querySelectorAll('.method-item').forEach(i => i.classList.remove('selected'));
+      el.classList.add('selected');
+      STATE.selected = true;
+      validateForm();
+    };
+
+    maxBtn.onclick = () => {
+      if(STATE.balance <= 0) return;
+      amountInput.value = STATE.balance.toFixed(2); // Fix: Exact format
+      validateForm();
+    };
+
+    // Prevent negative manual input
+    amountInput.addEventListener('keydown', (e) => {
+        if(e.key === '-' || e.key === 'e') e.preventDefault();
+    });
+
+    amountInput.addEventListener('input', validateForm);
+
+    function validateForm() {
+      const val = parseFloat(amountInput.value) || 0; // Fix: Handle NaN
+      
+      // Basic validity check
+      if (val > 0 && val <= STATE.balance && STATE.selected) {
+        continueBtn.disabled = false;
+      } else {
+        continueBtn.disabled = true;
+      }
+    }
+
+    // Submit Logic (Simulated Async)
+    continueBtn.onclick = async () => {
+      const val = parseFloat(amountInput.value);
+      
+      // Server-side guard logic (Simulated)
+      if (val > STATE.balance) {
+        showToast("Insufficient Balance", "error");
+        return;
+      }
+
+      // UX: Processing state
+      continueBtn.disabled = true;
+      continueBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+      // Simulate network delay
+      setTimeout(() => {
+          // In a real app, this would be the response from the API saying "User restricted"
+          modal.showModal();
+          
+          // Reset button
+          continueBtn.disabled = false;
+          continueBtn.textContent = 'Continue';
+      }, 1000);
+    };
+
+    // Toast Helper
+    function showToast(msg, type = 'info') {
+      const x = document.getElementById("toast");
+      x.textContent = msg;
+      
+      // Fix: Use classes instead of inline styles
+      x.className = `show toast-${type}`;
+      
+      setTimeout(() => { 
+          x.className = x.className.replace("show", ""); 
+      }, 3000);
+    }
+
+  </script>
 </body>
 </html>
-
