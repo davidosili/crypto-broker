@@ -2,218 +2,127 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register - Crypto Broker</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    /* Full-page dark gradient background */
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #0a0a0f, #101020, #1a1a2f);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-      color: #fff;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-    }
-
-    /* Title Section */
-    .welcome {
-      margin-bottom: 25px;
-    }
-
-    .welcome h2 {
-      margin: 0;
-      font-weight: 600;
-      font-size: 28px;
-      color: #fff;
-    }
-
-    .welcome p {
-      font-size: 14px;
-      color: #aaa;
-      margin-top: 5px;
-    }
-
-    /* Input Fields */
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 15px;
-    }
-
-    .input-group input {
-      background: #1c1c2b;
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 14px;
-      color: #fff;
-      font-size: 15px;
-      outline: none;
-      transition: 0.3s;
-    }
-
-    .input-group input:focus {
-      border-color: #6a5acd;
-      background: #23233b;
-    }
-
-    /* Gradient Register Button */
-    .btn {
-      width: 100%;
-      padding: 14px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      color: white;
-      background: linear-gradient(90deg, #6a5acd, #9b59b6);
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .btn:hover {
-      filter: brightness(1.2);
-      transform: translateY(-2px);
-    }
-
-    /* Terms Checkbox */
-    .terms {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: #aaa;
-      margin: 12px 0;
-      justify-content: flex-start;
-    }
-
-    .terms input {
-      width: 16px;
-      height: 16px;
-    }
-
-    /* Social Sign-Up Buttons */
-    .social-login {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .social-login button {
-      flex: 1;
-      padding: 12px;
-      border: 1px solid #333;
-      border-radius: 12px;
-      background: #1c1c2b;
-      color: white;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: 0.3s;
-    }
-
-    .social-login button:hover {
-      background: #2c2c3b;
-    }
-
-    /* Footer Links */
-    .footer-text {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #aaa;
-    }
-
-    .footer-text a {
-      color: #9b59b6;
-      text-decoration: none;
-    }
-
-    /* Loading Overlay */
-    #loadingOverlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-
-    .spinner {
-      border: 6px solid rgba(255,255,255,0.2);
-      border-top: 6px solid #9b59b6;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 480px) {
-      .welcome h2 { font-size: 24px; }
-      .input-group input { font-size: 14px; }
-      .btn { font-size: 15px; }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Create Account - Krypt</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="css/auth-style.css">
 </head>
 <body>
 
-  <div class="container">
-    <div class="welcome">
-      <h2>Create Account</h2>
-      <p>Join Crypto Broker and start trading today</p>
-    </div>
+  <div id="toast"></div>
 
-    <form id="registerForm">
-      <div class="input-group">
-        <input type="text" name="username" placeholder="Username" required />
-      </div>
-      <div class="input-group">
-        <input type="email" name="email" placeholder="Email" required />
-      </div>
-      <div class="input-group">
-        <input type="password" name="password" placeholder="Password" required />
+  <div class="auth-container">
+    
+    <div class="auth-panel left-panel">
+      <div class="auth-header">
+        <a href="index.html" class="logo">
+          <img src="logo.svg" alt="Krypt" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+          <span class="logo-text">Krypt</span>
+        </a>
       </div>
 
-      <label class="terms">
-        <input type="checkbox" required /> I agree to the <a href="#">Terms & Conditions</a>
-      </label>
+      <div class="form-wrapper">
+        <div class="text-block">
+          <h1>Create your account</h1>
+          <p>Join 2M+ traders on the world's most secure crypto exchange.</p>
+        </div>
 
-      <button class="btn" type="submit">Sign Up</button>
-    </form>
+        <form id="registerForm" autocomplete="off">
+          
+          <div class="input-group">
+            <input type="text" id="username" name="username" required placeholder=" " autocomplete="off">
+            <label for="username">Username</label>
+            <i class="fas fa-user input-icon"></i>
+          </div>
 
-    <div class="social-login">
-      <button id="googleLogin"><img src="https://www.svgrepo.com/show/303108/google-icon-logo.svg" width="18" alt="google"> Google</button>
-      <button><img src="https://www.svgrepo.com/show/475647/facebook-color.svg" width="18" alt="facebook"> Facebook</button>
+          <div class="input-group">
+            <input type="email" id="email" name="email" required placeholder=" " autocomplete="off">
+            <label for="email">Email Address</label>
+            <i class="fas fa-envelope input-icon"></i>
+          </div>
+
+          <div class="input-group">
+            <input type="password" id="password" name="password" required placeholder=" " autocomplete="new-password">
+            <label for="password">Password</label>
+            <i class="fas fa-lock input-icon"></i>
+            <i class="fas fa-eye toggle-password" id="togglePassword"></i>
+          </div>
+
+          <div class="password-strength">
+            <div class="strength-bar"><div id="strengthFill"></div></div>
+            <span id="strengthText">Password strength</span>
+          </div>
+
+          <div class="terms-group">
+            <label class="custom-checkbox">
+              <input type="checkbox" required>
+              <span class="checkmark"></span>
+              <span class="label-text">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn-primary" id="submitBtn">
+            <span>Create Account</span>
+            <div class="loader" id="btnLoader"></div>
+          </button>
+
+        </form>
+
+        <div class="divider">
+          <span>Or continue with</span>
+        </div>
+
+        <div class="social-login">
+          <button class="social-btn">
+            <img src="https://www.svgrepo.com/show/303108/google-icon-logo.svg" alt="Google">
+            Google
+          </button>
+          <button class="social-btn">
+            <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook">
+            Facebook
+          </button>
+        </div>
+
+        <div class="auth-footer">
+          Already have an account? <a href="login.html" class="highlight-link">Log in</a>
+        </div>
+      </div>
     </div>
 
-    <div class="footer-text">
-      Already have an account? <a href="login.html">Login</a>
+    <div class="auth-panel right-panel">
+      <div class="glass-card visual-content">
+        <div class="visual-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h2>Bank-Grade Security</h2>
+        <p>Your assets are protected by cold storage and multi-signature technology. Trade with peace of mind.</p>
+        
+        <div class="stats-row">
+          <div class="stat">
+            <strong>2M+</strong>
+            <span>Users</span>
+          </div>
+          <div class="stat">
+            <strong>$350M</strong>
+            <span>Volume</span>
+          </div>
+          <div class="stat">
+            <strong>< 50ms</strong>
+            <span>Latency</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glow-sphere"></div>
     </div>
+
   </div>
-
-  <!-- Loading Spinner -->
-  <div id="loadingOverlay"><div class="spinner"></div></div>
 
   <script src="js/auth.js"></script>
 </body>
