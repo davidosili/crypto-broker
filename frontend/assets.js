@@ -1,4 +1,4 @@
-const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
+/*const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
   ? 'http://localhost:3000/api'
   : 'https://krypt-broker.onrender.com/api';
 
@@ -308,4 +308,4 @@ document.getElementById("notificationBell").onclick = () => {
 document.addEventListener("DOMContentLoaded", () => {
   renderNotifications();
   loadAssets();
-});
+});*/
