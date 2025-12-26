@@ -55,7 +55,7 @@
     
     .amount-input {
       flex: 1; background: transparent; border: none; color: white;
-      font-size: 18px; font-weight: 600; outline: none; font-family: inherit; /* Consistent font */
+      font-size: 18px; font-weight: 600; outline: none; font-family: inherit;
     }
     /* Hide number arrows */
     .amount-input::-webkit-outer-spin-button, .amount-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -116,11 +116,25 @@
       text-align: center; font-size: 11px; color: var(--text-secondary); margin-top: 20px; padding: 0 20px; line-height: 1.4;
     }
 
-    /* --- MODAL --- */
+    /* --- MODAL (CENTERED) --- */
     dialog {
-      background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color);
-      border-radius: 12px; padding: 24px; width: 90%; max-width: 350px; text-align: center;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      /* Force Center Position */
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin: 0; /* Override default auto margins */
+      
+      background: var(--bg-card); 
+      color: var(--text-primary); 
+      border: 1px solid var(--border-color);
+      border-radius: 12px; 
+      padding: 24px; 
+      width: 90%; 
+      max-width: 350px; 
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+      z-index: 2000;
     }
     dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
     
@@ -250,7 +264,6 @@
         
         balanceEl.textContent = STATE.balance.toLocaleString('en-US', {minimumFractionDigits: 2});
         
-        // UX: Disable MAX if 0
         if(STATE.balance <= 0) {
             maxBtn.classList.add('disabled');
             maxBtn.style.pointerEvents = 'none';
@@ -272,11 +285,10 @@
 
     maxBtn.onclick = () => {
       if(STATE.balance <= 0) return;
-      amountInput.value = STATE.balance.toFixed(2); // Fix: Exact format
+      amountInput.value = STATE.balance.toFixed(2);
       validateForm();
     };
 
-    // Prevent negative manual input
     amountInput.addEventListener('keydown', (e) => {
         if(e.key === '-' || e.key === 'e') e.preventDefault();
     });
@@ -284,9 +296,7 @@
     amountInput.addEventListener('input', validateForm);
 
     function validateForm() {
-      const val = parseFloat(amountInput.value) || 0; // Fix: Handle NaN
-      
-      // Basic validity check
+      const val = parseFloat(amountInput.value) || 0;
       if (val > 0 && val <= STATE.balance && STATE.selected) {
         continueBtn.disabled = false;
       } else {
@@ -294,42 +304,29 @@
       }
     }
 
-    // Submit Logic (Simulated Async)
     continueBtn.onclick = async () => {
       const val = parseFloat(amountInput.value);
       
-      // Server-side guard logic (Simulated)
       if (val > STATE.balance) {
         showToast("Insufficient Balance", "error");
         return;
       }
 
-      // UX: Processing state
       continueBtn.disabled = true;
       continueBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
-      // Simulate network delay
       setTimeout(() => {
-          // In a real app, this would be the response from the API saying "User restricted"
           modal.showModal();
-          
-          // Reset button
           continueBtn.disabled = false;
           continueBtn.textContent = 'Continue';
       }, 1000);
     };
 
-    // Toast Helper
     function showToast(msg, type = 'info') {
       const x = document.getElementById("toast");
       x.textContent = msg;
-      
-      // Fix: Use classes instead of inline styles
       x.className = `show toast-${type}`;
-      
-      setTimeout(() => { 
-          x.className = x.className.replace("show", ""); 
-      }, 3000);
+      setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
     }
 
   </script>
