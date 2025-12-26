@@ -2,69 +2,195 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Copy Trading Strategy</title>
-  <link rel="stylesheet" href="/frontend/css/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Create Strategy - ProTrade</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
   <style>
-    body {
-      background: #0e0e0e;
-      color: white;
-      font-family: sans-serif;
-      padding: 20px;
+    :root {
+      --bg-body: #121212;
+      --bg-card: #1E2329;
+      --bg-input: #2B3139;
+      --border-color: #2B3139;
+      --primary-yellow: #F7A600;
+      --text-primary: #EAECEF;
+      --text-secondary: #848E9C;
+      --success-green: #2EBD85;
+      --danger-red: #F6465D;
+      --font-main: 'IBM Plex Sans', sans-serif;
     }
-    .box {
-      background: #1e1e1e;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: var(--font-main); background-color: var(--bg-body); color: var(--text-primary); padding-bottom: 80px; }
+
+    /* --- HEADER --- */
+    .page-header {
+      background: var(--bg-card); padding: 16px; border-bottom: 1px solid var(--border-color);
+      display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100;
     }
-    input, select {
-      padding: 8px;
-      border-radius: 6px;
-      margin: 5px 0;
-      width: 100%;
-      border: none;
+    .page-title { font-size: 18px; font-weight: 600; }
+    .back-btn { color: var(--text-secondary); font-size: 18px; cursor: pointer; border: none; background: none; }
+
+    /* --- CONTENT --- */
+    .content-wrapper { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+    /* Allocation Card */
+    .strategy-card {
+      background: var(--bg-card); border-radius: 12px; padding: 20px;
+      border: 1px solid var(--border-color); margin-bottom: 20px;
     }
-    button {
-      padding: 10px 20px;
-      margin-top: 10px;
-      background: orange;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .card-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
+    
+    /* Rows */
+    .alloc-rows { display: flex; flex-direction: column; gap: 12px; }
+    .alloc-row {
+      display: flex; gap: 10px; align-items: center;
+      animation: slideIn 0.2s ease-out;
     }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Inputs */
+    .input-group { flex: 1; position: relative; }
+    .form-input {
+      width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid transparent;
+      border-radius: 6px; color: white; font-size: 14px; outline: none; transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--primary-yellow); }
+    .form-input.error { border-color: var(--danger-red); background: rgba(246, 70, 93, 0.05); }
+    
+    .symbol-input { text-transform: uppercase; font-weight: 600; }
+    .remove-btn {
+      color: var(--danger-red); background: rgba(246, 70, 93, 0.1); border: none;
+      width: 36px; height: 36px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .remove-btn:hover { background: rgba(246, 70, 93, 0.2); }
+
+    /* Total Section */
+    .total-section {
+      margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .total-label { font-size: 12px; color: var(--text-secondary); }
+    .total-value { font-size: 18px; font-weight: 700; color: var(--success-green); }
+
+    /* Actions */
+    .add-btn {
+      width: 100%; padding: 12px; background: var(--bg-input); border: 1px dashed var(--text-secondary);
+      color: var(--text-secondary); border-radius: 8px; margin-top: 15px; cursor: pointer; font-size: 13px; font-weight: 600;
+      transition: 0.2s;
+    }
+    .add-btn:hover { border-color: var(--primary-yellow); color: var(--primary-yellow); background: rgba(247, 166, 0, 0.05); }
+
+    .submit-btn {
+      width: 100%; padding: 16px; border: none; border-radius: 8px; margin-top: 20px;
+      font-size: 16px; font-weight: 700; cursor: pointer; background: var(--primary-yellow); color: #000;
+      transition: opacity 0.2s;
+    }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; background: var(--bg-input); color: var(--text-secondary); }
+
+    /* --- RESULT MODAL --- */
+    dialog {
+      background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color);
+      border-radius: 12px; padding: 20px; width: 90%; max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
+    
+    .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; text-align: center; }
+    .code-box {
+      background: var(--bg-input); padding: 15px; border-radius: 8px; text-align: center;
+      font-family: monospace; font-size: 20px; letter-spacing: 2px; margin: 20px 0; border: 1px solid var(--border-color);
+      color: var(--primary-yellow); user-select: all;
+    }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-btn { flex: 1; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+    .btn-copy { background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); }
+    .btn-done { background: var(--success-green); color: #fff; }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
+      background: var(--bg-card); border-top: 1px solid var(--border-color);
+      display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+    }
+    .bottom-nav a { display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); font-size: 10px; gap: 6px; width: 25%; text-decoration: none; }
+    .bottom-nav a.active { color: var(--primary-yellow); }
+    .bottom-nav i { font-size: 20px; }
+    
+    /* Toast */
+    #toast {
+      visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
+      border-radius: 4px; padding: 12px 16px; position: fixed; z-index: 3000; left: 50%; bottom: 90px;
+      transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+    @keyframes fadein { from {bottom: 40px; opacity: 0;} to {bottom: 90px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 90px; opacity: 1;} to {bottom: 40px; opacity: 0;} }
+
   </style>
 </head>
 <body>
-  <nav class="bottom-nav">
-  <a href="dashboard.html" class="active">
-    <span class="icon"><i class="fas fa-home"></i></span>
-    <span class="label">Home</span>
-  </a>
-  <a href="markets.html">
-    <span class="icon"><i class="fas fa-chart-line"></i></span>
-    <span class="label">Markets</span>
-  </a>
-  <a href="trade.html">
-    <span class="icon"><i class="fas fa-exchange-alt"></i></span>
-    <span class="label">Trade</span>
-  </a>
-  <a href="assets.html">
-    <span class="icon"><i class="fas fa-wallet"></i></span>
-    <span class="label">Assets</span>
-  </a>
-</nav>
 
-  <h2>Create a Copy Trading Strategy</h2>
-  <div class="box">
-    <div id="allocations"></div>
-    <button id="addRowBtn">➕ Add Coin</button>
-    <button id="submitStrategy">🚀 Create Strategy</button>
+  <div id="toast" role="alert" aria-live="assertive"></div>
+
+  <header class="page-header">
+    <button class="back-btn" onclick="window.history.back()" aria-label="Go back">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="page-title">Create Strategy</div>
+    <div style="width: 20px;"></div>
+  </header>
+
+  <div class="content-wrapper">
+    
+    <div class="strategy-card">
+      <div class="card-header">
+        <div class="card-title">Portfolio Allocation</div>
+        <div style="font-size:12px; color:var(--text-secondary)">Add assets & amounts</div>
+      </div>
+
+      <div id="allocations" class="alloc-rows"></div>
+
+      <button id="addRowBtn" class="add-btn" aria-label="Add new asset row">
+        <i class="fas fa-plus"></i> Add Another Asset
+      </button>
+
+      <div class="total-section" aria-live="polite">
+        <div class="total-label">Total Required Investment</div>
+        <div class="total-value" id="totalDisplay">$0.00</div>
+      </div>
+    </div>
+
+    <button id="submitStrategy" class="submit-btn" disabled>
+      <i class="fas fa-rocket"></i> Create Strategy
+    </button>
+
   </div>
 
-  <div id="result" class="box"></div>
+  <dialog id="resultModal">
+    <div class="modal-title">Strategy Created!</div>
+    <p style="text-align:center; color:var(--text-secondary); font-size:13px; margin:0;">Share this code with others to let them copy your trades.</p>
+    
+    <div class="code-box" id="strategyCode">--</div>
+    
+    <div class="modal-actions">
+      <button class="modal-btn btn-copy" onclick="copyCode()" aria-label="Copy strategy link">Copy Link</button>
+      <button class="modal-btn btn-done" onclick="window.location.href='copytrade.html?code=' + document.getElementById('strategyCode').innerText">View</button>
+    </div>
+  </dialog>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html" class="active"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="markets.html"><i class="fas fa-chart-bar"></i><span>Markets</span></a>
+    <a href="trade.html"><i class="fas fa-exchange-alt"></i><span>Trade</span></a>
+    <a href="assets.html"><i class="fas fa-wallet"></i><span>Assets</span></a>
+  </nav>
 
   <script src="js/create-strategy.js"></script>
 </body>
