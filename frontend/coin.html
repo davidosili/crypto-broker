@@ -1,527 +1,558 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coin Details - Crypto Broker</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Trade - ProTrade</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="css/style.css">
+  
   <style>
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: #0d0d0d;
-      color: #ffffff;
-      min-height: 100vh;
-      padding: 20px;
+    :root {
+      --bg-body: #121212;
+      --bg-card: #1E2329;
+      --bg-input: #2B3139;
+      --border-color: #2B3139;
+      --primary-yellow: #F7A600;
+      --text-primary: #EAECEF;
+      --text-secondary: #848E9C;
+      --success-green: #2EBD85;
+      --danger-red: #F6465D;
+      --font-main: 'IBM Plex Sans', sans-serif;
     }
 
-    h2, h3, h4 { margin-top: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: var(--font-main); background-color: var(--bg-body); color: var(--text-primary); padding-bottom: 80px; }
 
-    .container {
+    /* --- TICKER STRIP --- */
+    .ticker-strip {
+      background: var(--bg-card); padding: 10px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 1000;
+    }
+    .ticker-pair { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .ticker-price { font-size: 18px; font-weight: 600; color: var(--success-green); }
+    .ticker-stats { font-size: 11px; color: var(--text-secondary); display: flex; gap: 15px; margin-top: 4px; }
+    .stat-item span { color: var(--text-primary); }
+
+    /* --- LAYOUT GRID --- */
+    .trade-grid {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 20px;
+      grid-template-columns: 1fr 320px;
+      gap: 1px;
+      max-width: 1200px; margin: 0 auto;
     }
+    @media (max-width: 900px) { .trade-grid { grid-template-columns: 1fr; } }
 
-    .card {
-      background: #404041;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-      margin-bottom: 20px;
+    /* --- CHART SECTION --- */
+    .chart-panel {
+      background: var(--bg-body); height: 450px; position: relative;
+      border-right: 1px solid var(--border-color);
     }
-
-    .highlight {
-      color: #4cafef;
+    .timeframe-toolbar {
+      display: flex; gap: 10px; padding: 10px 16px;
+      border-bottom: 1px solid var(--border-color); background: var(--bg-card);
     }
-
-    #coinPrice {
-      font-size: 24px;
-      font-weight: 600;
-      margin: 5px 0;
+    .tf-btn {
+      background: none; border: none; color: var(--text-secondary);
+      font-size: 12px; font-weight: 600; cursor: pointer;
     }
+    .tf-btn.active { color: var(--text-primary); }
+    .canvas-wrapper { height: 380px; width: 100%; position: relative; }
 
-    .price-changes span {
-      margin: 0 6px;
-      font-weight: 500;
+    /* --- ORDER PANEL --- */
+    .order-panel {
+      background: var(--bg-card); padding: 16px; display: flex; flex-direction: column; gap: 16px;
     }
-
-    .price-up { color: #4caf50; }
-    .price-down { color: #ff5252; }
-
-    /* Chart */
-    .chart-wrapper {
-      height: 300px;
-      position: relative;
+    .order-tabs { display: flex; background: var(--bg-input); border-radius: 4px; padding: 2px; }
+    .order-tab {
+      flex: 1; text-align: center; padding: 10px; font-size: 14px; font-weight: 600;
+      cursor: pointer; color: var(--text-secondary); border-radius: 2px;
     }
+    .order-tab.buy.active { background: var(--success-green); color: white; }
+    .order-tab.sell.active { background: var(--danger-red); color: white; }
 
-    canvas {
-      max-width: 100%;
+    .input-group { position: relative; margin-bottom: 12px; }
+    .input-group label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+    .market-badge { background: var(--bg-body); padding: 2px 4px; border-radius: 2px; font-size: 10px; border: 1px solid var(--border-color); }
+    
+    .input-field {
+      width: 100%; background: var(--bg-input); border: 1px solid transparent;
+      padding: 12px; color: white; font-size: 14px; border-radius: 4px;
+      text-align: right; font-family: monospace;
     }
+    .input-field:focus { outline: none; border-color: var(--primary-yellow); }
+    .input-field:disabled { opacity: 0.6; cursor: not-allowed; }
+    .suffix { position: absolute; right: 12px; top: 32px; font-size: 12px; color: var(--text-secondary); }
 
-    /* Trade box */
-    .trade-box input,
-    .trade-box button,
-    select {
-      margin: 5px 0;
-      padding: 10px;
-      width: 100%;
-      border-radius: 8px;
-      border: none;
-      outline: none;
+    .percent-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .pct-btn {
+      flex: 1; background: var(--bg-input); border: none; color: var(--text-secondary);
+      font-size: 11px; padding: 6px; border-radius: 2px; cursor: pointer;
     }
+    .pct-btn:hover { background: #363c45; }
 
-    .trade-box input {
-      background: #11111a;
-      color: #fff;
+    .order-summary { font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .fee-display { color: var(--text-secondary); font-size: 11px; text-align: right; margin-bottom: 12px; }
+
+    .order-btn {
+      width: 100%; padding: 14px; border: none; border-radius: 4px;
+      font-size: 16px; font-weight: 700; cursor: pointer; color: white;
+      transition: opacity 0.2s;
     }
+    .order-btn.buy { background: var(--success-green); }
+    .order-btn.sell { background: var(--danger-red); }
+    .order-btn:active { opacity: 0.8; }
+    .order-btn:disabled { background: var(--bg-input); color: var(--text-secondary); cursor: not-allowed; }
 
-    .trade-box button {
-      background: linear-gradient(90deg, #6a5acd, #9b59b6);
-      color: white;
-      cursor: pointer;
-      font-weight: 500;
-      transition: 0.3s;
+    .balance-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+
+    /* --- INFO SECTION --- */
+    .info-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 16px;
+      background: var(--bg-card); margin-top: 1px; border-top: 1px solid var(--border-color);
     }
+    .info-item h4 { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+    .info-item p { font-size: 14px; font-weight: 500; }
 
-    .trade-box button:hover {
-      filter: brightness(1.2);
-      transform: translateY(-2px);
+    /* --- BOTTOM NAV --- */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
+      background: var(--bg-card); border-top: 1px solid var(--border-color);
+      display: flex; justify-content: space-around; align-items: center;
+      z-index: 1000; padding-bottom: 5px;
     }
+    .bottom-nav a { display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); font-size: 10px; gap: 6px; width: 25%; }
+    .bottom-nav a.active { color: var(--primary-yellow); }
+    .bottom-nav i { font-size: 20px; }
 
-    /* Table */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
+    #chartLoader {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(18,18,18,0.8); display: flex; justify-content: center; align-items: center;
+      z-index: 5; color: var(--text-secondary); font-size: 12px;
     }
-
-    th, td {
-      padding: 8px;
-      border-bottom: 1px solid #2a2a3d;
-      text-align: left;
-    }
-
-    th { color: #bbb; }
-
-    /* Responsive */
-    @media (max-width: 900px) {
-      .container {
-        grid-template-columns: 1fr;
-      }
-    }
+    .msg-box { text-align: center; font-size: 12px; margin-top: 10px; display: none; padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.2); }
   </style>
 </head>
 <body>
 
-  <body>
-  <!-- Your dashboard content here -->
-
-  <!-- Bottom Navigation -->
-<nav class="bottom-nav">
-  <a href="dashboard.html" class="active">
-    <span class="icon"><i class="fas fa-home"></i></span>
-    <span class="label">Home</span>
-  </a>
-  <a href="markets.html">
-    <span class="icon"><i class="fas fa-chart-line"></i></span>
-    <span class="label">Markets</span>
-  </a>
-  <a href="trade.html">
-    <span class="icon"><i class="fas fa-exchange-alt"></i></span>
-    <span class="label">Trade</span>
-  </a>
-  <a href="assets.html">
-    <span class="icon"><i class="fas fa-wallet"></i></span>
-    <span class="label">Assets</span>
-  </a>
-</nav>
-
-
-
-  <h2 id="coinTitle">Loading coin...</h2>
-
-  <div class="container">
-    <!-- Left Column: Price & Chart -->
+  <div class="ticker-strip">
     <div>
-    <div class="card chart-wrapper">
-      <canvas id="priceChart"></canvas>
-      <div id="loadingIndicator" style="text-align:center; margin-top:10px; display:none;">
-        <p>🔄 Loading chart...</p>
+      <div class="ticker-pair">
+        <span id="coinSymbol">--</span>/USDT
+        <span class="ticker-price" id="headerPrice">--</span>
+      </div>
+      <div class="ticker-stats">
+        <div>24h Chg <span id="headerChange">--</span></div>
+        <div>24h Vol <span id="headerVol">--</span></div>
       </div>
     </div>
-      <div class="card">
-        <p id="coinPrice">Price: --</p>
-        <div class="price-changes">
-          1h: <span id="change1h">--</span> | 
-          24h: <span id="change24h">--</span> | 
-          7d: <span id="change7d">--</span> | 
-          30d: <span id="change30d">--</span>
-        </div>
-        <p id="coinDesc" style="color:#aaa;font-size:14px;">Description loading...</p>
-      </div>
-
-      <div class="card" id="historySection">
-        <h3>📅 Historical Prices (7 Days)</h3>
-        <table>
-          <thead>
-            <tr><th>Date</th><th>Price (USD)</th></tr>
-          </thead>
-          <tbody id="historyTable"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Right Column: Trade & Stats -->
-    <div>
-      <div class="card trade-box">
-        <h3>Trade This Coin</h3>
-        <input type="number" id="usdInput" placeholder="Amount in USD" />
-        <p id="convertedAmount">≈ 0 COIN</p>
-        <p id="warningMsg" style="display:none; color:#ff5252; font-size:14px;"></p>
-        <button onclick="placeTrade('buy')">Buy</button>
-        <button onclick="placeTrade('sell')">Sell</button>
-      </div>
-
-      <div class="card">
-        <h3>🔔 Set Price Alert</h3>
-        <input type="number" id="alertTargetPrice" placeholder="Target price (USD)" />
-        <select id="alertDirection">
-          <option value="above">Above</option>
-          <option value="below">Below</option>
-        </select>
-        <button onclick="setPriceAlert()">✅ Set Alert</button>
-      </div>
-
-      <div class="card" id="coinStats">
-        <h3>📊 Coin Statistics</h3>
-        <p><strong>Market Cap:</strong> <span id="marketCap">--</span></p>
-        <p><strong>24h Volume:</strong> <span id="volume24h">--</span></p>
-        <p><strong>Circulating Supply:</strong> <span id="circSupply">--</span></p>
-        <p><strong>Total Supply:</strong> <span id="totalSupply">--</span></p>
-        <p><strong>Max Supply:</strong> <span id="maxSupply">--</span></p>
-        <h4>🌐 Links</h4>
-        <ul id="infoLinks"></ul>
-        <p><strong>Categories:</strong> <span id="categories">--</span></p>
-        <p><strong>API ID:</strong> <span id="apiId">--</span></p>
-      </div>
-
-      <a href="dashboard.html" style="display:block; margin-top:10px; color:#9b59b6;">⬅ Back to Dashboard</a>
+    <div style="font-size: 20px; color: var(--text-secondary); cursor: pointer;" onclick="window.location.href='dashboard.html'">
+      <i class="fas fa-times"></i>
     </div>
   </div>
+
+  <div class="trade-grid">
+    
+    <div class="chart-panel">
+      <div class="timeframe-toolbar">
+        <button class="tf-btn active" onclick="updateTimeframe('1', this)">1D</button>
+        <button class="tf-btn" onclick="updateTimeframe('7', this)">7D</button>
+        <button class="tf-btn" onclick="updateTimeframe('30', this)">30D</button>
+        <button class="tf-btn" onclick="updateTimeframe('90', this)">3M</button>
+      </div>
+      
+      <div class="canvas-wrapper">
+        <canvas id="priceChart"></canvas>
+        <div id="chartLoader"><i class="fas fa-spinner fa-spin"></i>&nbsp; Loading Chart...</div>
+      </div>
+    </div>
+
+    <div class="order-panel">
+      <div class="order-tabs">
+        <div class="order-tab buy active" onclick="setOrderType('buy')">Buy</div>
+        <div class="order-tab sell" onclick="setOrderType('sell')">Sell</div>
+      </div>
+
+      <div class="balance-row">
+        <span>Avail.</span>
+        <span id="availBalance">-- USDT</span>
+      </div>
+
+      <div class="input-group">
+        <label>
+          <span>Order Price</span>
+          <span class="market-badge">Market</span>
+        </label>
+        <input type="text" class="input-field" value="Best Market Price" disabled>
+      </div>
+
+      <div class="input-group">
+        <label>Order Value</label>
+        <input type="number" id="tradeAmount" class="input-field" placeholder="0.00">
+        <span class="suffix">USDT</span>
+      </div>
+
+      <div class="percent-row">
+        <button class="pct-btn" onclick="setPercent(25)">25%</button>
+        <button class="pct-btn" onclick="setPercent(50)">50%</button>
+        <button class="pct-btn" onclick="setPercent(75)">75%</button>
+        <button class="pct-btn" onclick="setPercent(100)">100%</button>
+      </div>
+
+      <div class="fee-display" id="feeDisplay">Fee (0.1%): 0.00</div>
+
+      <button id="submitBtn" class="order-btn buy" onclick="executeTrade()">Buy Long</button>
+      <div id="tradeMsg" class="msg-box"></div>
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-item">
+      <h4>Market Cap</h4>
+      <p id="statCap">--</p>
+    </div>
+    <div class="info-item">
+      <h4>Circulating Supply</h4>
+      <p id="statSupply">--</p>
+    </div>
+    <div class="info-item">
+      <h4>All Time High</h4>
+      <p id="statATH">--</p>
+    </div>
+    <div class="info-item">
+      <h4>Rank</h4>
+      <p id="statRank">--</p>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html">
+      <i class="fas fa-home"></i><span>Home</span>
+    </a>
+    <a href="markets.html">
+      <i class="fas fa-chart-bar"></i><span>Markets</span>
+    </a>
+    <a href="trade.html" class="active">
+      <i class="fas fa-exchange-alt"></i><span>Trade</span>
+    </a>
+    <a href="assets.html">
+      <i class="fas fa-wallet"></i><span>Assets</span>
+    </a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const API_URL = window.location.hostname.includes('localhost')
-  ? 'http://localhost:3000/api'
-  : 'https://krypt-broker.onrender.com/api';
+    const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
+      ? 'http://localhost:3000/api'
+      : 'https://krypt-broker.onrender.com/api';
+
     const coinId = new URLSearchParams(window.location.search).get('coinId');
     const ctx = document.getElementById('priceChart').getContext('2d');
-    let coinName = '';
-    let currentPrice = 0;
-
-    function getCachedData(key, ttl = 60000) {
-      const cached = localStorage.getItem(key);
-      if (!cached) return null;
-      try {
-        const { data, timestamp } = JSON.parse(cached);
-        return Date.now() - timestamp < ttl ? data : null;
-      } catch {
-        localStorage.removeItem(key);
-        return null;
-      }
-    }
-
-    function setCachedData(key, data) {
-      localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
-    }
-
     
-    async function loadCoinDetails() {
-      if (!coinId) return;
+    // State with Persistence
+    let STATE = {
+      coinData: null,
+      currentPrice: 0,
+      userBalanceUSDT: 0,
+      userBalanceCoin: 0, 
+      orderType: localStorage.getItem('lastOrderType') || 'buy', // 💾 Persistent State
+      chartDays: '1'
+    };
 
-      let data = getCachedData(`coin-${coinId}`);
-      if (!data) {
-        try {
+    let chartInstance;
+    let chartAbortController = null; // 🛑 Race condition controller
+
+    // --- INIT ---
+    async function init() {
+      if (!coinId) { alert("No coin specified"); window.location.href = 'markets.html'; return; }
+      
+      // Initialize UI based on saved state
+      setOrderType(STATE.orderType);
+
+      // 1. Fetch Details First
+      await fetchCoinDetails();
+      
+      // 2. Fetch Balance 
+      await fetchUserBalance();
+      
+      // 3. Load Chart
+      await loadChart(STATE.chartDays);
+      
+      // Auto-refresh price every 30s
+      setInterval(fetchCoinDetails, 30000);
+    }
+
+    // --- 1. FETCH DETAILS ---
+    async function fetchCoinDetails() {
+      try {
+        let data = getCachedData(`coin-${coinId}`, 60000);
+        if (!data) {
           const res = await fetch(`${API_URL}/coin/coin/${coinId}`);
+          if(!res.ok) throw new Error("Coin fetch failed");
           data = await res.json();
           setCachedData(`coin-${coinId}`, data);
-        } catch (err) {
-          console.error('❌ Fetch error:', err);
         }
-      }
 
-      if (!data || !data.symbol || !data.market_data) {
-        document.getElementById('coinTitle').textContent = `❌ Error loading ${coinId}`;
-        document.getElementById('coinPrice').textContent = 'Price: --';
-        document.getElementById('coinDesc').textContent = '⚠️ Could not load description.';
-        return;
-      }
+        STATE.coinData = data;
+        STATE.currentPrice = data.market_data.current_price.usd;
 
-      coinName = data.symbol.toUpperCase();
-      currentPrice = data.market_data.current_price.usd;
-      const description = data.description?.en?.split('. ')[0] || 'No description available.';
+        updateUI(data);
+      } catch (err) { console.error(err); }
+    }
 
-      document.getElementById('coinTitle').textContent = `${data.name} (${coinName})`;
-      document.getElementById('coinPrice').textContent = `Price: $${currentPrice}`;
-      document.getElementById('coinDesc').textContent = description;
-
+    function updateUI(data) {
       const m = data.market_data;
+      const change = typeof m.price_change_percentage_24h === 'number' ? m.price_change_percentage_24h : 0;
+      const isPos = change >= 0;
 
-document.getElementById('marketCap').textContent = `$${m.market_cap.usd.toLocaleString()}`;
-document.getElementById('volume24h').textContent = `$${m.total_volume.usd.toLocaleString()}`;
-document.getElementById('circSupply').textContent = `${m.circulating_supply.toLocaleString()}`;
-document.getElementById('totalSupply').textContent = `${m.total_supply?.toLocaleString() || 'N/A'}`;
-document.getElementById('maxSupply').textContent = `${m.max_supply?.toLocaleString() || 'N/A'}`;
-
-document.getElementById('change1h').textContent = `${m.price_change_percentage_1h_in_currency.usd?.toFixed(2)}%`;
-document.getElementById('change24h').textContent = `${m.price_change_percentage_24h_in_currency.usd?.toFixed(2)}%`;
-document.getElementById('change7d').textContent = `${m.price_change_percentage_7d_in_currency.usd?.toFixed(2)}%`;
-document.getElementById('change30d').textContent = `${m.price_change_percentage_30d_in_currency.usd?.toFixed(2)}%`;
-
-
-// API ID
-document.getElementById('apiId').textContent = data.id;
-
-// Categories
-document.getElementById('categories').textContent = (data.categories || []).join(', ') || 'None';
-
-// Info links
-const links = data.links;
-const infoList = document.getElementById('infoLinks');
-infoList.innerHTML = ''; // clear old
-
-if (links.homepage?.[0]) {
-  infoList.innerHTML += `<li><a href="${links.homepage[0]}" target="_blank">Website</a></li>`;
-}
-(links.blockchain_site || []).slice(0, 3).forEach(link => {
-  if (link) infoList.innerHTML += `<li><a href="${link}" target="_blank">Explorer</a></li>`;
-});
-(links.repos_url?.github || []).forEach(url => {
-  infoList.innerHTML += `<li><a href="${url}" target="_blank">Source Code</a></li>`;
-});
-
-    }
-
-    async function loadChartData() {
-      let data = getCachedData(`chart-${coinId}`);
-      if (!data) {
-        try {
-          const res = await fetch(`${API_URL}/coin/chart/${coinId}?vs_currency=usd&days=1`);
-          data = await res.json();
-          setCachedData(`chart-${coinId}`, data);
-        } catch (err) {
-          console.error('❌ Chart fetch error:', err);
-        }
-      }
-
-      if (!data || !Array.isArray(data.prices)) {
-        const chartContainer = document.getElementById('priceChart').parentElement;
-        chartContainer.innerHTML += `<p style="color:red;">⚠️ Could not load chart data.</p>`;
-        return;
-      }
-
-      const labels = data.prices.map(p => new Date(p[0]).toLocaleTimeString());
-      const prices = data.prices.map(p => p[1]);
-
-      new Chart(ctx, {
-        
-  type: 'line',
-  data: {
-    labels,
-    datasets: [{
-      label: `${coinName} Price (USD)`,
-      data: prices,
-      borderColor: 'white',
-      fill: true,
-      tension: 0.4, // smoother curve
-      borderWidth: 1.5,
-      pointRadius: 0,         // no circles at points
-      pointHoverRadius: 4     // show point on hover
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-scales: {
-  x: {
-    ticks: {
-      display: false, // ✅ Hide X-axis ticks (date labels)
-    },
-    grid: {
-      display: false  // ✅ Optional: hide grid lines too
-    }
-  },
-  y: {
-    beginAtZero: false,
-    ticks: {
-      callback: value => `$${value.toLocaleString()}`,
-      color: 'white'
-    }
-  }
-},
-    plugins: {
-      tooltip: {
-        mode: 'index',
-        intersect: false,
-        callbacks: {
-          label: ctx => `Price: $${ctx.raw.toLocaleString()}`
-        }
-      },
-      legend: {
-        display: true,
-        labels: {
-          color: '#333',
-          font: { size: 14 }
-        }
-      }
-    }
-  }
-  
-});
-const historyBody = document.getElementById('historyTable');
-const dayPrices = data.prices.slice(-7); // last 7 days
-historyBody.innerHTML = '';
-dayPrices.forEach(p => {
-  const date = new Date(p[0]).toLocaleDateString();
-  const price = `$${p[1].toLocaleString()}`;
-  historyBody.innerHTML += `<tr><td>${date}</td><td>${price}</td></tr>`;
-});
-
-
-    }
-
-async function placeTrade(type) {
-  const usdAmount = parseFloat(usdInput.value);
-
-  if (!usdAmount || usdAmount <= 0) return alert('Enter a valid USD amount');
-  if (!currentPrice || !coinName) return alert('Coin data not ready. Try again.');
-
-  // Check live balance for buys
-  if (type === 'buy' && usdAmount > availableUSDT) {
-    alert(`❌ Insufficient USDT balance. You only have $${availableUSDT.toFixed(2)}`);
-    return;
-  }
-
-  const coinAmount = usdAmount / currentPrice;
-
-  try {
-    const res = await fetch(`${API_URL}/trade/place`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        type,
-        coin: coinName,
-        amount: coinAmount,
-        price: currentPrice
-      })
-    });
-
-    const result = await res.json();
-    if (res.ok) {
-      alert(result.message || '✅ Trade successful.');
+      const symbol = data.symbol.toUpperCase();
+      document.getElementById('coinSymbol').textContent = symbol;
+      updateButtonLabel();
       
-      // Update local balance if buy
-      if (type === 'buy') {
-        availableUSDT -= usdAmount;
-      }
+      document.getElementById('headerPrice').textContent = `$${STATE.currentPrice.toLocaleString()}`;
+      document.getElementById('headerPrice').style.color = isPos ? 'var(--success-green)' : 'var(--danger-red)';
+      
+      const changeEl = document.getElementById('headerChange');
+      changeEl.textContent = `${change.toFixed(2)}%`;
+      changeEl.style.color = isPos ? 'var(--success-green)' : 'var(--danger-red)';
+      
+      document.getElementById('headerVol').textContent = `$${(m.total_volume.usd / 1000000).toFixed(1)}M`;
 
-      window.location.href = 'trade.html';
-    } else {
-      alert(result.message || '❌ Trade failed.');
+      document.getElementById('statCap').textContent = `$${(m.market_cap.usd / 1000000000).toFixed(2)}B`;
+      document.getElementById('statSupply').textContent = `${(m.circulating_supply / 1000000).toFixed(1)}M`;
+      document.getElementById('statATH').textContent = `$${m.ath.usd.toLocaleString()}`;
+      document.getElementById('statRank').textContent = `#${data.market_cap_rank}`;
     }
-  } catch (err) {
-    console.error('❌ Trade failed:', err);
-    alert('Trade failed. Please try again later.');
-  }
-}
 
+    // --- 2. USER BALANCE ---
+    async function fetchUserBalance() {
+      try {
+        const res = await fetch(`${API_URL}/trade/portfolio`, { credentials: 'include' });
+        if(!res.ok) return; 
+        const data = await res.json();
+        
+        STATE.userBalanceUSDT = data.portfolio?.USDT || 0;
+        const symbol = STATE.coinData?.symbol?.toUpperCase();
+        STATE.userBalanceCoin = symbol ? (data.portfolio?.[symbol] || 0) : 0;
+        
+        updateBalanceDisplay();
+      } catch (err) { console.warn("Balance fetch failed"); }
+    }
 
-    async function setPriceAlert() {
-      const targetPrice = parseFloat(document.getElementById('alertTargetPrice').value);
-      const direction = document.getElementById('alertDirection').value;
+    function updateBalanceDisplay() {
+      const el = document.getElementById('availBalance');
+      if (STATE.orderType === 'buy') {
+        el.textContent = `${STATE.userBalanceUSDT.toFixed(2)} USDT`;
+      } else {
+        const symbol = STATE.coinData?.symbol?.toUpperCase() || 'Coin';
+        el.textContent = `${STATE.userBalanceCoin.toFixed(6)} ${symbol}`;
+      }
+    }
 
-      if (!targetPrice || !direction) {
-        alert("Please fill out all fields.");
+    // --- 3. CHART LOGIC (With AbortController) ---
+    async function loadChart(days) {
+      if (chartAbortController) chartAbortController.abort(); // 🛑 Cancel previous request
+      chartAbortController = new AbortController();
+
+      document.getElementById('chartLoader').style.display = 'flex';
+      
+      try {
+        const res = await fetch(`${API_URL}/coin/chart/${coinId}?vs_currency=usd&days=${days}`, {
+            signal: chartAbortController.signal
+        });
+        const data = await res.json();
+        
+        if(!data.prices || !data.prices.length) throw new Error("No chart data");
+
+        const prices = data.prices.map(p => p[1]);
+        const labels = data.prices.map(p => {
+            const date = new Date(p[0]);
+            return days === '1' ? date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : date.toLocaleDateString();
+        });
+
+        if (chartInstance) chartInstance.destroy();
+
+        chartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              data: prices,
+              borderColor: '#F7A600',
+              backgroundColor: (context) => {
+                const ctx = context.chart.ctx;
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(247, 166, 0, 0.2)');
+                gradient.addColorStop(1, 'rgba(247, 166, 0, 0)');
+                return gradient;
+              },
+              borderWidth: 2,
+              pointRadius: 0,
+              fill: true,
+              tension: 0.1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { display: false },
+              y: { 
+                 position: 'right',
+                 grid: { color: '#2B3139' },
+                 ticks: { color: '#848E9C', font: {size: 10} }
+              }
+            },
+            interaction: { mode: 'index', intersect: false }
+          }
+        });
+
+      } catch (err) { 
+        if (err.name !== 'AbortError') console.error("Chart error", err); 
+      } finally { 
+        document.getElementById('chartLoader').style.display = 'none'; 
+      }
+    }
+
+    function updateTimeframe(days, btn) {
+      document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      STATE.chartDays = days;
+      loadChart(days);
+    }
+
+    // --- 4. TRADE LOGIC (With Fees) ---
+    function setOrderType(type) {
+      STATE.orderType = type;
+      localStorage.setItem('lastOrderType', type); // 💾 Save Preference
+      
+      const buyTab = document.querySelector('.order-tab.buy');
+      const sellTab = document.querySelector('.order-tab.sell');
+      const btn = document.getElementById('submitBtn');
+      
+      if(type === 'buy') {
+        buyTab.classList.add('active');
+        sellTab.classList.remove('active');
+        btn.className = 'order-btn buy';
+      } else {
+        sellTab.classList.add('active');
+        buyTab.classList.remove('active');
+        btn.className = 'order-btn sell';
+      }
+      
+      updateButtonLabel();
+      updateBalanceDisplay();
+      updateFeeDisplay();
+    }
+
+    function updateButtonLabel() {
+        const symbol = STATE.coinData?.symbol?.toUpperCase() || '';
+        const btn = document.getElementById('submitBtn');
+        btn.textContent = `${STATE.orderType === 'buy' ? 'Buy' : 'Sell'} ${symbol}`;
+    }
+
+    function setPercent(pct) {
+      const input = document.getElementById('tradeAmount');
+      if (STATE.orderType === 'buy') {
+        const amount = (STATE.userBalanceUSDT * pct) / 100;
+        input.value = amount.toFixed(2);
+      } else {
+        const coinVal = (STATE.userBalanceCoin * pct) / 100;
+        const usdVal = coinVal * STATE.currentPrice;
+        input.value = usdVal.toFixed(2);
+      }
+      updateFeeDisplay();
+    }
+
+    // 💰 Fee Calculation (0.1%)
+    document.getElementById('tradeAmount').addEventListener('input', updateFeeDisplay);
+
+    function updateFeeDisplay() {
+        const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
+        const fee = amount * 0.001; // 0.1%
+        const el = document.getElementById('feeDisplay');
+        const symbol = STATE.orderType === 'buy' ? 'USDT' : 'USDT Value';
+        el.textContent = `Fee (0.1%): ${fee.toFixed(4)} ${symbol}`;
+    }
+
+    async function executeTrade() {
+      const usdAmount = parseFloat(document.getElementById('tradeAmount').value);
+      const btn = document.getElementById('submitBtn');
+      
+      if (!usdAmount || usdAmount <= 0) {
+        showMessage("Please enter a valid amount", false);
         return;
       }
+      
+      // Balance Checks
+      if (STATE.orderType === 'buy' && usdAmount > STATE.userBalanceUSDT) {
+         showMessage(`Insufficient USDT. Balance: $${STATE.userBalanceUSDT.toFixed(2)}`, false);
+         return;
+      }
+      
+      const estimatedCoin = usdAmount / STATE.currentPrice;
+      if (STATE.orderType === 'sell' && estimatedCoin > STATE.userBalanceCoin) {
+         showMessage(`Insufficient Coin Balance`, false);
+         return;
+      }
 
-      const res = await fetch(`${API_URL}/alerts`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coinId, targetPrice, direction })
-      });
+      btn.disabled = true;
+      btn.textContent = "Processing...";
 
-      const data = await res.json();
-      if (res.ok) {
-        alert("🔔 Price alert set successfully!");
-      } else {
-        alert(`❌ Failed: ${data.message}`);
+      try {
+        const res = await fetch(`${API_URL}/trade/place`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            type: STATE.orderType,
+            coin: STATE.coinData.symbol.toUpperCase(),
+            amount: estimatedCoin,
+            price: STATE.currentPrice
+          })
+        });
+
+        const result = await res.json();
+        
+        if (res.ok) {
+           showMessage("✅ Order Filled Successfully!", true);
+           fetchUserBalance(); 
+           document.getElementById('tradeAmount').value = '';
+           updateFeeDisplay();
+        } else {
+           showMessage(`❌ ${result.message}`, false);
+        }
+      } catch (err) { console.error(err); showMessage("Network Error", false); }
+      finally {
+         btn.disabled = false;
+         updateButtonLabel();
       }
     }
-let priceChart; // globally scoped
+    
+    function showMessage(msg, isSuccess) {
+        const el = document.getElementById('tradeMsg');
+        el.style.display = 'block';
+        el.style.color = isSuccess ? 'var(--success-green)' : 'var(--danger-red)';
+        el.textContent = msg;
+        setTimeout(() => { el.style.display = 'none'; }, 3000);
+    }
 
+    // --- HELPERS ---
+    function getCachedData(key, ttl) {
+      const cached = localStorage.getItem(key);
+      if (!cached) return null;
+      try { const { data, timestamp } = JSON.parse(cached); return Date.now() - timestamp < ttl ? data : null; } catch { return null; }
+    }
+    function setCachedData(key, data) { localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() })); }
 
-
-      const usdInput = document.getElementById('usdInput');
-  const convertedAmount = document.getElementById('convertedAmount');
-
-usdInput.addEventListener('input', () => {
-  const usd = parseFloat(usdInput.value);
-
-  if (!currentPrice || isNaN(usd) || usd <= 0) {
-    convertedAmount.textContent = `≈ 0 ${coinName}`;
-    warningMsg.style.display = 'none';
-    usdInput.style.background = '#11111a';
-    return;
-  }
-
-  const coins = usd / currentPrice;
-  convertedAmount.textContent = `≈ ${coins.toFixed(6)} ${coinName}`;
-
-  // Check against live USDT balance
-  if (usd > availableUSDT) {
-    usdInput.style.background = '#551111';
-    warningMsg.style.display = 'block';
-    warningMsg.textContent = `⚠️ Insufficient funds: You have only $${availableUSDT.toFixed(2)} USDT`;
-  } else {
-    usdInput.style.background = '#11111a';
-    warningMsg.style.display = 'none';
-  }
-});
-
-
-  let availableUSDT = 0; // Live balance
-
-async function loadUserBalance() {
-  try {
-    const res = await fetch(`${API_URL}/trade/portfolio`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-
-    if (!res.ok) throw new Error('Failed to fetch portfolio');
-
-    const data = await res.json();
-    const portfolio = data.portfolio || {}; // assuming your controller returns { portfolio: { USDT: 100, BTC: 0.02 } }
-
-    availableUSDT = portfolio.USDT || 0;
-
-    console.log('💰 Available USDT:', availableUSDT);
-  } catch (err) {
-    console.error('❌ Error fetching USDT balance:', err);
-  }
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
-  await loadUserBalance(); // Fetch USDT before trading
-  await loadCoinDetails();
-  await loadChartData();
-});
-
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
