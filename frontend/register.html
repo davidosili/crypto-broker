@@ -11,7 +11,447 @@
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   
-  <link rel="stylesheet" href="css/auth-style.css">
+  <style>
+    :root {
+      --bg-dark: #0b0e11;
+      --bg-card: #15181e;
+      --primary: #00ffe7;
+      --primary-hover: #00bfae;
+      --text-main: #ffffff;
+      --text-muted: #848e9c;
+      --border-color: #2b3139;
+      --input-bg: #1e2329;
+      --font-heading: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --danger: #f6465d;
+      --success: #0ecb81;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden; /* Prevent scroll on desktop */
+    }
+
+    /* --- LAYOUT --- */
+    .auth-container {
+      display: flex;
+      height: 100%;
+    }
+
+    .auth-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Left Panel (Form) */
+    .left-panel {
+      background: var(--bg-dark);
+      padding: 40px 60px;
+      max-width: 600px;
+      overflow-y: auto;
+    }
+
+    .auth-header {
+      margin-bottom: 40px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-text {
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .form-wrapper {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .text-block h1 {
+      font-family: var(--font-heading);
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .text-block p {
+      color: var(--text-muted);
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+
+    /* --- INPUTS --- */
+    .input-group {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 16px 16px 16px 45px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .input-group input:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(0, 255, 231, 0.1);
+    }
+
+    /* Floating Label Logic */
+    .input-group label {
+      position: absolute;
+      left: 45px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: 0.3s ease;
+      font-size: 15px;
+    }
+
+    .input-group input:focus + label,
+    .input-group input:not(:placeholder-shown) + label {
+      top: -10px;
+      left: 10px;
+      font-size: 12px;
+      color: var(--primary);
+      background: var(--bg-dark);
+      padding: 0 5px;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      transition: 0.3s;
+    }
+
+    .input-group input:focus ~ .input-icon {
+      color: var(--primary);
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .toggle-password:hover { color: var(--text-main); }
+
+    /* --- PASSWORD STRENGTH --- */
+    .password-strength {
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: none;
+    }
+
+    .strength-bar {
+      height: 4px;
+      background: var(--border-color);
+      border-radius: 2px;
+      margin-bottom: 5px;
+      overflow: hidden;
+    }
+
+    #strengthFill {
+      height: 100%;
+      width: 0;
+      transition: width 0.3s, background 0.3s;
+    }
+
+    /* --- BUTTONS --- */
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 4px 15px rgba(0, 255, 231, 0.3);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .loader {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(0,0,0,0.1);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* --- CHECKBOX --- */
+    .terms-group { margin-bottom: 20px; }
+
+    .custom-checkbox {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-muted);
+      user-select: none;
+    }
+
+    .custom-checkbox input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    .checkmark {
+      height: 18px;
+      width: 18px;
+      min-width: 18px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .custom-checkbox input:checked ~ .checkmark {
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .checkmark:after {
+      content: "";
+      position: absolute;
+      display: none;
+      left: 6px;
+      top: 2px;
+      width: 4px;
+      height: 10px;
+      border: solid black;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .custom-checkbox input:checked ~ .checkmark:after { display: block; }
+
+    .custom-checkbox a { color: var(--primary); text-decoration: none; }
+
+    /* --- SOCIAL & FOOTER --- */
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 30px 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .divider span { padding: 0 15px; }
+
+    .social-login {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .social-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: 500;
+    }
+
+    .social-btn img { width: 20px; }
+
+    .social-btn:hover {
+      border-color: var(--text-muted);
+      background: #252a30;
+    }
+
+    .auth-footer {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .highlight-link {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* --- RIGHT PANEL (VISUALS) --- */
+    .right-panel {
+      background: radial-gradient(circle at bottom right, #1a1e26, #0b0e11);
+      position: relative;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 50px;
+      border-radius: 24px;
+      max-width: 450px;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+
+    .visual-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(0, 255, 231, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: var(--primary);
+      margin-bottom: 25px;
+    }
+
+    .right-panel h2 {
+      font-family: var(--font-heading);
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+
+    .right-panel p {
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 25px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 20px;
+      color: var(--text-main);
+      margin-bottom: 5px;
+    }
+
+    .stat span {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .glow-sphere {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0, 255, 231, 0.15) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* --- TOAST --- */
+    #toast {
+      visibility: hidden;
+      min-width: 250px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 4px;
+      padding: 14px 20px;
+      position: fixed;
+      z-index: 3000;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      font-size: 14px;
+    }
+
+    #toast.show {
+      visibility: visible;
+      animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+
+    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 900px) {
+      .right-panel { display: none; }
+      .left-panel {
+        max-width: 100%;
+        align-items: center;
+        background: radial-gradient(circle at top right, #1a1e26, #0b0e11);
+      }
+      body { overflow: auto; }
+    }
+  </style>
 </head>
 <body>
 
@@ -124,6 +564,97 @@
 
   </div>
 
-  <script src="js/auth.js"></script>
+  <script>
+    const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
+      ? 'http://localhost:3000/api'
+      : 'https://krypt-broker.onrender.com/api';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('registerForm');
+      const passwordInput = document.getElementById('password');
+      const toggleIcon = document.getElementById('togglePassword');
+      const btn = document.getElementById('submitBtn');
+      const loader = document.getElementById('btnLoader');
+      
+      // 1. Password Toggle
+      toggleIcon.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        toggleIcon.classList.toggle('fa-eye');
+        toggleIcon.classList.toggle('fa-eye-slash');
+      });
+
+      // 2. Password Strength Logic
+      passwordInput.addEventListener('input', function() {
+        const strengthSection = document.querySelector('.password-strength');
+        const fill = document.getElementById('strengthFill');
+        const text = document.getElementById('strengthText');
+        const val = this.value;
+        
+        if(val.length > 0) strengthSection.style.display = 'block';
+        else strengthSection.style.display = 'none';
+
+        let score = 0;
+        if(val.length >= 8) score++;
+        if(/[A-Z]/.test(val)) score++;
+        if(/[0-9]/.test(val)) score++;
+        if(/[^A-Za-z0-9]/.test(val)) score++;
+
+        const colors = ['#f6465d', '#f6465d', '#ffa500', '#0ecb81', '#00ffe7'];
+        const widths = ['20%', '40%', '60%', '80%', '100%'];
+        const texts = ['Weak', 'Weak', 'Medium', 'Strong', 'Very Strong'];
+
+        fill.style.width = widths[score];
+        fill.style.backgroundColor = colors[score];
+        text.textContent = texts[score];
+        text.style.color = colors[score];
+      });
+
+      // 3. Form Submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Disable Button
+        btn.disabled = true;
+        loader.style.display = 'inline-block';
+        btn.querySelector('span').style.opacity = '0.5';
+
+        const username = document.getElementById('username').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = passwordInput.value;
+
+        try {
+          const res = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            showToast("✅ Account created! Redirecting...", "success");
+            setTimeout(() => window.location.href = 'dashboard.html', 1500);
+          } else {
+            throw new Error(data.message || 'Registration failed');
+          }
+
+        } catch (err) {
+          showToast("❌ " + err.message, "error");
+          btn.disabled = false;
+          loader.style.display = 'none';
+          btn.querySelector('span').style.opacity = '1';
+        }
+      });
+    });
+
+    function showToast(msg, type) {
+      const x = document.getElementById("toast");
+      x.textContent = msg;
+      x.style.backgroundColor = type === 'error' ? '#f6465d' : '#0ecb81';
+      x.className = "show";
+      setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+    }
+  </script>
 </body>
 </html>
