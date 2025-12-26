@@ -83,17 +83,32 @@
     .coin-amount { font-size: 15px; font-weight: 600; color: var(--text-primary); }
     .coin-usd { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 
-    /* --- MODALS (DIALOGS) --- */
+    /* --- MODALS (DIALOGS) - CENTERED --- */
     dialog {
-      background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color);
-      border-radius: 12px; padding: 0; width: 90%; max-width: 400px;
+      /* Fixed Position for True Centering */
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin: 0; /* Override default auto margins */
+      
+      background: var(--bg-card); 
+      color: var(--text-primary); 
+      border: 1px solid var(--border-color);
+      border-radius: 12px; 
+      padding: 0; 
+      width: 90%; 
+      max-width: 400px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      max-height: 90vh; /* Prevent overflow on small screens */
+      overflow-y: auto;
     }
     dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
     
     .modal-header {
       padding: 16px; border-bottom: 1px solid var(--border-color);
       display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; background: var(--bg-card); z-index: 10;
     }
     .modal-title { font-size: 16px; font-weight: 700; }
     .close-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 18px; }
@@ -135,7 +150,7 @@
     .notif-item.success { border-left: 3px solid var(--success-green); }
     .notif-item.error { border-left: 3px solid var(--danger-red); }
 
-    /* Toast Notification (Replaces Global Alert) */
+    /* Toast Notification */
     #toast {
       visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
       border-radius: 4px; padding: 16px; position: fixed; z-index: 3000; left: 50%; bottom: 80px;
@@ -407,6 +422,7 @@
           if (amount <= 0) return;
 
           const coin = priceMap[symbol.toUpperCase()];
+          // Safety: Fallback price 0
           const price = coin?.current_price ?? (symbol === 'USDT' ? 1 : 0);
           const usdValue = amount * price;
           totalUSD += usdValue;
@@ -612,7 +628,7 @@
       else err.style.display = 'none';
     }
 
-    // REVERTED: Fallback Country List
+    // Fallback Country List
     const fallbackCountries = [
       { name: { common: "United States" }, cca2: "US" },
       { name: { common: "United Kingdom" }, cca2: "GB" },
@@ -664,5 +680,3 @@
   </script>
 </body>
 </html>
-
-
