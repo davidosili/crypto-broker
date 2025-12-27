@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="View live crypto markets, top gainers, losers, and trading volumes on ProTrade.">
   <title>Markets - ProTrade</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   
   <style>
+    /* --- CSS VARIABLES & RESET --- */
     :root {
       --bg-body: #121212;
       --bg-card: #1E2329;
@@ -22,70 +23,105 @@
       --text-secondary: #848E9C;
       --success-green: #2EBD85;
       --danger-red: #F6465D;
+      
+      --header-height: 50px;
+      --bottom-nav-height: 65px;
       --font-main: 'IBM Plex Sans', sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { font-family: var(--font-main); background-color: var(--bg-body); color: var(--text-primary); padding-bottom: 80px; }
-    
+    button { cursor: pointer; border: none; background: none; font-family: inherit; color: inherit; }
+
+    /* --- UTILITY CLASSES --- */
+    .text-secondary { color: var(--text-secondary); font-size: 12px; }
+    .text-primary { color: var(--text-primary); }
+    .font-bold { font-weight: 600; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .mb-xs { margin-bottom: 4px; }
+    .p-16 { padding: 16px; }
+
+    /* Sentiment Colors */
+    .text-bullish { color: var(--success-green); }
+    .text-bearish { color: var(--danger-red); }
+    .text-neutral { color: var(--text-primary); }
+    .bg-bullish { background: var(--success-green); }
+    .bg-bearish { background: var(--danger-red); }
+    .bg-neutral { background: var(--bg-input); }
+
+    /* Flex Columns */
+    .flex-2 { flex: 2; }
+    .flex-1-5 { flex: 1.5; }
+    .flex-1-2 { flex: 1.2; }
+
     /* --- HEADER --- */
     .market-header {
       position: fixed; top: 0; left: 0; right: 0;
-      background: var(--bg-card); height: 50px;
+      background: var(--bg-card); height: var(--header-height);
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 16px; z-index: 1000; border-bottom: 1px solid var(--border-color);
     }
-    .market-header h2 { font-size: 18px; font-weight: 600; }
-    .search-btn { color: var(--text-primary); font-size: 18px; cursor: pointer; }
+    .market-header h2 { font-size: 18px; font-weight: 600; margin: 0; }
+    .search-btn { color: var(--text-primary); font-size: 18px; }
 
-    /* --- CATEGORY TABS --- */
+    /* --- TABS --- */
     .tabs-wrapper {
-      margin-top: 50px;
+      margin-top: var(--header-height);
       background: var(--bg-body);
       padding: 10px 16px;
-      position: sticky; top: 50px; z-index: 900;
+      position: sticky; top: var(--header-height); z-index: 900;
     }
     .tabs-scroll {
-      display: flex; gap: 20px; overflow-x: auto; scrollbar-width: none;
+      display: flex; gap: 20px; overflow-x: auto; 
+      scrollbar-width: none;
     }
+    .tabs-scroll::-webkit-scrollbar { display: none; }
+    
     .tab-item {
-      font-size: 14px; color: var(--text-secondary); white-space: nowrap; font-weight: 500; cursor: pointer; position: relative; padding-bottom: 8px;
+      font-size: 14px; color: var(--text-secondary); white-space: nowrap; font-weight: 500; 
+      position: relative; padding-bottom: 8px;
     }
+    .tab-item:focus { outline: none; color: var(--text-primary); }
     .tab-item.active { color: var(--text-primary); font-weight: 700; }
     .tab-item.active::after {
       content: ''; position: absolute; bottom: 0; left: 0; right: 0;
       height: 3px; background: var(--primary-yellow); border-radius: 2px;
     }
 
-    /* --- MARKET OVERVIEW --- */
+    /* --- OVERVIEW CARD --- */
     .overview-card {
       margin: 10px 16px; padding: 16px;
       background: var(--bg-card); border-radius: 8px;
       display: flex; justify-content: space-between; align-items: center;
     }
-    .sentiment-box div:first-child { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
     .sentiment-text { font-size: 16px; font-weight: 700; }
     
     .sentiment-bars { display: flex; gap: 2px; height: 4px; width: 60px; margin-top: 5px; }
-    .bar { flex: 1; background: var(--bg-input); border-radius: 2px; }
-    .bar.fill-green { background: var(--success-green); }
-    .bar.fill-red { background: var(--danger-red); }
+    .bar { flex: 1; background: var(--bg-input); border-radius: 2px; transition: background 0.3s; }
 
-    /* --- COIN LIST --- */
+    /* --- LIST --- */
     .list-header {
       display: flex; justify-content: space-between; padding: 10px 16px;
       font-size: 12px; color: var(--text-secondary);
     }
-    .coin-list { padding: 0 16px; }
+    .coin-list { padding: 0 16px; min-height: 200px; }
     
+    /* Native Button Styling for Row */
     .coin-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 14px 0; border-bottom: 1px solid var(--border-color); cursor: pointer;
+      width: 100%; padding: 14px 0; border-bottom: 1px solid var(--border-color); 
+      text-align: left; transition: background 0.2s;
     }
-    
+    .coin-row:hover, .coin-row:focus { background: var(--bg-input); outline: none; }
+
     .col-fav { width: 30px; text-align: left; }
     .col-name { flex: 2; display: flex; align-items: center; gap: 10px; }
-    .col-price { flex: 1.5; text-align: right; font-weight: 600; font-size: 15px; }
+    .col-price { flex: 1.5; text-align: right; font-weight: 600; font-size: 15px; color: var(--text-primary); }
     .col-change { flex: 1.2; text-align: right; }
 
     .change-btn {
@@ -99,321 +135,465 @@
     .coin-vol { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
     .coin-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
     
-    /* Favorite Star */
-    .fav-star { font-size: 14px; color: var(--bg-input); transition: color 0.2s; }
+    .fav-star { font-size: 14px; color: var(--bg-input); transition: color 0.2s; padding: 5px; }
+    .fav-star:hover { transform: scale(1.1); }
     .fav-star.active { color: var(--primary-yellow); }
 
-    /* --- SKELETON LOADER --- */
+    /* --- SKELETON --- */
     .skeleton {
+      width: 100%; height: 40px; border-radius: 4px;
       background: linear-gradient(90deg, #1E2329 25%, #2B3139 50%, #1E2329 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 4px;
+      background-size: 200% 100%; animation: shimmer 1.5s infinite;
     }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
+    .empty-state { padding: 40px 20px; text-align: center; color: var(--text-secondary); }
+
     /* --- BOTTOM NAV --- */
     .bottom-nav {
-      position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
+      position: fixed; bottom: 0; left: 0; width: 100%; height: var(--bottom-nav-height);
       background: var(--bg-card); border-top: 1px solid var(--border-color);
       display: flex; justify-content: space-around; align-items: center;
       z-index: 1000; padding-bottom: 5px;
     }
-    .bottom-nav a {
+    .nav-link {
       display: flex; flex-direction: column; align-items: center;
-      color: var(--text-secondary); font-size: 10px; gap: 6px; width: 25%;
+      color: var(--text-secondary); font-size: 10px; gap: 6px; flex: 1; text-decoration: none;
+      transition: color 0.2s;
     }
-    .bottom-nav a.active { color: var(--primary-yellow); }
-    .bottom-nav i { font-size: 20px; }
+    .nav-link:hover, .nav-link:focus { color: var(--text-primary); }
+    .nav-link.active { color: var(--primary-yellow); }
+    .nav-link i { font-size: 20px; }
 
-    /* --- SEARCH MODAL --- */
+    /* --- SEARCH OVERLAY --- */
     #searchOverlay {
       position: fixed; top: 0; left: 0; right: 0; height: 100%;
       background: var(--bg-body); z-index: 2000; padding: 16px;
-      display: none;
     }
-    .search-input-wrapper {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
-    }
+    .search-input-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
     .search-input-wrapper input {
       flex: 1; background: var(--bg-input); border: none; padding: 12px;
-      border-radius: 4px; color: white; font-size: 16px;
+      border-radius: 4px; color: white; font-size: 16px; outline: none;
     }
-    .close-search { color: var(--primary-yellow); font-weight: 600; cursor: pointer; }
-
+    .search-input-wrapper input:focus { outline: 1px solid var(--primary-yellow); }
+    .close-search { color: var(--primary-yellow); font-weight: 600; }
+    
+    .retry-btn { margin-top: 10px; padding: 8px 16px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; transition: 0.2s; }
+    .retry-btn:hover { background: #363c45; }
   </style>
 </head>
 <body>
 
   <header class="market-header">
     <h2>Markets</h2>
-    <i class="fas fa-search search-btn" onclick="toggleSearch(true)"></i>
+    <button class="search-btn" id="openSearchBtn" aria-label="Open Search">
+      <i class="fas fa-search"></i>
+    </button>
   </header>
 
   <div class="tabs-wrapper">
-    <div class="tabs-scroll">
-      <div class="tab-item active" onclick="filterCoins('all', this)">All</div>
-      <div class="tab-item" onclick="filterCoins('favorites', this)">Favorites</div>
-      <div class="tab-item" onclick="filterCoins('gainers', this)">Top Gainers</div>
-      <div class="tab-item" onclick="filterCoins('losers', this)">Top Losers</div>
+    <div class="tabs-scroll" role="tablist" aria-label="Market Categories" id="tabList">
+      <button class="tab-item" id="tab-all" data-filter="all" role="tab" aria-selected="false" tabindex="-1">All</button>
+      <button class="tab-item" id="tab-favorites" data-filter="favorites" role="tab" aria-selected="false" tabindex="-1">Favorites</button>
+      <button class="tab-item" id="tab-gainers" data-filter="gainers" role="tab" aria-selected="false" tabindex="-1">Top Gainers</button>
+      <button class="tab-item" id="tab-losers" data-filter="losers" role="tab" aria-selected="false" tabindex="-1">Top Losers</button>
     </div>
   </div>
 
-  <div class="overview-card">
-    <div class="sentiment-box">
-      <div>Market Sentiment</div>
-      <div class="sentiment-text" id="sentimentText">Neutral</div>
-      <div class="sentiment-bars" id="sentimentBars">
-        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+  <main>
+    <div class="overview-card">
+      <div class="sentiment-box">
+        <div class="text-secondary mb-xs">Market Sentiment</div>
+        <div class="sentiment-text" id="sentimentText" aria-live="polite">Neutral</div>
+        <div class="sentiment-bars" id="sentimentBars" aria-hidden="true">
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="text-secondary">24h Vol</div>
+        <div class="font-bold" id="totalVolume">--</div>
       </div>
     </div>
-    <div style="text-align: right;">
-      <div style="font-size: 12px; color: var(--text-secondary);">24h Vol</div>
-      <div style="font-weight: 600;">$42.8B</div>
+
+    <div class="list-header">
+      <span class="col-fav"></span>
+      <span class="flex-2">Name / Vol</span>
+      <span class="flex-1-5 text-right">Last Price</span>
+      <span class="flex-1-2 text-right">24h Chg%</span>
     </div>
-  </div>
 
-  <div class="list-header">
-    <span class="col-fav"></span>
-    <span style="flex:2">Name / Vol</span>
-    <span style="flex:1.5; text-align: right;">Last Price</span>
-    <span style="flex:1.2; text-align: right;">24h Chg%</span>
-  </div>
-
-  <div class="coin-list" id="coinList">
-    <div class="coin-row"><div class="skeleton" style="width: 100%; height: 40px;"></div></div>
-    <div class="coin-row"><div class="skeleton" style="width: 100%; height: 40px;"></div></div>
-    <div class="coin-row"><div class="skeleton" style="width: 100%; height: 40px;"></div></div>
-    <div class="coin-row"><div class="skeleton" style="width: 100%; height: 40px;"></div></div>
-    <div class="coin-row"><div class="skeleton" style="width: 100%; height: 40px;"></div></div>
-  </div>
+    <div class="coin-list" id="coinList" role="list">
+      </div>
+  </main>
 
   <nav class="bottom-nav">
-    <a href="dashboard.html">
-      <i class="fas fa-home"></i><span>Home</span>
-    </a>
-    <a href="markets.html" class="active">
-      <i class="fas fa-chart-bar"></i><span>Markets</span>
-    </a>
-    <a href="trade.html">
-      <i class="fas fa-exchange-alt"></i><span>Trade</span>
-    </a>
-    <a href="assets.html">
-      <i class="fas fa-wallet"></i><span>Assets</span>
-    </a>
+    <a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="markets.html" class="nav-link active" aria-current="page"><i class="fas fa-chart-bar"></i><span>Markets</span></a>
+    <a href="trade.html" class="nav-link"><i class="fas fa-exchange-alt"></i><span>Trade</span></a>
+    <a href="assets.html" class="nav-link"><i class="fas fa-wallet"></i><span>Assets</span></a>
   </nav>
 
-  <div id="searchOverlay">
+  <div id="searchOverlay" class="hidden" aria-modal="true" role="dialog">
     <div class="search-input-wrapper">
-      <i class="fas fa-search" style="color: var(--text-secondary)"></i>
-      <input type="text" id="marketSearch" placeholder="Search coin (e.g. BTC)" autocomplete="off" aria-label="Search Cryptocurrency">
-      <span class="close-search" onclick="toggleSearch(false)">Cancel</span>
+      <i class="fas fa-search text-secondary"></i>
+      <input type="text" id="marketSearch" placeholder="Search coin (e.g. BTC)" autocomplete="off">
+      <button class="close-search" id="closeSearchBtn">Cancel</button>
     </div>
     <div class="coin-list" id="searchResults"></div>
   </div>
 
   <script>
-    const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
-      ? 'http://localhost:3000/api'
-      : 'https://krypt-broker.onrender.com/api';
+    // --- CONFIG ---
+    const Config = {
+      get API_URL() {
+        if (window.__API__) return window.__API__;
+        const host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.')) {
+            return 'http://localhost:3000/api';
+        }
+        return 'https://krypt-broker.onrender.com/api';
+      },
+      CACHE_TTL: 60000 
+    };
 
-    let allCoins = [];
-    let favorites = new Set(JSON.parse(localStorage.getItem('favCoins') || '[]'));
+    // --- STATE ---
+    const State = {
+      coins: [],
+      favorites: new Set(JSON.parse(localStorage.getItem('favCoins') || '[]')),
+      currentFilter: localStorage.getItem('marketTab') || 'all', // Persist Tab
+      abortController: null,
+      previousFocus: null
+    };
 
-    // --- 1. Fetch & Cache Logic ---
+    // --- DOM CACHE ---
+    const DOM = {
+      coinList: document.getElementById('coinList'),
+      searchOverlay: document.getElementById('searchOverlay'),
+      searchInput: document.getElementById('marketSearch'),
+      searchResults: document.getElementById('searchResults'),
+      sentimentText: document.getElementById('sentimentText'),
+      sentimentBars: document.getElementById('sentimentBars').children,
+      totalVolume: document.getElementById('totalVolume'),
+      tabList: document.getElementById('tabList'),
+      tabs: document.querySelectorAll('.tab-item'),
+      openSearchBtn: document.getElementById('openSearchBtn'),
+      closeSearchBtn: document.getElementById('closeSearchBtn')
+    };
+
+    // --- INIT ---
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSkeletons();
+      restoreTabState();
+      initApp();
+    });
+
+    function initApp() {
+      setupEventListeners();
+      loadMarkets();
+    }
+
+    function renderSkeletons() {
+      DOM.coinList.innerHTML = Array(6).fill('<div class="coin-row"><div class="skeleton"></div></div>').join('');
+    }
+
+    function restoreTabState() {
+      DOM.tabs.forEach(tab => {
+        const isActive = tab.dataset.filter === State.currentFilter;
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-selected', isActive);
+        tab.tabIndex = isActive ? 0 : -1;
+      });
+    }
+
+    // --- DATA FETCHING ---
     async function loadMarkets() {
+      if (State.abortController) State.abortController.abort();
+      State.abortController = new AbortController();
+
       try {
-        let data = getCachedData('marketData');
+        let data = getCachedData('marketData', Config.CACHE_TTL); // Use TTL
+        
         if (!data) {
-          const res = await fetch(`${API_URL}/coin/markets`);
+          const res = await fetch(`${Config.API_URL}/coin/markets`, { signal: State.abortController.signal });
           if (!res.ok) throw new Error(`API Error: ${res.status}`);
           data = await res.json();
           setCachedData('marketData', data);
         }
         
-        // 🔧 Optimization: Precompute search string
-        allCoins = data.map(c => ({
+        State.coins = data.map(c => ({
           ...c,
           _searchStr: (c.name + c.symbol).toLowerCase()
         }));
 
+        // Dynamic Volume
+        const totalVol = data.reduce((sum, c) => sum + (c.total_volume || 0), 0);
+        DOM.totalVolume.textContent = formatVolume(totalVol);
+
         updateSentiment(data);
-        renderList(allCoins); 
+        applyFilter(); 
       } catch (err) {
-        console.error("Failed to load markets", err);
-        document.getElementById('coinList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--danger-red)">Failed to load market data.</div>';
+        if (err.name !== 'AbortError') {
+          console.error("Failed to load markets", err);
+          renderError();
+        }
       }
     }
 
-    // --- 2. Render List Logic ---
-    function renderList(coinsToRender) {
-      const container = document.getElementById('coinList');
+    function renderError() {
+      DOM.coinList.innerHTML = `
+        <div class="text-center p-16">
+            <div style="color:var(--danger-red); margin-bottom:10px;">Failed to load data</div>
+            <button class="retry-btn" id="retryBtn">Retry</button>
+        </div>`;
+      document.getElementById('retryBtn')?.addEventListener('click', loadMarkets);
+    }
+
+    // --- RENDERING ---
+    function renderList(coinsToRender, container, isSearch = false) {
       container.innerHTML = '';
 
-      if(!coinsToRender || coinsToRender.length === 0) {
-        container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-secondary)">No coins found</div>';
+      if (!coinsToRender || coinsToRender.length === 0) {
+        container.innerHTML = '<div class="empty-state">No coins found</div>';
         return;
       }
 
+      const fragment = document.createDocumentFragment();
+
       coinsToRender.forEach(c => {
-        const change = typeof c.price_change_percentage_24h === 'number' ? c.price_change_percentage_24h : 0;
+        const change = c.price_change_percentage_24h ?? 0;
         const isPos = change >= 0;
         const colorClass = isPos ? 'bg-green' : 'bg-red';
         const sign = isPos ? '+' : '';
-        const isFav = favorites.has(c.id);
+        const isFav = State.favorites.has(c.id);
 
-        const div = document.createElement('div');
-        div.className = 'coin-row';
-        div.onclick = (e) => {
-            if(e.target.classList.contains('fav-star')) return; // Prevent nav if clicking star
+        // Native Button for A11y
+        const row = document.createElement('button');
+        row.className = 'coin-row';
+        row.onclick = () => {
+            if (isSearch) toggleSearch(false);
             window.location.href = `coin.html?coinId=${c.id}`;
         };
+
+        // Fav Button
+        const favBtn = document.createElement('button');
+        favBtn.className = `fav-star ${isFav ? 'active' : ''}`;
+        favBtn.innerHTML = '<i class="fas fa-star"></i>';
+        favBtn.setAttribute('aria-label', isFav ? `Remove ${c.name} from favorites` : `Add ${c.name} to favorites`);
+        favBtn.onclick = (e) => {
+          e.stopPropagation();
+          toggleFavorite(c.id, favBtn);
+        };
+
+        const colFav = document.createElement('div');
+        colFav.className = 'col-fav';
+        colFav.appendChild(favBtn);
+
+        // Coin Name
+        const colName = document.createElement('div');
+        colName.className = 'col-name';
         
-        div.innerHTML = `
-          <div class="col-fav">
-            <i class="fas fa-star fav-star ${isFav ? 'active' : ''}" onclick="toggleFavorite('${c.id}', this)"></i>
-          </div>
-          <div class="col-name">
-            <img src="${c.image}" class="coin-icon" alt="${c.name} Logo">
-            <div>
-              <div class="coin-symbol">${c.symbol.toUpperCase()}</div>
-              <div class="coin-vol">Vol ${formatVolume(c.total_volume)}</div>
-            </div>
-          </div>
-          <div class="col-price">$${c.current_price.toLocaleString()}</div>
-          <div class="col-change">
-            <span class="change-btn ${colorClass}">${sign}${change.toFixed(2)}%</span>
-          </div>
-        `;
-        container.appendChild(div);
+        const img = document.createElement('img');
+        img.src = c.image;
+        img.className = 'coin-icon';
+        img.alt = c.symbol;
+        img.loading = 'lazy'; 
+
+        const textDiv = document.createElement('div');
+        const symDiv = document.createElement('div');
+        symDiv.className = 'coin-symbol';
+        symDiv.textContent = c.symbol.toUpperCase();
+        
+        const volDiv = document.createElement('div');
+        volDiv.className = 'coin-vol';
+        volDiv.textContent = `Vol ${formatVolume(c.total_volume)}`;
+
+        textDiv.append(symDiv, volDiv);
+        colName.append(img, textDiv);
+
+        // Price
+        const colPrice = document.createElement('div');
+        colPrice.className = 'col-price';
+        colPrice.textContent = `$${c.current_price.toLocaleString()}`;
+
+        // Change
+        const colChange = document.createElement('div');
+        colChange.className = 'col-change';
+        const badge = document.createElement('span');
+        badge.className = `change-btn ${colorClass}`;
+        badge.textContent = `${sign}${change.toFixed(2)}%`;
+        colChange.appendChild(badge);
+
+        row.append(colFav, colName, colPrice, colChange);
+        fragment.appendChild(row);
       });
+
+      container.appendChild(fragment);
     }
 
-    // --- 3. Favorites Logic ---
-    function toggleFavorite(coinId, el) {
-      if (favorites.has(coinId)) {
-        favorites.delete(coinId);
-        el.classList.remove('active');
+    // --- LOGIC ---
+    function toggleFavorite(coinId, btnEl) {
+      if (State.favorites.has(coinId)) {
+        State.favorites.delete(coinId);
+        btnEl.classList.remove('active');
+        btnEl.setAttribute('aria-label', btnEl.getAttribute('aria-label').replace('Remove', 'Add'));
       } else {
-        favorites.add(coinId);
-        el.classList.add('active');
+        State.favorites.add(coinId);
+        btnEl.classList.add('active');
+        btnEl.setAttribute('aria-label', btnEl.getAttribute('aria-label').replace('Add', 'Remove'));
       }
-      localStorage.setItem('favCoins', JSON.stringify([...favorites]));
+      localStorage.setItem('favCoins', JSON.stringify([...State.favorites]));
+      
+      if (State.currentFilter === 'favorites') applyFilter();
     }
 
-    // --- 4. Filtering Logic ---
-    function filterCoins(type, btn) {
-      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
+    function applyFilter() {
+      let filtered = State.coins.slice();
 
-      let filtered = allCoins.slice(); // 🛡️ Safety: prevent mutation
-
-      if (type === 'favorites') {
-        filtered = filtered.filter(c => favorites.has(c.id));
-      } else if (type === 'gainers') {
-        filtered.sort((a, b) => (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0));
-      } else if (type === 'losers') {
-        filtered.sort((a, b) => (a.price_change_percentage_24h ?? 0) - (b.price_change_percentage_24h ?? 0));
+      switch (State.currentFilter) {
+        case 'favorites':
+          filtered = filtered.filter(c => State.favorites.has(c.id));
+          break;
+        case 'gainers':
+          filtered.sort((a, b) => (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0));
+          break;
+        case 'losers':
+          filtered.sort((a, b) => (a.price_change_percentage_24h ?? 0) - (b.price_change_percentage_24h ?? 0));
+          break;
       }
       
-      renderList(filtered);
+      renderList(filtered, DOM.coinList);
     }
 
-    // --- 5. Sentiment Logic ---
     function updateSentiment(coins) {
       if (!coins || coins.length === 0) return;
-
+      
       const gainers = coins.filter(c => (c.price_change_percentage_24h ?? 0) > 0).length;
       const percent = (gainers / coins.length) * 100;
       
-      const textEl = document.getElementById('sentimentText');
-      const bars = document.getElementById('sentimentBars').children;
-
-      Array.from(bars).forEach(b => b.className = 'bar');
+      const bars = Array.from(DOM.sentimentBars);
+      bars.forEach(b => b.className = 'bar'); 
 
       if (percent > 60) {
-        textEl.textContent = "Bullish 🐂";
-        textEl.style.color = "var(--success-green)";
-        bars[0].classList.add('fill-green');
-        bars[1].classList.add('fill-green');
-        bars[2].classList.add('fill-green');
+        DOM.sentimentText.textContent = "Bullish 🐂";
+        DOM.sentimentText.className = "sentiment-text text-bullish";
+        bars.forEach(b => b.classList.add('bg-bullish'));
       } else if (percent < 40) {
-        textEl.textContent = "Bearish 🐻";
-        textEl.style.color = "var(--danger-red)";
-        bars[0].classList.add('fill-red');
-        bars[1].classList.add('fill-red');
-        bars[2].classList.add('fill-red');
+        DOM.sentimentText.textContent = "Bearish 🐻";
+        DOM.sentimentText.className = "sentiment-text text-bearish";
+        bars.forEach(b => b.classList.add('bg-bearish'));
       } else {
-        textEl.textContent = "Neutral ⚖️";
-        textEl.style.color = "var(--text-primary)";
-        bars[0].classList.add('fill-green');
-        bars[1].classList.add('fill-green');
+        DOM.sentimentText.textContent = "Neutral ⚖️";
+        DOM.sentimentText.className = "sentiment-text text-neutral";
+        bars[0].classList.add('bg-bearish'); 
+        bars[1].classList.add('bg-neutral');
+        bars[2].classList.add('bg-bullish');
       }
     }
 
-    // --- 6. Search Logic ---
-    function toggleSearch(show) {
-      const el = document.getElementById('searchOverlay');
-      el.style.display = show ? 'block' : 'none';
-      if(show) document.getElementById('marketSearch').focus();
-    }
+    // --- EVENTS & UI ---
+    function setupEventListeners() {
+      DOM.tabs.forEach(tab => tab.addEventListener('click', handleTabClick));
+      
+      // Tab Keyboard Navigation (Left/Right)
+      DOM.tabList.addEventListener('keydown', (e) => {
+          const tabs = Array.from(DOM.tabs);
+          const idx = tabs.indexOf(document.activeElement);
+          
+          let nextIdx = null;
+          if (e.key === 'ArrowRight') nextIdx = (idx + 1) % tabs.length;
+          else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + tabs.length) % tabs.length;
 
-    let searchTimeout;
+          if (nextIdx !== null) {
+              tabs[nextIdx].focus();
+              tabs[nextIdx].click();
+          }
+      });
 
-    document.getElementById('marketSearch').addEventListener('input', (e) => {
-      clearTimeout(searchTimeout);
-      const query = e.target.value.toLowerCase().trim();
-      const resultsDiv = document.getElementById('searchResults');
-
-      if (!query) {
-        resultsDiv.innerHTML = '';
-        return;
-      }
-
-      searchTimeout = setTimeout(() => {
-        // 🔧 Optimization: Use precomputed _searchStr
-        const matches = allCoins.filter(c => c._searchStr.includes(query));
-
-        resultsDiv.innerHTML = ''; 
+      DOM.openSearchBtn.addEventListener('click', () => toggleSearch(true));
+      DOM.closeSearchBtn.addEventListener('click', () => toggleSearch(false));
+      
+      let searchTimeout;
+      DOM.searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.toLowerCase().trim();
         
-        matches.forEach(c => {
-          const div = document.createElement('div');
-          div.className = 'coin-row';
-          div.onclick = () => window.location.href = `coin.html?coinId=${c.id}`;
-          div.innerHTML = `
-            <div class="col-name">
-              <img src="${c.image}" class="coin-icon" alt="${c.name}">
-              <div class="coin-symbol">${c.symbol.toUpperCase()}</div>
-            </div>
-            <div class="col-price">$${c.current_price.toLocaleString()}</div>
-          `;
-          resultsDiv.appendChild(div);
-        });
+        if (!query) { DOM.searchResults.innerHTML = ''; return; }
 
-        if(matches.length === 0) {
-            resultsDiv.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-secondary)">No matches found</div>';
-        }
-      }, 300);
-    });
+        searchTimeout = setTimeout(() => {
+          const matches = State.coins.filter(c => c._searchStr.includes(query));
+          renderList(matches, DOM.searchResults, true);
+        }, 300);
+      });
+    }
 
-    // --- Helpers ---
+    function handleTabClick(e) {
+      const target = e.currentTarget;
+      
+      DOM.tabs.forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+        t.tabIndex = -1;
+      });
+      
+      target.classList.add('active');
+      target.setAttribute('aria-selected', 'true');
+      target.tabIndex = 0;
+
+      State.currentFilter = target.dataset.filter;
+      localStorage.setItem('marketTab', State.currentFilter); // Persist
+      applyFilter();
+    }
+
+    function toggleSearch(show) {
+      if (show) {
+        State.previousFocus = document.activeElement;
+        DOM.searchOverlay.classList.remove('hidden');
+        DOM.searchInput.focus();
+        DOM.searchOverlay.addEventListener('keydown', trapFocus);
+      } else {
+        DOM.searchOverlay.classList.add('hidden');
+        DOM.searchInput.value = '';
+        DOM.searchResults.innerHTML = '';
+        DOM.searchOverlay.removeEventListener('keydown', trapFocus);
+        if (State.previousFocus) State.previousFocus.focus();
+      }
+    }
+
+    function trapFocus(e) {
+      if (e.key === 'Escape') { toggleSearch(false); return; }
+      
+      const focusable = DOM.searchOverlay.querySelectorAll('button, input');
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.key === 'Tab') {
+          if (e.shiftKey) { 
+              if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+          } else { 
+              if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+          }
+      }
+    }
+
+    // --- HELPERS ---
     function formatVolume(num) {
-      if(num >= 1000000000) return (num/1000000000).toFixed(2) + 'B';
-      if(num >= 1000000) return (num/1000000).toFixed(2) + 'M';
+      if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+      if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
       return num.toLocaleString();
     }
 
-    function getCachedData(key, ttl = 60000) { 
+    function getCachedData(key, ttl = 60000) {
       const cached = localStorage.getItem(key);
       if (!cached) return null;
-      try { const { data, timestamp } = JSON.parse(cached); return Date.now() - timestamp < ttl ? data : null; } catch { return null; }
+      try {
+        const { data, timestamp } = JSON.parse(cached);
+        return Date.now() - timestamp < ttl ? data : null;
+      } catch { return null; }
     }
-    
+
     function setCachedData(key, data) {
       localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
     }
-
-    document.addEventListener('DOMContentLoaded', loadMarkets);
   </script>
 </body>
 </html>
