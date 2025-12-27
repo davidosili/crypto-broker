@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   
   <style>
+    /* --- VARIABLES --- */
     :root {
       --bg-body: #121212;
       --bg-card: #1E2329;
@@ -25,8 +25,10 @@
       --font-main: 'IBM Plex Sans', sans-serif;
     }
 
+    /* --- RESET --- */
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { font-family: var(--font-main); background-color: var(--bg-body); color: var(--text-primary); padding-bottom: 80px; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; color: inherit; }
 
     /* --- TICKER STRIP --- */
     .ticker-strip {
@@ -36,46 +38,68 @@
       position: sticky; top: 0; z-index: 1000;
     }
     .ticker-pair { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .ticker-price { font-size: 18px; font-weight: 600; color: var(--success-green); }
+    .ticker-price { font-size: 18px; font-weight: 600; transition: color 0.3s; }
     .ticker-stats { font-size: 11px; color: var(--text-secondary); display: flex; gap: 15px; margin-top: 4px; }
     .stat-item span { color: var(--text-primary); }
 
-    /* --- LAYOUT GRID --- */
+    /* Price Flash Animations */
+    .flash-up { animation: flashGreen 0.8s ease-out; }
+    .flash-down { animation: flashRed 0.8s ease-out; }
+    
+    @keyframes flashGreen { 
+      0% { background-color: rgba(46, 189, 133, 0.2); color: var(--success-green); } 
+      100% { background-color: transparent; } 
+    }
+    @keyframes flashRed { 
+      0% { background-color: rgba(246, 70, 93, 0.2); color: var(--danger-red); } 
+      100% { background-color: transparent; } 
+    }
+
+    /* --- LAYOUT --- */
     .trade-grid {
-      display: grid;
-      grid-template-columns: 1fr 320px;
-      gap: 1px;
+      display: grid; grid-template-columns: 1fr 320px; gap: 1px;
       max-width: 1200px; margin: 0 auto;
     }
     @media (max-width: 900px) { .trade-grid { grid-template-columns: 1fr; } }
 
-    /* --- CHART SECTION --- */
+    /* --- CHART --- */
     .chart-panel {
       background: var(--bg-body); height: 450px; position: relative;
-      border-right: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color); display: flex; flex-direction: column;
     }
     .timeframe-toolbar {
       display: flex; gap: 10px; padding: 10px 16px;
       border-bottom: 1px solid var(--border-color); background: var(--bg-card);
     }
-    .tf-btn {
-      background: none; border: none; color: var(--text-secondary);
-      font-size: 12px; font-weight: 600; cursor: pointer;
+    .tf-btn { color: var(--text-secondary); font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 4px; transition: 0.2s; }
+    .tf-btn:hover { color: var(--text-primary); background: var(--bg-input); }
+    .tf-btn.active { color: var(--primary-yellow); background: rgba(247, 166, 0, 0.1); }
+    
+    .canvas-wrapper { flex: 1; position: relative; width: 100%; overflow: hidden; }
+    
+    .overlay-msg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(18,18,18,0.8); display: flex; flex-direction: column; 
+      justify-content: center; align-items: center; z-index: 5; 
+      color: var(--text-secondary); font-size: 12px; gap: 10px;
+      /* Hidden by default, toggled via classes */
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
     }
-    .tf-btn.active { color: var(--text-primary); }
-    .canvas-wrapper { height: 380px; width: 100%; position: relative; }
+    .overlay-msg.active { opacity: 1; pointer-events: auto; }
+    
+    .retry-btn { padding: 8px 16px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; font-size: 12px; transition: 0.2s; }
+    .retry-btn:hover { background: #363c45; }
 
     /* --- ORDER PANEL --- */
-    .order-panel {
-      background: var(--bg-card); padding: 16px; display: flex; flex-direction: column; gap: 16px;
-    }
+    .order-panel { background: var(--bg-card); padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    
     .order-tabs { display: flex; background: var(--bg-input); border-radius: 4px; padding: 2px; }
     .order-tab {
       flex: 1; text-align: center; padding: 10px; font-size: 14px; font-weight: 600;
-      cursor: pointer; color: var(--text-secondary); border-radius: 2px;
+      color: var(--text-secondary); border-radius: 2px; transition: 0.2s;
     }
-    .order-tab.buy.active { background: var(--success-green); color: white; }
-    .order-tab.sell.active { background: var(--danger-red); color: white; }
+    .order-tab[data-type="buy"].active { background: var(--success-green); color: white; }
+    .order-tab[data-type="sell"].active { background: var(--danger-red); color: white; }
 
     .input-group { position: relative; margin-bottom: 12px; }
     .input-group label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
@@ -84,35 +108,32 @@
     .input-field {
       width: 100%; background: var(--bg-input); border: 1px solid transparent;
       padding: 12px; color: white; font-size: 14px; border-radius: 4px;
-      text-align: right; font-family: monospace;
+      text-align: right; font-family: monospace; outline: none; transition: border-color 0.2s;
     }
-    .input-field:focus { outline: none; border-color: var(--primary-yellow); }
+    .input-field:focus { border-color: var(--primary-yellow); }
     .input-field:disabled { opacity: 0.6; cursor: not-allowed; }
     .suffix { position: absolute; right: 12px; top: 32px; font-size: 12px; color: var(--text-secondary); }
 
     .percent-row { display: flex; gap: 8px; margin-bottom: 16px; }
     .pct-btn {
-      flex: 1; background: var(--bg-input); border: none; color: var(--text-secondary);
-      font-size: 11px; padding: 6px; border-radius: 2px; cursor: pointer;
+      flex: 1; background: var(--bg-input); color: var(--text-secondary);
+      font-size: 11px; padding: 6px; border-radius: 2px; transition: 0.2s;
     }
-    .pct-btn:hover { background: #363c45; }
+    .pct-btn:hover { background: #363c45; color: var(--text-primary); }
 
-    .order-summary { font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; margin-bottom: 4px; }
     .fee-display { color: var(--text-secondary); font-size: 11px; text-align: right; margin-bottom: 12px; }
 
     .order-btn {
-      width: 100%; padding: 14px; border: none; border-radius: 4px;
-      font-size: 16px; font-weight: 700; cursor: pointer; color: white;
-      transition: opacity 0.2s;
+      width: 100%; padding: 14px; border-radius: 4px; font-size: 16px; font-weight: 700; color: white; transition: opacity 0.2s;
     }
     .order-btn.buy { background: var(--success-green); }
     .order-btn.sell { background: var(--danger-red); }
-    .order-btn:active { opacity: 0.8; }
-    .order-btn:disabled { background: var(--bg-input); color: var(--text-secondary); cursor: not-allowed; }
+    .order-btn:disabled { background: var(--bg-input); color: var(--text-secondary); cursor: not-allowed; opacity: 0.7; }
+    .order-btn:active:not(:disabled) { opacity: 0.8; }
 
     .balance-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
 
-    /* --- INFO SECTION --- */
+    /* --- INFO & NAV --- */
     .info-grid {
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 16px;
       background: var(--bg-card); margin-top: 1px; border-top: 1px solid var(--border-color);
@@ -120,28 +141,35 @@
     .info-item h4 { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
     .info-item p { font-size: 14px; font-weight: 500; }
 
-    /* --- BOTTOM NAV --- */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
       background: var(--bg-card); border-top: 1px solid var(--border-color);
-      display: flex; justify-content: space-around; align-items: center;
-      z-index: 1000; padding-bottom: 5px;
+      display: flex; justify-content: space-around; align-items: center; z-index: 1000;
     }
-    .bottom-nav a { display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); font-size: 10px; gap: 6px; width: 25%; }
-    .bottom-nav a.active { color: var(--primary-yellow); }
-    .bottom-nav i { font-size: 20px; }
+    .nav-link { display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); font-size: 10px; gap: 6px; width: 25%; text-decoration: none; transition: color 0.2s; }
+    .nav-link.active { color: var(--primary-yellow); }
+    .nav-link:hover { color: var(--text-primary); }
+    .nav-link i { font-size: 20px; }
 
-    #chartLoader {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(18,18,18,0.8); display: flex; justify-content: center; align-items: center;
-      z-index: 5; color: var(--text-secondary); font-size: 12px;
+    /* --- TOAST --- */
+    #toast {
+      visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
+      border-radius: 4px; padding: 12px 16px; position: fixed; z-index: 3000; left: 50%; bottom: 80px;
+      transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-    .msg-box { text-align: center; font-size: 12px; margin-top: 10px; display: none; padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.2); }
+    #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+    .toast-success { background-color: var(--success-green) !important; color: white; }
+    .toast-error { background-color: var(--danger-red) !important; color: white; }
+    .toast-info { background-color: #333 !important; color: white; }
+    @keyframes fadein { from {bottom: 40px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 40px; opacity: 0;} }
   </style>
 </head>
 <body>
 
-  <div class="ticker-strip">
+  <div id="toast" role="alert" aria-live="polite"></div>
+
+  <header class="ticker-strip">
     <div>
       <div class="ticker-pair">
         <span id="coinSymbol">--</span>/USDT
@@ -152,31 +180,34 @@
         <div>24h Vol <span id="headerVol">--</span></div>
       </div>
     </div>
-    <div style="font-size: 20px; color: var(--text-secondary); cursor: pointer;" onclick="window.location.href='dashboard.html'">
+    <button id="closeBtn" aria-label="Close Trade" style="font-size:20px; color:var(--text-secondary);">
       <i class="fas fa-times"></i>
-    </div>
-  </div>
+    </button>
+  </header>
 
   <div class="trade-grid">
     
-    <div class="chart-panel">
-      <div class="timeframe-toolbar">
-        <button class="tf-btn active" onclick="updateTimeframe('1', this)">1D</button>
-        <button class="tf-btn" onclick="updateTimeframe('7', this)">7D</button>
-        <button class="tf-btn" onclick="updateTimeframe('30', this)">30D</button>
-        <button class="tf-btn" onclick="updateTimeframe('90', this)">3M</button>
+    <section class="chart-panel" aria-label="Price Chart">
+      <div class="timeframe-toolbar" role="group" aria-label="Chart Timeframe">
+        <button class="tf-btn active" data-days="1">1D</button>
+        <button class="tf-btn" data-days="7">7D</button>
+        <button class="tf-btn" data-days="30">30D</button>
+        <button class="tf-btn" data-days="90">3M</button>
       </div>
       
       <div class="canvas-wrapper">
         <canvas id="priceChart"></canvas>
-        <div id="chartLoader"><i class="fas fa-spinner fa-spin"></i>&nbsp; Loading Chart...</div>
+        <div id="chartOverlay" class="overlay-msg">
+          <i class="fas fa-spinner fa-spin"></i>
+          <span>Loading Chart...</span>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="order-panel">
-      <div class="order-tabs">
-        <div class="order-tab buy active" onclick="setOrderType('buy')">Buy</div>
-        <div class="order-tab sell" onclick="setOrderType('sell')">Sell</div>
+    <section class="order-panel" aria-label="Order Form">
+      <div class="order-tabs" role="tablist">
+        <button class="order-tab active" data-type="buy" role="tab" aria-selected="true" id="tab-buy">Buy</button>
+        <button class="order-tab" data-type="sell" role="tab" aria-selected="false" id="tab-sell">Sell</button>
       </div>
 
       <div class="balance-row">
@@ -189,157 +220,190 @@
           <span>Order Price</span>
           <span class="market-badge">Market</span>
         </label>
-        <input type="text" class="input-field" value="Best Market Price" disabled>
+        <input type="text" class="input-field" value="Best Market Price" disabled aria-label="Order Price">
       </div>
 
       <div class="input-group">
-        <label>Order Value</label>
-        <input type="number" id="tradeAmount" class="input-field" placeholder="0.00">
+        <label for="tradeAmount">Order Value</label>
+        <input type="number" id="tradeAmount" class="input-field" placeholder="0.00" min="0" step="0.01">
         <span class="suffix">USDT</span>
       </div>
 
       <div class="percent-row">
-        <button class="pct-btn" onclick="setPercent(25)">25%</button>
-        <button class="pct-btn" onclick="setPercent(50)">50%</button>
-        <button class="pct-btn" onclick="setPercent(75)">75%</button>
-        <button class="pct-btn" onclick="setPercent(100)">100%</button>
+        <button class="pct-btn" data-pct="25">25%</button>
+        <button class="pct-btn" data-pct="50">50%</button>
+        <button class="pct-btn" data-pct="75">75%</button>
+        <button class="pct-btn" data-pct="100">100%</button>
       </div>
 
-      <div class="fee-display" id="feeDisplay">Fee (0.1%): 0.00</div>
+      <div class="fee-display" id="feeDisplay">Fee (0.1%): 0.00 USDT</div>
 
-      <button id="submitBtn" class="order-btn buy" onclick="executeTrade()">Buy Long</button>
-      <div id="tradeMsg" class="msg-box"></div>
-    </div>
+      <button id="submitBtn" class="order-btn buy" disabled>Buy</button>
+    </section>
   </div>
 
   <div class="info-grid">
-    <div class="info-item">
-      <h4>Market Cap</h4>
-      <p id="statCap">--</p>
-    </div>
-    <div class="info-item">
-      <h4>Circulating Supply</h4>
-      <p id="statSupply">--</p>
-    </div>
-    <div class="info-item">
-      <h4>All Time High</h4>
-      <p id="statATH">--</p>
-    </div>
-    <div class="info-item">
-      <h4>Rank</h4>
-      <p id="statRank">--</p>
-    </div>
+    <div class="info-item"><h4>Market Cap</h4><p id="statCap">--</p></div>
+    <div class="info-item"><h4>Circulating Supply</h4><p id="statSupply">--</p></div>
+    <div class="info-item"><h4>All Time High</h4><p id="statATH">--</p></div>
+    <div class="info-item"><h4>Rank</h4><p id="statRank">--</p></div>
   </div>
 
   <nav class="bottom-nav">
-    <a href="dashboard.html">
-      <i class="fas fa-home"></i><span>Home</span>
-    </a>
-    <a href="markets.html">
-      <i class="fas fa-chart-bar"></i><span>Markets</span>
-    </a>
-    <a href="trade.html" class="active">
-      <i class="fas fa-exchange-alt"></i><span>Trade</span>
-    </a>
-    <a href="assets.html">
-      <i class="fas fa-wallet"></i><span>Assets</span>
-    </a>
+    <a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="markets.html" class="nav-link"><i class="fas fa-chart-bar"></i><span>Markets</span></a>
+    <a href="trade.html" class="nav-link active"><i class="fas fa-exchange-alt"></i><span>Trade</span></a>
+    <a href="assets.html" class="nav-link"><i class="fas fa-wallet"></i><span>Assets</span></a>
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
-      ? 'http://localhost:3000/api'
-      : 'https://krypt-broker.onrender.com/api';
+    // --- CONFIG ---
+    const CONFIG = {
+      API_URL: window.location.hostname.includes('localhost') ? 'http://localhost:3000/api' : 'https://krypt-broker.onrender.com/api',
+      FEE_RATE: 0.001 // 0.1%
+    };
 
-    const coinId = new URLSearchParams(window.location.search).get('coinId');
-    const ctx = document.getElementById('priceChart').getContext('2d');
-    
-    // State with Persistence
-    let STATE = {
+    // --- STATE ---
+    const STATE = {
+      coinId: new URLSearchParams(window.location.search).get('coinId'),
       coinData: null,
       currentPrice: 0,
       userBalanceUSDT: 0,
       userBalanceCoin: 0, 
-      orderType: localStorage.getItem('lastOrderType') || 'buy', // 💾 Persistent State
-      chartDays: '1'
+      orderType: localStorage.getItem('lastOrderType') || 'buy',
+      chartDays: '1',
+      priceInterval: null,
+      chartAbortController: null,
+      isSubmitting: false,
+      balanceLoaded: false // Explicit flag
     };
 
-    let chartInstance;
-    let chartAbortController = null; // 🛑 Race condition controller
+    // --- DOM CACHE ---
+    const DOM = {
+      chartOverlay: document.getElementById('chartOverlay'),
+      tradeAmount: document.getElementById('tradeAmount'),
+      submitBtn: document.getElementById('submitBtn'),
+      headerPrice: document.getElementById('headerPrice'),
+      availBalance: document.getElementById('availBalance'),
+      feeDisplay: document.getElementById('feeDisplay')
+    };
 
     // --- INIT ---
-    async function init() {
-      if (!coinId) { alert("No coin specified"); window.location.href = 'markets.html'; return; }
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!STATE.coinId) {
+        showToast("No coin specified", "error");
+        setTimeout(() => window.location.href = 'markets.html', 1500);
+        return;
+      }
       
-      // Initialize UI based on saved state
-      setOrderType(STATE.orderType);
+      setupEventListeners();
+      initApp();
+    });
 
-      // 1. Fetch Details First
+    async function initApp() {
+      renderOrderTypeUI(); 
       await fetchCoinDetails();
-      
-      // 2. Fetch Balance 
       await fetchUserBalance();
+      loadChart(STATE.chartDays);
       
-      // 3. Load Chart
-      await loadChart(STATE.chartDays);
-      
-      // Auto-refresh price every 30s
-      setInterval(fetchCoinDetails, 30000);
+      startPolling();
     }
 
-    // --- 1. FETCH DETAILS ---
+    // Optimization: Pause polling when tab hidden
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stopPolling();
+      else startPolling();
+    });
+
+    function startPolling() {
+      if (STATE.priceInterval) return;
+      STATE.priceInterval = setInterval(fetchCoinDetails, 30000);
+    }
+
+    function stopPolling() {
+      if (STATE.priceInterval) {
+        clearInterval(STATE.priceInterval);
+        STATE.priceInterval = null;
+      }
+    }
+
+    // --- DATA FETCHING ---
     async function fetchCoinDetails() {
       try {
-        let data = getCachedData(`coin-${coinId}`, 60000);
+        let data = getCachedData(`coin-${STATE.coinId}`, 60000); 
+        
         if (!data) {
-          const res = await fetch(`${API_URL}/coin/coin/${coinId}`);
+          const res = await fetch(`${CONFIG.API_URL}/coin/coin/${STATE.coinId}`);
           if(!res.ok) throw new Error("Coin fetch failed");
           data = await res.json();
-          setCachedData(`coin-${coinId}`, data);
+          setCachedData(`coin-${STATE.coinId}`, data);
+        } else {
+          // Fresh Price Check
+          const priceRes = await fetch(`${CONFIG.API_URL}/coin/markets?ids=${STATE.coinId}`);
+          if(priceRes.ok) {
+             const priceData = await priceRes.json();
+             if(priceData[0]) {
+                 // 🛡️ Fix: Use structuredClone to mutate copy safely
+                 data = structuredClone(data);
+                 data.market_data.current_price.usd = priceData[0].current_price;
+             }
+          }
         }
 
+        const prevPrice = STATE.currentPrice;
         STATE.coinData = data;
         STATE.currentPrice = data.market_data.current_price.usd;
-
-        updateUI(data);
+        
+        updateUI(data, prevPrice);
+        
+        // Fix: Explicit balance check using flag
+        if (!STATE.balanceLoaded) fetchUserBalance();
+        
+        validateOrder(); 
       } catch (err) { console.error(err); }
     }
 
-    function updateUI(data) {
+    function updateUI(data, prevPrice) {
       const m = data.market_data;
-      const change = typeof m.price_change_percentage_24h === 'number' ? m.price_change_percentage_24h : 0;
+      const change = m.price_change_percentage_24h ?? 0;
       const isPos = change >= 0;
 
-      const symbol = data.symbol.toUpperCase();
-      document.getElementById('coinSymbol').textContent = symbol;
-      updateButtonLabel();
+      document.getElementById('coinSymbol').textContent = data.symbol.toUpperCase();
       
-      document.getElementById('headerPrice').textContent = `$${STATE.currentPrice.toLocaleString()}`;
-      document.getElementById('headerPrice').style.color = isPos ? 'var(--success-green)' : 'var(--danger-red)';
+      const priceEl = DOM.headerPrice;
+      priceEl.textContent = `$${STATE.currentPrice.toLocaleString()}`;
+      priceEl.style.color = isPos ? 'var(--success-green)' : 'var(--danger-red)';
+      
+      if (prevPrice && prevPrice !== STATE.currentPrice) {
+          priceEl.classList.remove('flash-up', 'flash-down');
+          void priceEl.offsetWidth; 
+          priceEl.classList.add(STATE.currentPrice > prevPrice ? 'flash-up' : 'flash-down');
+      }
       
       const changeEl = document.getElementById('headerChange');
       changeEl.textContent = `${change.toFixed(2)}%`;
       changeEl.style.color = isPos ? 'var(--success-green)' : 'var(--danger-red)';
       
-      document.getElementById('headerVol').textContent = `$${(m.total_volume.usd / 1000000).toFixed(1)}M`;
-
-      document.getElementById('statCap').textContent = `$${(m.market_cap.usd / 1000000000).toFixed(2)}B`;
-      document.getElementById('statSupply').textContent = `${(m.circulating_supply / 1000000).toFixed(1)}M`;
+      document.getElementById('headerVol').textContent = formatMetric(m.total_volume.usd, true);
+      document.getElementById('statCap').textContent = formatMetric(m.market_cap.usd, true);
+      document.getElementById('statSupply').textContent = formatMetric(m.circulating_supply, false);
       document.getElementById('statATH').textContent = `$${m.ath.usd.toLocaleString()}`;
       document.getElementById('statRank').textContent = `#${data.market_cap_rank}`;
+      
+      renderOrderTypeUI(); 
     }
 
-    // --- 2. USER BALANCE ---
     async function fetchUserBalance() {
       try {
-        const res = await fetch(`${API_URL}/trade/portfolio`, { credentials: 'include' });
+        const res = await fetch(`${CONFIG.API_URL}/trade/portfolio`, { credentials: 'include' });
         if(!res.ok) return; 
         const data = await res.json();
         
         STATE.userBalanceUSDT = data.portfolio?.USDT || 0;
         const symbol = STATE.coinData?.symbol?.toUpperCase();
         STATE.userBalanceCoin = symbol ? (data.portfolio?.[symbol] || 0) : 0;
+        STATE.balanceLoaded = true; // Mark as loaded
         
         updateBalanceDisplay();
       } catch (err) { console.warn("Balance fetch failed"); }
@@ -355,70 +419,80 @@
       }
     }
 
-    // --- 3. CHART LOGIC (With AbortController) ---
+    // --- CHART LOGIC ---
     async function loadChart(days) {
-      if (chartAbortController) chartAbortController.abort(); // 🛑 Cancel previous request
-      chartAbortController = new AbortController();
+      if (STATE.chartAbortController) STATE.chartAbortController.abort();
+      STATE.chartAbortController = new AbortController();
 
-      document.getElementById('chartLoader').style.display = 'flex';
+      showChartLoader(true);
       
       try {
-        const res = await fetch(`${API_URL}/coin/chart/${coinId}?vs_currency=usd&days=${days}`, {
-            signal: chartAbortController.signal
+        const res = await fetch(`${CONFIG.API_URL}/coin/chart/${STATE.coinId}?vs_currency=usd&days=${days}`, {
+            signal: STATE.chartAbortController.signal
         });
         const data = await res.json();
-        
-        if(!data.prices || !data.prices.length) throw new Error("No chart data");
+        if(!data.prices || !data.prices.length) throw new Error("No data");
 
-        const prices = data.prices.map(p => p[1]);
-        const labels = data.prices.map(p => {
+        renderChart(data.prices, days);
+        showChartLoader(false);
+      } catch (err) { 
+        if (err.name !== 'AbortError') {
+            console.error(err);
+            showChartError();
+        }
+      }
+    }
+
+    function renderChart(prices, days) {
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        const priceData = prices.map(p => p[1]);
+        const labels = prices.map(p => {
             const date = new Date(p[0]);
             return days === '1' ? date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : date.toLocaleDateString();
         });
 
-        if (chartInstance) chartInstance.destroy();
+        if (window.myChart) window.myChart.destroy();
 
-        chartInstance = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels,
-            datasets: [{
-              data: prices,
-              borderColor: '#F7A600',
-              backgroundColor: (context) => {
-                const ctx = context.chart.ctx;
-                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                gradient.addColorStop(0, 'rgba(247, 166, 0, 0.2)');
-                gradient.addColorStop(1, 'rgba(247, 166, 0, 0)');
-                return gradient;
+        try {
+            window.myChart = new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels,
+                datasets: [{
+                  data: priceData,
+                  borderColor: '#F7A600',
+                  backgroundColor: (context) => {
+                    const chart = context.chart;
+                    const { ctx, chartArea } = chart;
+                    if (!chartArea) return null; 
+                    
+                    const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                    gradient.addColorStop(0, 'rgba(247, 166, 0, 0.05)');
+                    gradient.addColorStop(1, 'rgba(247, 166, 0, 0.3)');
+                    return gradient;
+                  },
+                  borderWidth: 2,
+                  pointRadius: 0,
+                  fill: true,
+                  tension: 0.1
+                }]
               },
-              borderWidth: 2,
-              pointRadius: 0,
-              fill: true,
-              tension: 0.1
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { display: false },
-              y: { 
-                 position: 'right',
-                 grid: { color: '#2B3139' },
-                 ticks: { color: '#848E9C', font: {size: 10} }
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                  x: { display: false },
+                  y: { 
+                     position: 'right',
+                     grid: { color: '#2B3139' },
+                     ticks: { color: '#848E9C', font: {size: 10} }
+                  }
+                },
+                interaction: { mode: 'index', intersect: false }
               }
-            },
-            interaction: { mode: 'index', intersect: false }
-          }
-        });
-
-      } catch (err) { 
-        if (err.name !== 'AbortError') console.error("Chart error", err); 
-      } finally { 
-        document.getElementById('chartLoader').style.display = 'none'; 
-      }
+            });
+        } catch(e) { showChartError(); }
     }
 
     function updateTimeframe(days, btn) {
@@ -428,131 +502,165 @@
       loadChart(days);
     }
 
-    // --- 4. TRADE LOGIC (With Fees) ---
+    // --- TRADE LOGIC ---
     function setOrderType(type) {
       STATE.orderType = type;
-      localStorage.setItem('lastOrderType', type); // 💾 Save Preference
-      
-      const buyTab = document.querySelector('.order-tab.buy');
-      const sellTab = document.querySelector('.order-tab.sell');
-      const btn = document.getElementById('submitBtn');
-      
-      if(type === 'buy') {
-        buyTab.classList.add('active');
-        sellTab.classList.remove('active');
-        btn.className = 'order-btn buy';
-      } else {
-        sellTab.classList.add('active');
-        buyTab.classList.remove('active');
-        btn.className = 'order-btn sell';
-      }
-      
-      updateButtonLabel();
+      localStorage.setItem('lastOrderType', type);
+      renderOrderTypeUI();
       updateBalanceDisplay();
-      updateFeeDisplay();
+      validateOrder();
     }
 
-    function updateButtonLabel() {
-        const symbol = STATE.coinData?.symbol?.toUpperCase() || '';
-        const btn = document.getElementById('submitBtn');
-        btn.textContent = `${STATE.orderType === 'buy' ? 'Buy' : 'Sell'} ${symbol}`;
+    function renderOrderTypeUI() {
+      if (STATE.isSubmitting) return;
+
+      document.querySelectorAll('.order-tab').forEach(t => {
+          const isActive = t.dataset.type === STATE.orderType;
+          t.classList.toggle('active', isActive);
+          t.setAttribute('aria-selected', isActive);
+      });
+
+      const symbol = STATE.coinData?.symbol?.toUpperCase() || '';
+      DOM.submitBtn.className = `order-btn ${STATE.orderType}`;
+      DOM.submitBtn.textContent = `${STATE.orderType === 'buy' ? 'Buy' : 'Sell'} ${symbol}`;
     }
 
     function setPercent(pct) {
-      const input = document.getElementById('tradeAmount');
       if (STATE.orderType === 'buy') {
-        const amount = (STATE.userBalanceUSDT * pct) / 100;
-        input.value = amount.toFixed(2);
+        DOM.tradeAmount.value = ((STATE.userBalanceUSDT * pct) / 100).toFixed(2);
       } else {
-        const coinVal = (STATE.userBalanceCoin * pct) / 100;
-        const usdVal = coinVal * STATE.currentPrice;
-        input.value = usdVal.toFixed(2);
+        const coinAmt = (STATE.userBalanceCoin * pct) / 100;
+        DOM.tradeAmount.value = (coinAmt * STATE.currentPrice).toFixed(2);
       }
-      updateFeeDisplay();
+      validateOrder();
     }
 
-    // 💰 Fee Calculation (0.1%)
-    document.getElementById('tradeAmount').addEventListener('input', updateFeeDisplay);
+    let debounceTimer;
+    DOM.tradeAmount.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(validateOrder, 100);
+    });
 
-    function updateFeeDisplay() {
-        const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
-        const fee = amount * 0.001; // 0.1%
-        const el = document.getElementById('feeDisplay');
-        const symbol = STATE.orderType === 'buy' ? 'USDT' : 'USDT Value';
-        el.textContent = `Fee (0.1%): ${fee.toFixed(4)} ${symbol}`;
+    function validateOrder() {
+      const amount = parseFloat(DOM.tradeAmount.value) || 0;
+      const fee = amount * CONFIG.FEE_RATE;
+      
+      // Fix: Consistent fee label
+      DOM.feeDisplay.textContent = `Fee (0.1%): ${fee.toFixed(4)} USDT`;
+
+      let isValid = false;
+      if (amount > 0) {
+          if (STATE.orderType === 'buy') {
+              isValid = amount <= STATE.userBalanceUSDT;
+          } else {
+              const estimatedCoin = amount / STATE.currentPrice;
+              isValid = estimatedCoin <= STATE.userBalanceCoin;
+          }
+      }
+      
+      DOM.submitBtn.disabled = !isValid;
     }
 
     async function executeTrade() {
-      const usdAmount = parseFloat(document.getElementById('tradeAmount').value);
-      const btn = document.getElementById('submitBtn');
+      const usdAmount = parseFloat(DOM.tradeAmount.value);
       
-      if (!usdAmount || usdAmount <= 0) {
-        showMessage("Please enter a valid amount", false);
-        return;
-      }
-      
-      // Balance Checks
-      if (STATE.orderType === 'buy' && usdAmount > STATE.userBalanceUSDT) {
-         showMessage(`Insufficient USDT. Balance: $${STATE.userBalanceUSDT.toFixed(2)}`, false);
-         return;
-      }
-      
-      const estimatedCoin = usdAmount / STATE.currentPrice;
-      if (STATE.orderType === 'sell' && estimatedCoin > STATE.userBalanceCoin) {
-         showMessage(`Insufficient Coin Balance`, false);
-         return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = "Processing...";
+      STATE.isSubmitting = true;
+      DOM.submitBtn.disabled = true;
+      DOM.submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
       try {
-        const res = await fetch(`${API_URL}/trade/place`, {
+        const res = await fetch(`${CONFIG.API_URL}/trade/place`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
             type: STATE.orderType,
             coin: STATE.coinData.symbol.toUpperCase(),
-            amount: estimatedCoin,
-            price: STATE.currentPrice
+            usdAmount: usdAmount // Intent-based submission
           })
         });
 
         const result = await res.json();
         
         if (res.ok) {
-           showMessage("✅ Order Filled Successfully!", true);
-           fetchUserBalance(); 
-           document.getElementById('tradeAmount').value = '';
-           updateFeeDisplay();
+           showToast("Order Filled Successfully!", "success");
+           await fetchUserBalance(); 
+           DOM.tradeAmount.value = '';
+           validateOrder();
         } else {
-           showMessage(`❌ ${result.message}`, false);
+           showToast(result.message || "Trade Failed", "error");
         }
-      } catch (err) { console.error(err); showMessage("Network Error", false); }
-      finally {
-         btn.disabled = false;
-         updateButtonLabel();
+      } catch (err) { 
+          showToast("Network Error. Try again.", "error"); 
+      } finally {
+         STATE.isSubmitting = false;
+         renderOrderTypeUI(); 
+         validateOrder();     
       }
     }
-    
-    function showMessage(msg, isSuccess) {
-        const el = document.getElementById('tradeMsg');
-        el.style.display = 'block';
-        el.style.color = isSuccess ? 'var(--success-green)' : 'var(--danger-red)';
-        el.textContent = msg;
-        setTimeout(() => { el.style.display = 'none'; }, 3000);
+
+    // --- EVENTS ---
+    function setupEventListeners() {
+      document.querySelectorAll('.order-tab').forEach(btn => {
+          btn.addEventListener('click', () => setOrderType(btn.dataset.type));
+      });
+
+      document.querySelectorAll('.tf-btn').forEach(btn => {
+          btn.addEventListener('click', () => updateTimeframe(btn.dataset.days, btn));
+      });
+
+      document.querySelectorAll('.pct-btn').forEach(btn => {
+          btn.addEventListener('click', () => setPercent(parseInt(btn.dataset.pct)));
+      });
+
+      DOM.submitBtn.addEventListener('click', executeTrade);
+      document.getElementById('closeBtn').addEventListener('click', () => window.location.href = 'dashboard.html');
     }
 
     // --- HELPERS ---
-    function getCachedData(key, ttl) {
-      const cached = localStorage.getItem(key);
-      if (!cached) return null;
-      try { const { data, timestamp } = JSON.parse(cached); return Date.now() - timestamp < ttl ? data : null; } catch { return null; }
+    function showChartLoader(show) {
+        // Optimization: Toggle class instead of innerHTML
+        if(show) DOM.chartOverlay.classList.add('active');
+        else DOM.chartOverlay.classList.remove('active');
     }
-    function setCachedData(key, data) { localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() })); }
 
-    document.addEventListener('DOMContentLoaded', init);
+    function showChartError() {
+        DOM.chartOverlay.innerHTML = ''; // Only rewrite on error
+        const span = document.createElement('span');
+        span.style.color = 'var(--danger-red)';
+        span.textContent = 'Chart unavailable';
+        
+        const btn = document.createElement('button');
+        btn.className = 'retry-btn';
+        btn.textContent = 'Retry';
+        btn.addEventListener('click', () => loadChart(STATE.chartDays));
+        
+        DOM.chartOverlay.append(span, btn);
+        DOM.chartOverlay.classList.add('active');
+    }
+
+    function showToast(msg, type) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.remove('toast-success', 'toast-error', 'toast-info', 'show');
+        t.classList.add('show', `toast-${type}`);
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function formatMetric(num, isCurrency = true) {
+        if (num == null || isNaN(num)) return '--';
+        const prefix = isCurrency ? '$' : '';
+        if (num >= 1e9) return `${prefix}${(num / 1e9).toFixed(2)}B`;
+        if (num >= 1e6) return `${prefix}${(num / 1e6).toFixed(2)}M`;
+        return `${prefix}${num.toLocaleString()}`;
+    }
+
+    function getCachedData(key, ttl) {
+      const item = localStorage.getItem(key);
+      if(!item) return null;
+      try { const {data, ts} = JSON.parse(item); return Date.now()-ts < ttl ? data : null; } catch{return null;}
+    }
+    function setCachedData(key, data) { localStorage.setItem(key, JSON.stringify({data, ts: Date.now()})); }
   </script>
 </body>
 </html>
