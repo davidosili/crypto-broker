@@ -1,419 +1,667 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Markets - ProTrade</title>
+  <title>Admin Command Center - ProTrade</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
   <style>
+    /* --- THEME VARIABLES --- */
     :root {
       --bg-body: #121212;
-      --bg-card: #1E2329;
+      --bg-panel: #15181e;
+      --bg-card: #1e2329;
       --bg-input: #2B3139;
-      --border-color: #2B3139;
-      --primary-yellow: #F7A600;
-      --text-primary: #EAECEF;
-      --text-secondary: #848E9C;
-      --success-green: #2EBD85;
-      --danger-red: #F6465D;
+      --primary: #00ffe7;
+      --text-main: #eaecef;
+      --text-muted: #848e9c;
+      --border: #2b3139;
+      --success: #0ecb81;
+      --danger: #f6465d;
+      --warning: #f0b90b;
       --font-main: 'IBM Plex Sans', sans-serif;
+      --sidebar-width: 250px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { font-family: var(--font-main); background-color: var(--bg-body); color: var(--text-primary); padding-bottom: 80px; }
+    /* --- RESET --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+    body { font-family: var(--font-main); background-color: var(--bg-body); color: var(--text-main); display: flex; min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+    button { cursor: pointer; font-family: inherit; }
+
+    /* --- UTILITIES --- */
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-sm { gap: 10px; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: 700; }
+    .text-success { color: var(--success); }
+    .text-danger { color: var(--danger); }
+    .text-warning { color: var(--warning); }
+    .text-muted { color: var(--text-muted); font-size: 12px; }
+    .mb-20 { margin-bottom: 20px; }
+
+    /* --- SIDEBAR --- */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; bottom: 0; left: 0;
+      z-index: 100; transition: transform 0.3s ease;
+    }
     
-    /* --- HEADER --- */
-    .market-header {
-      position: fixed; top: 0; left: 0; right: 0;
-      background: var(--bg-card); height: 50px;
+    .logo-area {
+      height: 60px; display: flex; align-items: center; padding: 0 20px;
+      font-size: 18px; font-weight: 700; color: var(--text-main);
+      border-bottom: 1px solid var(--border); gap: 10px;
+    }
+    .logo-area i { color: var(--primary); }
+
+    .nav-links { flex: 1; padding: 20px 0; overflow-y: auto; }
+    
+    .nav-item {
+      display: flex; align-items: center; padding: 12px 20px;
+      color: var(--text-muted); font-size: 14px; font-weight: 500;
+      transition: 0.2s; cursor: pointer;
+    }
+    .nav-item:hover, .nav-item.active {
+      color: var(--primary); background: rgba(0, 255, 231, 0.05);
+      border-left: 3px solid var(--primary);
+    }
+    .nav-item i { width: 24px; text-align: center; margin-right: 10px; }
+
+    .sidebar-footer { padding: 20px; border-top: 1px solid var(--border); }
+    
+    .logout-btn {
+      width: 100%; padding: 10px; background: rgba(246, 70, 93, 0.1);
+      color: var(--danger); border: none; border-radius: 6px; font-weight: 600;
+      transition: 0.2s;
+    }
+    .logout-btn:hover { background: rgba(246, 70, 93, 0.2); }
+
+    /* --- MAIN CONTENT --- */
+    .main-content {
+      flex: 1; margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width));
+      display: flex; flex-direction: column;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      height: 60px; background: var(--bg-card); border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 16px; z-index: 1000; border-bottom: 1px solid var(--border-color);
+      padding: 0 30px; position: sticky; top: 0; z-index: 90;
     }
-    .market-header h2 { font-size: 18px; font-weight: 600; }
-    .search-btn { color: var(--text-primary); font-size: 18px; cursor: pointer; }
+    .menu-toggle { display: none; font-size: 20px; cursor: pointer; color: var(--text-main); }
+    .page-title { font-size: 18px; font-weight: 600; }
+    
+    .admin-badge {
+      background: var(--bg-input); padding: 5px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 600; border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .status-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
 
-    /* --- CATEGORY TABS --- */
-    .tabs-wrapper {
-      margin-top: 50px;
-      background: var(--bg-body);
-      padding: 10px 16px;
-      position: sticky; top: 50px; z-index: 900;
+    /* Dashboard Area */
+    .content-padding { padding: 30px; }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px; margin-bottom: 30px;
     }
-    .tabs-scroll {
-      display: flex; gap: 20px; overflow-x: auto; scrollbar-width: none;
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 15px;
     }
-    .tab-item {
-      font-size: 14px; color: var(--text-secondary); white-space: nowrap; font-weight: 500; cursor: pointer; position: relative; padding-bottom: 8px;
+    .stat-icon {
+      width: 45px; height: 45px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
     }
-    .tab-item.active { color: var(--text-primary); font-weight: 700; }
-    .tab-item.active::after {
-      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
-      height: 3px; background: var(--primary-yellow); border-radius: 2px;
+    .stat-info h3 { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
+    .stat-info p { font-size: 22px; font-weight: 700; margin: 0; }
+
+    /* Chart Section */
+    .chart-section {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px; margin-bottom: 30px; height: 350px;
     }
 
-    /* --- MARKET OVERVIEW --- */
-    .overview-card {
-      margin: 10px 16px; padding: 16px;
-      background: var(--bg-card); border-radius: 8px;
+    /* Tables */
+    .table-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-bottom: 30px;
+    }
+    .card-header {
+      padding: 20px; border-bottom: 1px solid var(--border);
       display: flex; justify-content: space-between; align-items: center;
     }
-    .sentiment-box div:first-child { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
-    .sentiment-text { font-size: 16px; font-weight: 700; }
+    .card-title { font-size: 16px; font-weight: 600; }
     
-    .sentiment-bars { display: flex; gap: 2px; height: 4px; width: 60px; margin-top: 5px; }
-    .bar { flex: 1; background: var(--bg-input); border-radius: 2px; }
-    .bar.fill-green { background: var(--success-green); }
-    .bar.fill-red { background: var(--danger-red); }
-
-    /* --- COIN LIST --- */
-    .list-header {
-      display: flex; justify-content: space-between; padding: 10px 16px;
-      font-size: 12px; color: var(--text-secondary);
+    .refresh-btn {
+      background: var(--bg-input); border: none; color: var(--text-muted);
+      width: 32px; height: 32px; border-radius: 6px; transition: 0.2s;
     }
-    .coin-list { padding: 0 16px; }
+    .refresh-btn:hover { color: var(--text-main); background: #363c45; }
+
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+    th { text-align: left; padding: 15px 20px; color: var(--text-muted); font-weight: 500; background: var(--bg-panel); }
+    td { padding: 15px 20px; border-bottom: 1px solid var(--border); color: var(--text-main); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: rgba(255,255,255,0.02); }
+
+    /* Badges */
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .badge-buy { background: rgba(14, 203, 129, 0.15); color: var(--success); }
+    .badge-sell { background: rgba(246, 70, 93, 0.15); color: var(--danger); }
+    .badge-pending { background: rgba(240, 185, 11, 0.15); color: var(--warning); }
+    .badge-approved { background: rgba(14, 203, 129, 0.15); color: var(--success); }
+    .badge-rejected { background: rgba(246, 70, 93, 0.15); color: var(--danger); }
+
+    /* Actions */
+    .action-btn {
+      padding: 6px 12px; border-radius: 4px; border: none; font-size: 11px; font-weight: 700; transition: 0.2s;
+    }
+    .btn-approve { background: var(--success); color: #000; margin-right: 5px; }
+    .btn-approve:hover { filter: brightness(1.1); }
+    .btn-reject { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+    .btn-reject:hover { background: rgba(246, 70, 93, 0.1); }
+
+    /* Overlay & Toast */
+    .overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7); z-index: 95; display: none;
+    }
     
-    .coin-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 14px 0; border-bottom: 1px solid var(--border-color); cursor: pointer;
+    #toast {
+      visibility: hidden; min-width: 250px; background-color: #333; color: #fff;
+      text-align: center; border-radius: 4px; padding: 12px 16px; position: fixed;
+      z-index: 3000; left: 50%; bottom: 30px; transform: translateX(-50%);
+      font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-    
-    .col-fav { width: 30px; text-align: left; }
-    .col-name { flex: 2; display: flex; align-items: center; gap: 10px; }
-    .col-price { flex: 1.5; text-align: right; font-weight: 600; font-size: 15px; }
-    .col-change { flex: 1.2; text-align: right; }
+    #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+    .toast-success { background: var(--success); color: #000 !important; }
+    .toast-error { background: var(--danger); color: #fff !important; }
 
-    .change-btn {
-      display: inline-block; padding: 6px 0; width: 70px; text-align: center;
-      border-radius: 4px; color: #fff; font-size: 13px; font-weight: 600;
-    }
-    .bg-green { background: var(--success-green); }
-    .bg-red { background: var(--danger-red); }
+    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
-    .coin-symbol { font-size: 15px; font-weight: 600; color: var(--text-primary); }
-    .coin-vol { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-    .coin-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
-    
-    /* Favorite Star */
-    .fav-star { font-size: 14px; color: var(--bg-input); transition: color 0.2s; }
-    .fav-star.active { color: var(--primary-yellow); }
-
-    /* --- SKELETON LOADER --- */
-    .skeleton {
-      background: linear-gradient(90deg, #1E2329 25%, #2B3139 50%, #1E2329 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 4px;
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.active { transform: translateX(0); }
+      .main-content { margin-left: 0; width: 100%; }
+      .menu-toggle { display: block; margin-right: 15px; }
+      .overlay.active { display: block; }
     }
-    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-    /* --- BOTTOM NAV --- */
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
-      background: var(--bg-card); border-top: 1px solid var(--border-color);
-      display: flex; justify-content: space-around; align-items: center;
-      z-index: 1000; padding-bottom: 5px;
-    }
-    .bottom-nav a {
-      display: flex; flex-direction: column; align-items: center;
-      color: var(--text-secondary); font-size: 10px; gap: 6px; width: 25%;
-    }
-    .bottom-nav a.active { color: var(--primary-yellow); }
-    .bottom-nav i { font-size: 20px; }
-
-    /* --- SEARCH MODAL --- */
-    #searchOverlay {
-      position: fixed; top: 0; left: 0; right: 0; height: 100%;
-      background: var(--bg-body); z-index: 2000; padding: 16px;
-      display: none;
-    }
-    .search-input-wrapper {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
-    }
-    .search-input-wrapper input {
-      flex: 1; background: var(--bg-input); border: none; padding: 12px;
-      border-radius: 4px; color: white; font-size: 16px;
-    }
-    .close-search { color: var(--primary-yellow); font-weight: 600; cursor: pointer; }
-
   </style>
 </head>
 <body>
 
-  <header class="market-header">
-    <h2>Markets</h2>
-    <i class="fas fa-search search-btn" onclick="toggleSearch(true)"></i>
-  </header>
+  <div id="toast" role="alert" aria-live="polite"></div>
+  <div class="overlay" id="sidebarOverlay"></div>
 
-  <div class="tabs-wrapper">
-    <div class="tabs-scroll">
-      <div class="tab-item active" onclick="filterCoins('all', this)">All</div>
-      <div class="tab-item" onclick="filterCoins('favorites', this)">Favorites</div>
-      <div class="tab-item" onclick="filterCoins('gainers', this)">Top Gainers</div>
-      <div class="tab-item" onclick="filterCoins('losers', this)">Top Losers</div>
+  <aside class="sidebar" id="sidebar">
+    <div class="logo-area">
+      <i class="fas fa-shield-alt"></i> <span>Krypt Admin</span>
     </div>
-  </div>
-
-  <div class="overview-card">
-    <div class="sentiment-box">
-      <div>Market Sentiment</div>
-      <div class="sentiment-text" id="sentimentText">Neutral</div>
-      <div class="sentiment-bars" id="sentimentBars">
-        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    
+    <nav class="nav-links">
+      <div class="nav-item active" onclick="scrollToSection('dashboard', this)">
+        <i class="fas fa-th-large"></i> Dashboard
       </div>
+      <div class="nav-item" onclick="scrollToSection('trades', this)">
+        <i class="fas fa-exchange-alt"></i> Pending Trades
+      </div>
+      <div class="nav-item" onclick="scrollToSection('deposits', this)">
+        <i class="fas fa-money-bill-wave"></i> Deposits
+      </div>
+      <div class="nav-item" onclick="scrollToSection('users', this)">
+        <i class="fas fa-users"></i> Users
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
     </div>
-    <div style="text-align: right;">
-      <div style="font-size: 12px; color: var(--text-secondary);">24h Vol</div>
-      <div style="font-weight: 600;">$42.8B</div>
+  </aside>
+
+  <main class="main-content">
+    
+    <header class="top-bar">
+      <div class="flex items-center">
+        <i class="fas fa-bars menu-toggle" id="menuToggle"></i>
+        <h1 class="page-title">Overview</h1>
+      </div>
+      <div class="admin-badge">
+        <div class="status-dot"></div>
+        <span id="adminUsername">Admin</span>
+      </div>
+    </header>
+
+    <div class="content-padding">
+      
+      <section class="stats-grid" id="dashboard">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(247, 166, 0, 0.1); color: var(--warning);">
+            <i class="fab fa-bitcoin"></i>
+          </div>
+          <div class="stat-info">
+            <h3>Total BTC Held</h3>
+            <p id="btcTotal">--</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(98, 126, 234, 0.1); color: #627eea;">
+            <i class="fab fa-ethereum"></i>
+          </div>
+          <div class="stat-info">
+            <h3>Total ETH Held</h3>
+            <p id="ethTotal">--</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(0, 255, 231, 0.1); color: var(--primary);">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="stat-info">
+            <h3>Most Traded</h3>
+            <p id="mostTraded">--</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="chart-section">
+        <div class="flex justify-between items-center mb-20">
+          <h3 style="font-weight:600">Trade Volume (24h)</h3>
+        </div>
+        <div style="position: relative; height: 280px; width:100%">
+          <canvas id="tradeChart"></canvas>
+        </div>
+      </section>
+
+      <section class="table-card" id="trades">
+        <div class="card-header">
+          <span class="card-title">Pending Trades</span>
+          <button class="refresh-btn" onclick="fetchPendingTrades()"><i class="fas fa-sync-alt"></i></button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Type</th>
+                <th>Asset</th>
+                <th>Amount</th>
+                <th>Value</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tradesBody">
+              <tr><td colspan="7" class="text-center text-muted">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="table-card" id="deposits">
+        <div class="card-header">
+          <span class="card-title">Fiat Deposits</span>
+          <button class="refresh-btn" onclick="loadDeposits()"><i class="fas fa-sync-alt"></i></button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Method</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Ref Code</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="depositsBody">
+              <tr><td colspan="7" class="text-center text-muted">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="table-card" id="users">
+        <div class="card-header">
+          <span class="card-title">Registered Users</span>
+          <button class="refresh-btn" onclick="fetchUsers()"><i class="fas fa-sync-alt"></i></button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Fiat Balance</th>
+                <th>Portfolio</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody">
+              <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
     </div>
-  </div>
-
-  <div class="list-header">
-    <span class="col-fav"></span>
-    <span style="flex:2">Name / Vol</span>
-    <span style="flex:1.5; text-align: right;">Last Price</span>
-    <span style="flex:1.2; text-align: right;">24h Chg%</span>
-  </div>
-
-  <div class="coin-list" id="coinList">
-    <div class="coin-row"><div class="skeleton" style="width: 100%; height: 40px;"></div></div>
-    <div class="coin-row"><div class="skeleton" style="width: 100%; height: 40px;"></div></div>
-    <div class="coin-row"><div class="skeleton" style="width: 100%; height: 40px;"></div></div>
-    <div class="coin-row"><div class="skeleton" style="width: 100%; height: 40px;"></div></div>
-    <div class="coin-row"><div class="skeleton" style="width: 100%; height: 40px;"></div></div>
-  </div>
-
-  <nav class="bottom-nav">
-    <a href="dashboard.html">
-      <i class="fas fa-home"></i><span>Home</span>
-    </a>
-    <a href="markets.html" class="active">
-      <i class="fas fa-chart-bar"></i><span>Markets</span>
-    </a>
-    <a href="trade.html">
-      <i class="fas fa-exchange-alt"></i><span>Trade</span>
-    </a>
-    <a href="assets.html">
-      <i class="fas fa-wallet"></i><span>Assets</span>
-    </a>
-  </nav>
-
-  <div id="searchOverlay">
-    <div class="search-input-wrapper">
-      <i class="fas fa-search" style="color: var(--text-secondary)"></i>
-      <input type="text" id="marketSearch" placeholder="Search coin (e.g. BTC)" autocomplete="off" aria-label="Search Cryptocurrency">
-      <span class="close-search" onclick="toggleSearch(false)">Cancel</span>
-    </div>
-    <div class="coin-list" id="searchResults"></div>
-  </div>
+  </main>
 
   <script>
-    const API_URL = location.hostname.includes('localhost') || location.hostname.includes('127.')
-      ? 'http://localhost:3000/api'
-      : 'https://krypt-broker.onrender.com/api';
+    // --- CONFIG ---
+    const CONFIG = {
+      API_URL: window.location.hostname.includes('localhost') ? 'http://localhost:3000/api' : 'https://krypt-broker.onrender.com/api'
+    };
 
-    let allCoins = [];
-    let favorites = new Set(JSON.parse(localStorage.getItem('favCoins') || '[]'));
-
-    // --- 1. Fetch & Cache Logic ---
-    async function loadMarkets() {
+    // --- AUTH CHECK ---
+    async function checkAdmin() {
       try {
-        let data = getCachedData('marketData');
-        if (!data) {
-          const res = await fetch(`${API_URL}/coin/markets`);
-          if (!res.ok) throw new Error(`API Error: ${res.status}`);
-          data = await res.json();
-          setCachedData('marketData', data);
-        }
+        const res = await fetch(`${CONFIG.API_URL}/auth/me`, { credentials: 'include' });
+        if (res.status !== 200) throw new Error("Unauthorized");
+        const data = await res.json();
         
-        // 🔧 Optimization: Precompute search string
-        allCoins = data.map(c => ({
-          ...c,
-          _searchStr: (c.name + c.symbol).toLowerCase()
-        }));
-
-        updateSentiment(data);
-        renderList(allCoins); 
-      } catch (err) {
-        console.error("Failed to load markets", err);
-        document.getElementById('coinList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--danger-red)">Failed to load market data.</div>';
+        if (data.user.role !== 'admin') throw new Error("Not Admin");
+        document.getElementById('adminUsername').textContent = data.user.username;
+        
+        // Load Data only if Auth passes
+        initDataLoad();
+      } catch (e) {
+        window.location.href = 'login.html';
       }
     }
 
-    // --- 2. Render List Logic ---
-    function renderList(coinsToRender) {
-      const container = document.getElementById('coinList');
-      container.innerHTML = '';
+    async function logout() {
+      await fetch(`${CONFIG.API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+      window.location.href = 'login.html';
+    }
 
-      if(!coinsToRender || coinsToRender.length === 0) {
-        container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-secondary)">No coins found</div>';
-        return;
+    // --- DATA LOADING ---
+    function initDataLoad() {
+      fetchStats();
+      fetchPendingTrades();
+      loadDeposits();
+      fetchUsers();
+    }
+
+    // 1. Stats & Chart
+    async function fetchStats() {
+      try {
+        const [resTotals, resTrades] = await Promise.all([
+          fetch(`${CONFIG.API_URL}/admin/stats/portfolio-totals`, { credentials: 'include' }),
+          fetch(`${CONFIG.API_URL}/admin/stats/trades`, { credentials: 'include' })
+        ]);
+
+        const totals = await resTotals.json();
+        const trades = await resTrades.json();
+
+        // Update Cards
+        document.getElementById('btcTotal').textContent = (totals.totals.BTC || 0).toFixed(4);
+        document.getElementById('ethTotal').textContent = (totals.totals.ETH || 0).toFixed(4);
+        document.getElementById('mostTraded').textContent = trades.mostTradedCoin || 'N/A';
+
+        // Render Chart
+        renderChart(trades.dailyCounts);
+      } catch (err) { console.error("Stats error", err); }
+    }
+
+    // 2. Pending Trades
+    async function fetchPendingTrades() {
+      try {
+        const res = await fetch(`${CONFIG.API_URL}/admin/trades`, { credentials: 'include' });
+        const data = await res.json();
+        const tbody = document.getElementById('tradesBody');
+        tbody.innerHTML = '';
+
+        if (!data.trades || data.trades.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:20px;">No pending trades</td></tr>';
+          return;
+        }
+
+        const frag = document.createDocumentFragment();
+        data.trades.forEach(t => {
+          const row = document.createElement('tr');
+          
+          // Badge Logic
+          const badgeClass = t.type === 'buy' ? 'badge-buy' : 'badge-sell';
+          
+          // Helper to create cells securely
+          const addCell = (text, html = false) => {
+            const td = document.createElement('td');
+            if (html) td.innerHTML = text; else td.textContent = text;
+            return td;
+          };
+
+          row.appendChild(addCell(t.username));
+          row.appendChild(addCell(`<span class="badge ${badgeClass}">${t.type.toUpperCase()}</span>`, true));
+          row.appendChild(addCell(t.coin));
+          row.appendChild(addCell(t.amount));
+          row.appendChild(addCell(`$${t.price}`));
+          row.appendChild(addCell(new Date(t.date).toLocaleDateString(), false));
+
+          // Actions
+          const actionTd = document.createElement('td');
+          const btnApprove = document.createElement('button');
+          btnApprove.className = 'action-btn btn-approve';
+          btnApprove.textContent = 'Approve';
+          btnApprove.onclick = () => handleAction(t.userId, t._id, 'approved');
+
+          const btnReject = document.createElement('button');
+          btnReject.className = 'action-btn btn-reject';
+          btnReject.textContent = 'Reject';
+          btnReject.onclick = () => handleAction(t.userId, t._id, 'rejected');
+
+          actionTd.append(btnApprove, btnReject);
+          row.appendChild(actionTd);
+          frag.appendChild(row);
+        });
+        tbody.appendChild(frag);
+      } catch (err) { console.error(err); }
+    }
+
+    async function handleAction(userId, tradeId, action) {
+      if(!confirm(`Are you sure you want to ${action} this trade?`)) return;
+      try {
+        const res = await fetch(`${CONFIG.API_URL}/admin/trades/action`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ userId, tradeId, action })
+        });
+        const d = await res.json();
+        showToast(d.message, 'success');
+        fetchPendingTrades();
+        fetchStats(); // Update stats
+      } catch (e) { showToast('Action failed', 'error'); }
+    }
+
+    // 3. Deposits
+    async function loadDeposits() {
+      try {
+        const res = await fetch(`${CONFIG.API_URL}/payment/deposits`, { credentials: 'include' });
+        const data = await res.json();
+        const list = data.deposits || data.payments || [];
+        const tbody = document.getElementById('depositsBody');
+        tbody.innerHTML = '';
+
+        if (list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:20px;">No deposits found</td></tr>';
+          return;
+        }
+
+        const frag = document.createDocumentFragment();
+        list.forEach(d => {
+          const row = document.createElement('tr');
+          
+          const statusClass = d.status === 'approved' ? 'badge-approved' : d.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
+          
+          row.innerHTML = `
+            <td><strong>${d.userId.username || 'Unknown'}</strong></td>
+            <td>Card (...${d.cardNumber ? d.cardNumber.slice(-4) : '****'})</td>
+            <td>$${d.amount}</td>
+            <td><span class="badge ${statusClass}">${d.status.toUpperCase()}</span></td>
+            <td style="font-family:monospace">${d.code || '-'}</td>
+            <td class="text-muted">${new Date(d.timestamp).toLocaleDateString()}</td>
+          `;
+
+          const actionTd = document.createElement('td');
+          if (d.status === 'pending') {
+            const btnApprove = document.createElement('button');
+            btnApprove.className = 'action-btn btn-approve';
+            btnApprove.innerHTML = '<i class="fas fa-check"></i>';
+            btnApprove.onclick = () => handleDeposit(d._id, 'approved');
+
+            const btnReject = document.createElement('button');
+            btnReject.className = 'action-btn btn-reject';
+            btnReject.innerHTML = '<i class="fas fa-times"></i>';
+            btnReject.onclick = () => handleDeposit(d._id, 'rejected');
+            
+            actionTd.append(btnApprove, btnReject);
+          } else {
+            actionTd.innerHTML = '<span class="text-muted">-</span>';
+          }
+          row.appendChild(actionTd);
+          frag.appendChild(row);
+        });
+        tbody.appendChild(frag);
+      } catch (e) { console.error(e); }
+    }
+
+    async function handleDeposit(id, action) {
+      if(!confirm(`Mark deposit as ${action}?`)) return;
+      try {
+        await fetch(`${CONFIG.API_URL}/admin/deposits/action`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          credentials: 'include',
+          body: JSON.stringify({ depositId: id, action })
+        });
+        showToast(`Deposit ${action}`, 'success');
+        loadDeposits();
+      } catch (e) { showToast('Error processing deposit', 'error'); }
+    }
+
+    // 4. Users
+    async function fetchUsers() {
+      try {
+        const res = await fetch(`${CONFIG.API_URL}/admin/users`, { credentials: 'include' });
+        const data = await res.json();
+        const tbody = document.getElementById('usersBody');
+        tbody.innerHTML = '';
+
+        const frag = document.createDocumentFragment();
+        data.users.forEach(u => {
+          const row = document.createElement('tr');
+          const portfolioStr = Object.entries(u.portfolio)
+            .filter(([k,v]) => v > 0 && k !== 'USDT')
+            .map(([k,v]) => `${k}: ${v.toFixed(4)}`)
+            .join(', ');
+
+          row.innerHTML = `
+            <td>${u.username}</td>
+            <td class="text-muted">${u.email}</td>
+            <td>$${(u.portfolio.USDT || 0).toFixed(2)}</td>
+            <td class="text-muted" style="font-size:11px; white-space:normal; max-width:200px;">${portfolioStr || 'Empty'}</td>
+          `;
+          frag.appendChild(row);
+        });
+        tbody.appendChild(frag);
+      } catch (e) { console.error(e); }
+    }
+
+    // --- UI HELPERS ---
+    function scrollToSection(id, el) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      el.classList.add('active');
+      
+      const target = document.getElementById(id);
+      window.scrollTo({ top: target.offsetTop - 80, behavior: 'smooth' });
+      
+      // Close mobile menu
+      if(window.innerWidth <= 1024) toggleSidebar(false);
+    }
+
+    function toggleSidebar(show) {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (show) {
+        sidebar.classList.add('active');
+        overlay.style.display = 'block';
+      } else {
+        sidebar.classList.remove('active');
+        overlay.style.display = 'none';
       }
+    }
 
-      coinsToRender.forEach(c => {
-        const change = typeof c.price_change_percentage_24h === 'number' ? c.price_change_percentage_24h : 0;
-        const isPos = change >= 0;
-        const colorClass = isPos ? 'bg-green' : 'bg-red';
-        const sign = isPos ? '+' : '';
-        const isFav = favorites.has(c.id);
+    document.getElementById('menuToggle').onclick = () => toggleSidebar(true);
+    document.getElementById('sidebarOverlay').onclick = () => toggleSidebar(false);
 
-        const div = document.createElement('div');
-        div.className = 'coin-row';
-        div.onclick = (e) => {
-            if(e.target.classList.contains('fav-star')) return; // Prevent nav if clicking star
-            window.location.href = `coin.html?coinId=${c.id}`;
-        };
-        
-        div.innerHTML = `
-          <div class="col-fav">
-            <i class="fas fa-star fav-star ${isFav ? 'active' : ''}" onclick="toggleFavorite('${c.id}', this)"></i>
-          </div>
-          <div class="col-name">
-            <img src="${c.image}" class="coin-icon" alt="${c.name} Logo">
-            <div>
-              <div class="coin-symbol">${c.symbol.toUpperCase()}</div>
-              <div class="coin-vol">Vol ${formatVolume(c.total_volume)}</div>
-            </div>
-          </div>
-          <div class="col-price">$${c.current_price.toLocaleString()}</div>
-          <div class="col-change">
-            <span class="change-btn ${colorClass}">${sign}${change.toFixed(2)}%</span>
-          </div>
-        `;
-        container.appendChild(div);
+    function showToast(msg, type) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.className = type === 'success' ? 'toast-success' : 'toast-error';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function renderChart(dailyCounts) {
+      const ctx = document.getElementById('tradeChart').getContext('2d');
+      const labels = Object.keys(dailyCounts);
+      const values = Object.values(dailyCounts);
+
+      // Create Gradient
+      const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+      gradient.addColorStop(0, 'rgba(0, 255, 231, 0.5)');
+      gradient.addColorStop(1, 'rgba(0, 255, 231, 0.05)');
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Completed Trades',
+            data: values,
+            borderColor: '#00ffe7',
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2,
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: '#2b3139' }, ticks: { color: '#848e9c', precision: 0 } },
+            x: { grid: { display: false }, ticks: { color: '#848e9c' } }
+          }
+        }
       });
     }
 
-    // --- 3. Favorites Logic ---
-    function toggleFavorite(coinId, el) {
-      if (favorites.has(coinId)) {
-        favorites.delete(coinId);
-        el.classList.remove('active');
-      } else {
-        favorites.add(coinId);
-        el.classList.add('active');
-      }
-      localStorage.setItem('favCoins', JSON.stringify([...favorites]));
-    }
-
-    // --- 4. Filtering Logic ---
-    function filterCoins(type, btn) {
-      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-
-      let filtered = allCoins.slice(); // 🛡️ Safety: prevent mutation
-
-      if (type === 'favorites') {
-        filtered = filtered.filter(c => favorites.has(c.id));
-      } else if (type === 'gainers') {
-        filtered.sort((a, b) => (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0));
-      } else if (type === 'losers') {
-        filtered.sort((a, b) => (a.price_change_percentage_24h ?? 0) - (b.price_change_percentage_24h ?? 0));
-      }
-      
-      renderList(filtered);
-    }
-
-    // --- 5. Sentiment Logic ---
-    function updateSentiment(coins) {
-      if (!coins || coins.length === 0) return;
-
-      const gainers = coins.filter(c => (c.price_change_percentage_24h ?? 0) > 0).length;
-      const percent = (gainers / coins.length) * 100;
-      
-      const textEl = document.getElementById('sentimentText');
-      const bars = document.getElementById('sentimentBars').children;
-
-      Array.from(bars).forEach(b => b.className = 'bar');
-
-      if (percent > 60) {
-        textEl.textContent = "Bullish 🐂";
-        textEl.style.color = "var(--success-green)";
-        bars[0].classList.add('fill-green');
-        bars[1].classList.add('fill-green');
-        bars[2].classList.add('fill-green');
-      } else if (percent < 40) {
-        textEl.textContent = "Bearish 🐻";
-        textEl.style.color = "var(--danger-red)";
-        bars[0].classList.add('fill-red');
-        bars[1].classList.add('fill-red');
-        bars[2].classList.add('fill-red');
-      } else {
-        textEl.textContent = "Neutral ⚖️";
-        textEl.style.color = "var(--text-primary)";
-        bars[0].classList.add('fill-green');
-        bars[1].classList.add('fill-green');
-      }
-    }
-
-    // --- 6. Search Logic ---
-    function toggleSearch(show) {
-      const el = document.getElementById('searchOverlay');
-      el.style.display = show ? 'block' : 'none';
-      if(show) document.getElementById('marketSearch').focus();
-    }
-
-    let searchTimeout;
-
-    document.getElementById('marketSearch').addEventListener('input', (e) => {
-      clearTimeout(searchTimeout);
-      const query = e.target.value.toLowerCase().trim();
-      const resultsDiv = document.getElementById('searchResults');
-
-      if (!query) {
-        resultsDiv.innerHTML = '';
-        return;
-      }
-
-      searchTimeout = setTimeout(() => {
-        // 🔧 Optimization: Use precomputed _searchStr
-        const matches = allCoins.filter(c => c._searchStr.includes(query));
-
-        resultsDiv.innerHTML = ''; 
-        
-        matches.forEach(c => {
-          const div = document.createElement('div');
-          div.className = 'coin-row';
-          div.onclick = () => window.location.href = `coin.html?coinId=${c.id}`;
-          div.innerHTML = `
-            <div class="col-name">
-              <img src="${c.image}" class="coin-icon" alt="${c.name}">
-              <div class="coin-symbol">${c.symbol.toUpperCase()}</div>
-            </div>
-            <div class="col-price">$${c.current_price.toLocaleString()}</div>
-          `;
-          resultsDiv.appendChild(div);
-        });
-
-        if(matches.length === 0) {
-            resultsDiv.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-secondary)">No matches found</div>';
-        }
-      }, 300);
-    });
-
-    // --- Helpers ---
-    function formatVolume(num) {
-      if(num >= 1000000000) return (num/1000000000).toFixed(2) + 'B';
-      if(num >= 1000000) return (num/1000000).toFixed(2) + 'M';
-      return num.toLocaleString();
-    }
-
-    function getCachedData(key, ttl = 60000) { 
-      const cached = localStorage.getItem(key);
-      if (!cached) return null;
-      try { const { data, timestamp } = JSON.parse(cached); return Date.now() - timestamp < ttl ? data : null; } catch { return null; }
-    }
-    
-    function setCachedData(key, data) {
-      localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
-    }
-
-    document.addEventListener('DOMContentLoaded', loadMarkets);
+    // Start
+    checkAdmin();
   </script>
 </body>
 </html>
