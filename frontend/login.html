@@ -452,7 +452,7 @@
           const data = await res.json();
 
           if (res.ok) {
-            showToast("✅ Login Successful!", "success");
+            showToast("Login Successful!", "success");
             setTimeout(() => window.location.href = 'dashboard.html', 1000);
           } else {
             throw new Error(data.message || 'Invalid credentials');
