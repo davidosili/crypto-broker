@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="View live crypto markets, top gainers, losers, and trading volumes on ProTrade.">
-  <title>Markets - ProTrade</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https:; img-src 'self' https: data:; font-src 'self' https: data:;">
+  <title>ProTrade Dashboard</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   
   <style>
-    /* --- CSS VARIABLES & RESET --- */
+    /* --- THEME VARIABLES --- */
     :root {
       --bg-body: #121212;
       --bg-card: #1E2329;
@@ -23,684 +23,688 @@
       --text-secondary: #848E9C;
       --success-green: #2EBD85;
       --danger-red: #F6465D;
-      
-      --header-height: 50px;
-      --bottom-nav-height: 65px;
       --font-main: 'IBM Plex Sans', sans-serif;
+      --sidebar-width: 260px;
     }
 
+    /* --- RESET & BASE --- */
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { font-family: var(--font-main); background-color: var(--bg-body); color: var(--text-primary); padding-bottom: 80px; }
-    
-    /* Scroll Lock for Modal */
-    body.no-scroll { overflow: hidden; }
-
-    button { cursor: pointer; border: none; background: none; font-family: inherit; color: inherit; }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; margin: 0; padding: 0; }
+    iframe { border: none; }
 
     /* --- UTILITY CLASSES --- */
-    .text-secondary { color: var(--text-secondary); font-size: 12px; }
-    .text-primary { color: var(--text-primary); }
-    .font-bold { font-weight: 600; }
-    .text-center { text-align: center; }
-    .text-right { text-align: right; }
-    .hidden { display: none !important; }
     .flex { display: flex; }
+    .flex-col { flex-direction: column; }
     .items-center { align-items: center; }
     .justify-between { justify-content: space-between; }
+    .gap-xs { gap: 4px; }
+    .gap-sm { gap: 8px; }
+    .gap-md { gap: 12px; }
+    
     .mb-xs { margin-bottom: 4px; }
-    .p-16 { padding: 16px; }
+    .mb-sm { margin-bottom: 8px; }
+    .mb-md { margin-bottom: 15px; }
+    .mb-lg { margin-bottom: 20px; }
+    .mt-lg { margin-top: 25px; }
+    
+    .w-full { width: 100%; }
+    .w-40 { width: 40px; }
+    .no-btn { background: none; border: none; padding: 0; cursor: pointer; color: inherit; }
+    
+    .text-primary { color: var(--text-primary); }
+    .text-secondary { color: var(--text-secondary); }
+    .text-success { color: var(--success-green); }
+    .text-danger { color: var(--danger-red); }
+    .text-highlight { color: var(--primary-yellow); }
+    
+    .text-xs { font-size: 11px; }
+    .text-sm { font-size: 13px; }
+    .text-base { font-size: 14px; }
+    .text-lg { font-size: 16px; }
+    .text-xl { font-size: 18px; }
+    .font-bold { font-weight: 700; }
+    .font-medium { font-weight: 500; }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .cursor-pointer { cursor: pointer; }
+    .hidden { display: none !important; }
+    .block { display: block; }
+    .relative { position: relative; }
 
-    /* Sentiment Colors */
-    .text-bullish { color: var(--success-green); }
-    .text-bearish { color: var(--danger-red); }
-    .text-neutral { color: var(--text-primary); }
-    .bg-bullish { background: var(--success-green); }
-    .bg-bearish { background: var(--danger-red); }
-    .bg-neutral { background: var(--bg-input); }
-
-    /* Flex Columns */
-    .flex-2 { flex: 2; }
-    .flex-1-5 { flex: 1.5; }
-    .flex-1-2 { flex: 1.2; }
-
-    /* --- HEADER --- */
-    .market-header {
+    /* --- COMPONENTS --- */
+    .top-bar {
       position: fixed; top: 0; left: 0; right: 0;
-      background: var(--bg-card); height: var(--header-height);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 16px; z-index: 1000; border-bottom: 1px solid var(--border-color);
+      background: var(--bg-card); height: 60px;
+      display: flex; align-items: center; padding: 0 20px;
+      z-index: 1000; border-bottom: 1px solid var(--border-color); gap: 15px;
+      transition: left 0.3s ease;
     }
-    .market-header h2 { font-size: 18px; font-weight: 600; margin: 0; }
-    .search-btn { color: var(--text-primary); font-size: 18px; }
+    .menu-btn { font-size: 20px; color: var(--text-primary); }
 
-    /* --- TABS --- */
-    .tabs-wrapper {
-      margin-top: var(--header-height);
-      background: var(--bg-body);
-      padding: 10px 16px;
-      position: sticky; top: var(--header-height); z-index: 900;
+    .search-container { flex: 1; position: relative; max-width: 600px; }
+    #coinSearch {
+      width: 100%; background: var(--bg-input); border: 1px solid transparent;
+      padding: 10px 12px 10px 40px; border-radius: 8px;
+      color: var(--text-primary); font-size: 14px; transition: border 0.3s;
     }
-    .tabs-scroll {
-      display: flex; gap: 20px; overflow-x: auto; 
-      scrollbar-width: none;
+    #coinSearch:focus { outline: none; border-color: var(--primary-yellow); }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 14px; }
+
+    #searchResults {
+      position: absolute; top: 45px; width: 100%; background: var(--bg-card);
+      border: 1px solid var(--border-color); border-radius: 8px;
+      max-height: 300px; overflow-y: auto; z-index: 1002;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.5);
     }
-    .tabs-scroll::-webkit-scrollbar { display: none; }
+    .search-item { border-bottom: 1px solid var(--border-color); padding: 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+    .search-item:hover, .search-item.active { background: var(--bg-input); }
     
-    .tab-item {
-      font-size: 14px; color: var(--text-secondary); white-space: nowrap; font-weight: 500; 
-      position: relative; padding-bottom: 8px;
+    .sidebar {
+      position: fixed; left: -280px; top: 0; height: 100%; width: 280px;
+      background: var(--bg-card); z-index: 1100; transition: left 0.3s ease;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.5); padding: 20px; display: flex; flex-direction: column;
+      border-right: 1px solid var(--border-color);
     }
-    .tab-item:focus { outline: none; color: var(--text-primary); }
-    .tab-item.active { color: var(--text-primary); font-weight: 700; }
-    .tab-item.active::after {
-      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
-      height: 3px; background: var(--primary-yellow); border-radius: 2px;
-    }
-
-    /* --- OVERVIEW CARD --- */
-    .overview-card {
-      margin: 10px 16px; padding: 16px;
-      background: var(--bg-card); border-radius: 8px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .sentiment-text { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .sidebar.active { left: 0; }
     
-    .sentiment-bars { display: flex; gap: 2px; height: 4px; width: 60px; margin-top: 5px; }
-    .bar { flex: 1; background: var(--bg-input); border-radius: 2px; transition: background 0.3s; }
-
-    /* --- LIST --- */
-    .list-header {
-      display: flex; justify-content: space-between; padding: 10px 16px;
-      font-size: 12px; color: var(--text-secondary);
-    }
+    .sidebar-header { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+    .profile-icon { width: 45px; height: 45px; border-radius: 50%; background: var(--bg-input); padding: 2px; }
     
-    /* Animation: Fade Effect */
-    .coin-list { 
-        padding: 0 16px; min-height: 200px; 
-        opacity: 1; transition: opacity 0.2s ease-in-out; 
+    .sidebar-menu ul li a { 
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 10px; border-radius: 8px; 
+        color: var(--text-secondary); font-size: 14px; transition: 0.2s;
     }
-    .coin-list.fading { opacity: 0.4; pointer-events: none; }
+    .sidebar-menu ul li a:hover { background: var(--bg-input); color: var(--text-primary); }
+    .sidebar-menu ul li a.active-link { color: var(--primary-yellow); background: var(--bg-input); }
+    .sidebar-menu ul li a i { width: 20px; text-align: center; }
     
-    /* ERROR STATE (Clean Separation) */
-    .error-state { padding-top: 40px; text-align: center; padding-left: 16px; padding-right: 16px; }
-    
-    /* Native Button Styling for DIV role=button */
-    .coin-row {
-      display: flex; justify-content: space-between; align-items: center;
-      width: 100%; padding: 14px 0; border-bottom: 1px solid var(--border-color); 
-      text-align: left; cursor: pointer; transition: background 0.2s;
-    }
-    .coin-row:hover, .coin-row:focus { background: var(--bg-input); outline: none; }
+    .logout-btn { width: 100%; padding: 12px; background: rgba(246, 70, 93, 0.1); border: none; color: var(--danger-red); border-radius: 6px; margin-top: 20px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    .logout-btn:hover { background: rgba(246, 70, 93, 0.2); }
+    .guest-badge { background: var(--bg-input); color: var(--primary-yellow); font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; display: none; }
+    .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1050; display: none; }
+    .overlay.active { display: block; }
 
-    .col-fav { width: 30px; text-align: left; }
-    .col-name { flex: 2; display: flex; align-items: center; gap: 10px; }
-    .col-price { flex: 1.5; text-align: right; font-weight: 600; font-size: 15px; color: var(--text-primary); }
-    .col-change { flex: 1.2; text-align: right; }
+    .content-wrapper { padding-top: 80px; padding-left: 16px; padding-right: 16px; max-width: 1200px; margin: 0 auto; transition: padding 0.3s; }
+    .dashboard-grid { display: flex; flex-direction: column; gap: 16px; }
 
-    .change-btn {
-      display: inline-block; padding: 6px 0; width: 70px; text-align: center;
-      border-radius: 4px; color: #fff; font-size: 13px; font-weight: 600;
-    }
-    .bg-green { background: var(--success-green); }
-    .bg-red { background: var(--danger-red); }
+    .card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; }
+    .card-padding { padding: 20px; }
+    .chart-card { height: 350px; display: flex; flex-direction: column; }
+    .canvas-container { flex: 1; position: relative; width: 100%; }
 
-    .coin-symbol { font-size: 15px; font-weight: 600; color: var(--text-primary); }
-    .coin-vol { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-    .coin-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
-    
-    .fav-star { font-size: 14px; color: var(--bg-input); transition: color 0.2s; padding: 5px; }
-    .fav-star:hover { transform: scale(1.1); }
-    .fav-star.active { color: var(--primary-yellow); }
+    .portfolio-card { height: 100%; background: linear-gradient(135deg, #2b3139 0%, #1e2329 100%); }
+    .total-value-display { font-size: 36px; font-weight: 700; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -0.5px; }
+    .coin-row { padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.05); }
+    .coin-img-sm { width: 28px; height: 28px; border-radius: 50%; }
 
-    /* --- SKELETON --- */
-    .skeleton {
-      width: 100%; height: 40px; border-radius: 4px;
-      background: linear-gradient(90deg, #1E2329 25%, #2B3139 50%, #1E2329 75%);
-      background-size: 200% 100%; animation: shimmer 1.5s infinite;
-    }
-    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .action-tabs { display: flex; background: var(--bg-card); padding: 4px; border-radius: 8px; margin-bottom: 16px; gap: 4px; border: 1px solid var(--border-color); }
+    .tab-btn { flex: 1; background: transparent; border: none; color: var(--text-secondary); padding: 10px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { background: var(--bg-input); color: var(--text-primary); }
+    .trade-btn { color: var(--primary-yellow); }
 
-    .empty-state { padding: 40px 20px; text-align: center; color: var(--text-secondary); }
+    .coin-list-container { margin-bottom: 20px; }
+    .coin-item { padding: 14px 20px; border-bottom: 1px solid var(--border-color); transition: background 0.2s; display: block; cursor: pointer; }
+    .coin-item:hover { background: var(--bg-input); }
+    .coin-item-content { width: 100%; display: flex; justify-content: space-between; align-items: center; font-weight: 500; }
 
-    /* --- RETRY BUTTON & SPINNER --- */
-    .retry-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      gap: 8px; padding: 10px 24px;
-      background: var(--bg-input); border: 1px solid var(--border-color);
-      color: var(--text-primary); border-radius: 4px; font-weight: 600;
-      transition: all 0.2s;
-    }
-    .retry-btn:hover:not(:disabled) { background: #363c45; border-color: var(--text-secondary); }
-    .retry-btn:disabled { opacity: 0.7; cursor: not-allowed; background: var(--bg-card); }
-    
-    .spinner {
-      width: 14px; height: 14px;
-      border: 2px solid rgba(255, 255, 255, 0.3); border-top-color: var(--primary-yellow);
-      border-radius: 50%; animation: spin 0.8s linear infinite; display: block;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
+    .coin-card-sm { background: var(--bg-card); padding: 16px; border-radius: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: 1px solid var(--border-color); }
+    .coin-card-sm:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-color: var(--text-secondary); }
+    .coin-card-img { width: 16px; height: 16px; border-radius: 50%; }
 
-    /* --- BOTTOM NAV --- */
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; width: 100%; height: var(--bottom-nav-height);
-      background: var(--bg-card); border-top: 1px solid var(--border-color);
-      display: flex; justify-content: space-around; align-items: center;
-      z-index: 1000; padding-bottom: 5px;
-    }
-    .nav-link {
-      display: flex; flex-direction: column; align-items: center;
-      color: var(--text-secondary); font-size: 10px; gap: 6px; flex: 1; text-decoration: none;
-      transition: color 0.2s;
-    }
-    .nav-link:hover, .nav-link:focus { color: var(--text-primary); }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: 5px; }
+    .nav-link { display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); font-size: 10px; gap: 6px; width: 25%; transition: 0.2s; }
+    .nav-link:hover { color: var(--text-primary); }
     .nav-link.active { color: var(--primary-yellow); }
     .nav-link i { font-size: 20px; }
 
-    /* --- SEARCH OVERLAY --- */
-    #searchOverlay {
-      position: fixed; top: 0; left: 0; right: 0; height: 100%;
-      background: var(--bg-body); z-index: 2000; padding: 16px;
+    .skeleton { background: linear-gradient(90deg, #2b3139 25%, #363c45 50%, #2b3139 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 4px; }
+    @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skeleton-text { height: 14px; margin-bottom: 6px; width: 60%; }
+    .skeleton-circle { width: 28px; height: 28px; border-radius: 50%; }
+
+    #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 4px; padding: 12px 16px; position: fixed; z-index: 3000; left: 50%; bottom: 80px; transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+    #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+    .toast-error { background-color: var(--danger-red) !important; color: white; }
+    .toast-success { background-color: var(--success-green) !important; color: white; }
+    
+    @media (min-width: 1024px) {
+      .sidebar { left: 0 !important; width: var(--sidebar-width); box-shadow: none; }
+      .menu-btn, .overlay, .bottom-nav { display: none !important; }
+      .top-bar { left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); padding: 0 40px; }
+      .content-wrapper { padding-left: calc(var(--sidebar-width) + 40px); padding-right: 40px; padding-top: 90px; max-width: 1600px; }
+      .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+      .chart-card, .portfolio-card { height: 400px; }
+      .action-tabs { max-width: 400px; }
+      .grid-2 { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+      body { padding-bottom: 0; }
     }
-    .search-input-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-    .search-input-wrapper input {
-      flex: 1; background: var(--bg-input); border: none; padding: 12px;
-      border-radius: 4px; color: white; font-size: 16px; outline: none;
-    }
-    .search-input-wrapper input:focus { outline: 1px solid var(--primary-yellow); }
-    .close-search { color: var(--primary-yellow); font-weight: 600; }
   </style>
 </head>
 <body>
 
-  <header class="market-header" id="mainHeader">
-    <h2>Markets</h2>
-    <button class="search-btn" id="openSearchBtn" aria-label="Open Search">
-      <i class="fas fa-search"></i>
-    </button>
+  <div id="toast" role="alert" aria-live="polite"></div>
+  <div class="overlay" id="sidebarOverlay"></div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header flex items-center gap-md">
+      <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Profile" class="profile-icon" loading="lazy">
+      <div>
+        <div class="flex items-center gap-xs">
+            <h2 id="userInfo" class="text-base font-bold">Guest</h2>
+            <span id="guestBadge" class="guest-badge">DEMO</span>
+        </div>
+        <p class="text-secondary text-xs">UID: 8839201</p>
+      </div>
+    </div>
+    <div class="sidebar-menu flex flex-col justify-between" style="height: 100%;">
+      <ul>
+        <li><a href="dashboard.html" class="active-link"><i class="fas fa-home"></i> Dashboard</a></li>
+        <li><a href="markets.html"><i class="fas fa-chart-line"></i> Markets</a></li>
+        <li><a href="trade.html"><i class="fas fa-exchange-alt"></i> Spot Trade</a></li>
+        <li><a href="assets.html"><i class="fas fa-wallet"></i> Wallet</a></li>
+        <li><a href="copytrade.html"><i class="fas fa-robot"></i> Strategy Bot</a></li>
+        <li><a href="security.html"><i class="fas fa-shield-alt"></i> Security</a></li>
+        <li><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+      </ul>
+      <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <header class="top-bar">
+    <button class="menu-btn no-btn" id="sidebarToggle" aria-label="Toggle Sidebar" aria-expanded="false"><i class="fas fa-bars"></i></button>
+    <div class="search-container">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" id="coinSearch" placeholder="Search Coin (e.g. BTC)" aria-label="Search Cryptocurrency" autocomplete="off">
+      <ul id="searchResults" role="listbox"></ul>
+    </div>
   </header>
 
-  <div class="tabs-wrapper" id="mainTabs">
-    <div class="tabs-scroll" role="tablist" aria-label="Market Categories" id="tabList">
-      <button class="tab-item" id="tab-all" data-filter="all" role="tab" aria-selected="false" tabindex="-1">All</button>
-      <button class="tab-item" id="tab-favorites" data-filter="favorites" role="tab" aria-selected="false" tabindex="-1">Favorites</button>
-      <button class="tab-item" id="tab-gainers" data-filter="gainers" role="tab" aria-selected="false" tabindex="-1">Top Gainers</button>
-      <button class="tab-item" id="tab-losers" data-filter="losers" role="tab" aria-selected="false" tabindex="-1">Top Losers</button>
+  <div class="content-wrapper">
+    <div class="dashboard-grid">
+      <div class="card chart-card card-padding">
+        <div class="flex justify-between items-center mb-md">
+          <span id="currentCoinLabel" class="font-bold text-base transition-colors">BTC/USDT</span>
+          <button class="no-btn text-secondary" id="expandChartBtn" title="Fullscreen"><i class="fas fa-expand-alt"></i></button>
+        </div>
+        <div class="canvas-container">
+          <canvas id="coinChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card portfolio-card card-padding">
+        <div class="flex items-center gap-sm text-secondary text-sm mb-sm">
+          Total Assets (USD) <button class="no-btn fas fa-eye" id="eyeToggle" aria-label="Toggle Balance Visibility"></button>
+        </div>
+        <div class="total-value-display"><span id="totalValue">0.00</span></div>
+        <div id="portfolioBreakdown">
+          <div class="coin-row flex justify-between items-center">
+             <div class="flex items-center gap-sm">
+                <div class="skeleton skeleton-circle"></div>
+                <div class="skeleton skeleton-text"></div>
+             </div>
+             <div class="skeleton skeleton-text w-40"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-lg"></div>
+
+    <div class="action-tabs">
+      <button class="tab-btn active" onclick="toggleList(event, 'rising')" aria-selected="true">Gainers</button>
+      <button class="tab-btn" onclick="toggleList(event, 'falling')" aria-selected="false">Losers</button>
+      <button class="tab-btn trade-btn" onclick="window.location.href='trade.html'">Trade</button>
+    </div>
+
+    <div id="risingList" class="card coin-list-container">
+        <div class="coin-item"><div class="skeleton skeleton-text w-full"></div></div>
+    </div>
+    <div id="fallingList" class="card coin-list-container hidden"></div>
+
+    <section>
+      <div class="text-xl font-bold text-primary flex items-center gap-sm mb-md">
+        <i class="fas fa-fire text-highlight"></i> Hot Derivatives
+      </div>
+      <div id="trendingCoins" class="grid-2">
+         <div class="coin-card-sm"><div class="skeleton skeleton-text"></div></div>
+      </div>
+    </section>
+
+    <div class="text-xl font-bold text-primary flex items-center gap-sm mb-md">
+      <i class="fas fa-newspaper"></i> Latest News
+    </div>
+    <div class="relative" style="min-height:300px;">
+        <iframe class="card" width="100%" loading="lazy" scrolling="no" 
+            src="https://cryptopanic.com/widgets/news/?bg_color=1E2329&font_family=sans&header_bg_color=1E2329&header_text_color=FFFFFF&link_color=F7A600&news_feed=recent&text_color=EAECEF&title=Latest%20News" 
+            height="300px">
+        </iframe>
     </div>
   </div>
 
-  <main id="mainContent">
-    <div class="overview-card">
-      <div class="sentiment-box">
-        <div class="text-secondary mb-xs">Market Sentiment</div>
-        <div class="sentiment-text" id="sentimentText" aria-live="polite">
-          <span>Neutral</span> <span aria-hidden="true">⚖️</span>
-        </div>
-        <div class="sentiment-bars" id="sentimentBars" aria-hidden="true">
-          <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-        </div>
-      </div>
-      <div class="text-right">
-        <div class="text-secondary">24h Vol</div>
-        <div class="font-bold" id="totalVolume">--</div>
-      </div>
-    </div>
-
-    <div class="list-header">
-      <span class="col-fav"></span>
-      <span class="flex-2">Name / Vol</span>
-      <span class="flex-1-5 text-right">Last Price</span>
-      <span class="flex-1-2 text-right">24h Chg%</span>
-    </div>
-
-    <div class="coin-list" id="coinList" role="list"></div>
-  </main>
-
-  <nav class="bottom-nav" id="mainNav">
-    <a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>Home</span></a>
-    <a href="markets.html" class="nav-link active" aria-current="page"><i class="fas fa-chart-bar"></i><span>Markets</span></a>
+  <nav class="bottom-nav">
+    <a href="dashboard.html" class="nav-link active"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="markets.html" class="nav-link"><i class="fas fa-chart-bar"></i><span>Markets</span></a>
     <a href="trade.html" class="nav-link"><i class="fas fa-exchange-alt"></i><span>Trade</span></a>
     <a href="assets.html" class="nav-link"><i class="fas fa-wallet"></i><span>Assets</span></a>
   </nav>
 
-  <div id="searchOverlay" class="hidden" aria-modal="true" role="dialog" aria-label="Search Coins">
-    <div class="search-input-wrapper">
-      <i class="fas fa-search text-secondary"></i>
-      <input type="text" id="marketSearch" placeholder="Search coin (e.g. BTC)" autocomplete="off">
-      <button class="close-search" id="closeSearchBtn">Cancel</button>
-    </div>
-    <div class="coin-list" id="searchResults" role="list"></div>
-  </div>
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // --- CONFIG ---
-    const Config = {
-      get API_URL() {
+    const getApiUrl = () => {
         if (window.__API__) return window.__API__;
         const host = window.location.hostname;
-        if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.')) {
-            return 'http://localhost:3000/api';
-        }
+        if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:3000/api';
         return 'https://krypt-broker.onrender.com/api';
-      },
-      CACHE_TTL: 60000 
+    };
+
+    const CONFIG = {
+      API_URL: getApiUrl(),
+      CACHE_TTL: 120000 // Default 2 minutes
     };
 
     // --- STATE ---
-    const State = {
-      coins: [],
-      favorites: new Set(JSON.parse(localStorage.getItem('favCoins') || '[]')),
-      currentFilter: localStorage.getItem('marketTab') || 'all',
+    const STATE = {
+      isSyncing: false,
+      balanceVisible: true,
+      portfolioData: {},
+      marketData: [],
+      chartCoins: [{ id: 'bitcoin', symbol: 'BTC' }], // Only BTC by default
+      chartIndex: 0,
       abortController: null,
-      previousFocus: null
+      intervals: []
     };
 
     // --- DOM CACHE ---
     const DOM = {
-      coinList: document.getElementById('coinList'),
-      searchOverlay: document.getElementById('searchOverlay'),
-      searchInput: document.getElementById('marketSearch'),
+      sidebar: document.getElementById('sidebar'),
+      overlay: document.getElementById('sidebarOverlay'),
+      portfolioBreakdown: document.getElementById('portfolioBreakdown'),
+      totalValue: document.getElementById('totalValue'),
+      risingList: document.getElementById('risingList'),
+      fallingList: document.getElementById('fallingList'),
+      trendingCoins: document.getElementById('trendingCoins'),
       searchResults: document.getElementById('searchResults'),
-      sentimentText: document.getElementById('sentimentText'),
-      sentimentBars: document.getElementById('sentimentBars').children,
-      totalVolume: document.getElementById('totalVolume'),
-      tabList: document.getElementById('tabList'),
-      tabs: document.querySelectorAll('.tab-item'),
-      openSearchBtn: document.getElementById('openSearchBtn'),
-      closeSearchBtn: document.getElementById('closeSearchBtn'),
-      // Elements to hide from ARIA when modal is open
-      backgroundElements: document.querySelectorAll('#mainHeader, #mainTabs, #mainContent, #mainNav')
+      eyeToggle: document.getElementById('eyeToggle'),
+      sidebarToggle: document.getElementById('sidebarToggle'),
+      coinSearch: document.getElementById('coinSearch'),
+      coinLabel: document.getElementById('currentCoinLabel'),
+      guestBadge: document.getElementById('guestBadge'),
+      chartCanvas: document.getElementById('coinChart')
     };
 
-    // --- INIT ---
-    document.addEventListener('DOMContentLoaded', () => {
-      renderSkeletons();
-      restoreTabState();
-      initApp();
-    });
-
+    // --- INITIALIZATION ---
     function initApp() {
-      setupEventListeners();
-      loadMarkets();
+      fetchUserInfo();
+      startDataSync();
     }
 
-    function renderSkeletons() {
-      DOM.coinList.innerHTML = Array(6).fill('<div class="coin-row"><div class="skeleton"></div></div>').join('');
+    function startDataSync() {
+      if (STATE.isSyncing) return;
+      STATE.isSyncing = true;
+      
+      stopDataSync(); 
+      STATE.abortController = new AbortController();
+      
+      fetchMarketData();
+      fetchPortfolio();
+      
+      updateChart(); // Load chart once
+
+      // Schedule Market Data every 90 seconds (1.5 mins)
+      scheduleNext(fetchMarketData, 90000);
     }
 
-    function restoreTabState() {
-      DOM.tabs.forEach(tab => {
-        const isActive = tab.dataset.filter === State.currentFilter;
-        tab.classList.toggle('active', isActive);
-        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
-        tab.tabIndex = isActive ? 0 : -1;
-      });
+    function stopDataSync() {
+      if (STATE.abortController) STATE.abortController.abort();
+      STATE.intervals.forEach(clearTimeout);
+      STATE.intervals = [];
+      STATE.isSyncing = false;
     }
 
-    // --- DATA FETCHING (SWR) ---
-    async function loadMarkets() {
-      if (State.abortController) State.abortController.abort();
-      State.abortController = new AbortController();
-
-      const cached = getCachedData('marketData:v1', Config.CACHE_TTL);
-      if (cached) {
-        processAndRender(cached);
-      } else {
-        if (DOM.coinList.children.length === 0 || DOM.coinList.querySelector('.retry-btn')) {
-           renderSkeletons();
-        }
-      }
-
-      try {
-        const res = await fetch(`${Config.API_URL}/coin/markets`, { signal: State.abortController.signal });
-        if (!res.ok) throw new Error(`API Error: ${res.status}`);
+    // SAFE RECURSIVE SCHEDULING
+    function scheduleNext(fn, delay) {
+      const timer = setTimeout(async () => {
+        // Critical: Check if we are still syncing before continuing
+        if (!STATE.isSyncing) return;
         
-        const data = await res.json();
-        setCachedData('marketData:v1', data);
-        processAndRender(data);
+        if (!document.hidden && navigator.onLine) await fn();
+        scheduleNext(fn, delay);
+      }, delay);
+      STATE.intervals.push(timer);
+    }
 
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.error("Fetch error:", err);
-          if (!cached && DOM.coinList.querySelectorAll('.coin-row').length === 0) {
-             renderError();
-          }
+    function el(tag, cls = '', text = '') {
+        const e = document.createElement(tag);
+        if(cls) e.className = cls;
+        if(text) e.textContent = text;
+        return e;
+    }
+
+    // --- DATA FETCHING ---
+    async function fetchUserInfo() {
+      try {
+        const res = await fetch(`${CONFIG.API_URL}/auth/me`, { credentials: 'include' });
+        if(res.ok) {
+            const data = await res.json();
+            if (data.user) {
+                document.getElementById('userInfo').textContent = data.user.username; 
+                DOM.guestBadge.style.display = 'none';
+            }
+        } else DOM.guestBadge.style.display = 'inline-block';
+      } catch(e) { DOM.guestBadge.style.display = 'inline-block'; }
+    }
+
+    async function fetchMarketData() {
+      try {
+        // Use 'globalMarkets' key for shared cache
+        const cached = getCachedData('globalMarkets');
+        if (cached) {
+            STATE.marketData = cached;
+        } else {
+            const res = await fetch(`${CONFIG.API_URL}/coin/markets`, { signal: STATE.abortController?.signal });
+            if (res.status === 429) throw new Error('RateLimit');
+            if(!res.ok) throw new Error('API Error');
+            const data = await res.json();
+            STATE.marketData = data;
+            // Cache for 2 mins (120000)
+            setCachedData('globalMarkets', data, 120000);
         }
+        
+        renderTrendingLists();
+        if(Object.keys(STATE.portfolioData).length > 0) renderPortfolio(); 
+      } catch (err) { 
+        console.warn("Market fetch skipped:", err.message);
       }
     }
 
-    function processAndRender(data) {
-        State.coins = data.map(c => ({
-          ...c,
-          _searchStr: `${c.name} ${c.symbol}`.toLowerCase()
-        }));
-
-        const totalVol = data.reduce((sum, c) => sum + (c.total_volume || 0), 0);
-        DOM.totalVolume.textContent = formatVolume(totalVol);
-
-        updateSentiment(data);
-        applyFilter(); 
-    }
-
-    // --- ENHANCED ERROR HANDLING ---
-    function renderError() {
-      // Use CSS class for spacing instead of inline style
-      DOM.coinList.innerHTML = `
-        <div class="error-state">
-            <div style="color: var(--danger-red); margin-bottom: 15px; font-weight: 500;">
-              <i class="fas fa-exclamation-circle"></i> Connection Failed
-            </div>
-            <button class="retry-btn" id="retryBtn">
-              <span class="label">Retry Connection</span>
-              <span class="spinner hidden"></span>
-            </button>
-        </div>`;
-
-      const retryBtn = document.getElementById('retryBtn');
-      if (retryBtn) {
-        retryBtn.addEventListener('click', (e) => {
-          const btn = e.currentTarget;
-          const label = btn.querySelector('.label');
-          const spinner = btn.querySelector('.spinner');
-
-          btn.disabled = true;
-          label.textContent = 'Retrying...';
-          spinner.classList.remove('hidden');
-
-          setTimeout(() => {
-             // Logic: We don't need to "reset" the button here visually 
-             // because renderSkeletons() is about to destroy it.
-             // If this next loadMarkets fails, renderError will generate a BRAND NEW button.
-             renderSkeletons(); 
-             loadMarkets();
-          }, 300); 
+    async function fetchPortfolio() {
+      try {
+        const res = await fetch(`${CONFIG.API_URL}/trade/portfolio`, { 
+            credentials: 'include',
+            signal: STATE.abortController?.signal 
         });
+        if(!res.ok) throw new Error();
+        const data = await res.json();
+        STATE.portfolioData = data.portfolio || {};
+        renderPortfolio();
+      } catch (err) {
+        if (err.name !== 'AbortError') DOM.portfolioBreakdown.replaceChildren(el('div', 'text-center text-secondary text-sm p-4', 'Sign in to view assets'));
       }
     }
 
     // --- RENDERING ---
-    function renderList(coinsToRender, container, isSearch = false) {
-      container.innerHTML = '';
-
-      if (!coinsToRender || coinsToRender.length === 0) {
-        container.innerHTML = '<div class="empty-state">No coins found</div>';
+    function renderPortfolio() {
+      if (Object.keys(STATE.portfolioData).length === 0) {
+        DOM.portfolioBreakdown.replaceChildren(el('p', 'text-center text-secondary text-sm p-2', 'No assets found'));
+        DOM.totalValue.textContent = STATE.balanceVisible ? '$0.00' : '****';
         return;
       }
 
-      const fragment = document.createDocumentFragment();
-      const fallbackImg = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjMkIzMTM5Ii8+PHRleHQgeD0iMTIiIHk9IjE2IiBmb250LXNpemU9IjEyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjODQ4RTlDIj4/PC90ZXh0Pjwvc3ZnPg==";
+      const marketMap = new Map(STATE.marketData.map(c => [c.symbol.toLowerCase(), c]));
+      let total = 0;
+      const frag = document.createDocumentFragment();
 
-      coinsToRender.forEach(c => {
-        const change = c.price_change_percentage_24h ?? 0;
-        const isPos = change >= 0;
-        const colorClass = isPos ? 'bg-green' : 'bg-red';
-        const sign = isPos ? '+' : '';
-        const isFav = State.favorites.has(c.id);
+      Object.entries(STATE.portfolioData).forEach(([symbol, amount]) => {
+        const coin = marketMap.get(symbol.toLowerCase());
+        const price = coin?.current_price ?? 0;
+        const val = amount * price;
+        total += val;
 
-        const row = document.createElement('div');
-        row.className = 'coin-row';
-        row.setAttribute('role', 'listitem');
-        row.tabIndex = 0;
-        // A11y: Explicit intent
-        row.setAttribute('aria-label', `View ${c.name} details`);
+        const row = el('div', 'coin-row flex justify-between items-center');
+        const left = el('div', 'flex items-center gap-sm');
+        const img = el('img', 'coin-img-sm');
+        img.src = coin?.image || 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png';
+        const infoDiv = el('div');
+        infoDiv.appendChild(el('strong', 'text-primary text-base block', symbol.toUpperCase()));
+        infoDiv.appendChild(el('small', 'text-secondary text-xs', amount.toFixed(4)));
+        left.appendChild(img); left.appendChild(infoDiv);
         
-        const goToDetail = () => {
-             if (isSearch) toggleSearch(false);
-             window.location.href = `coin.html?coinId=${c.id}`;
-        };
+        const right = el('div', 'text-right');
+        const displayVal = STATE.balanceVisible ? `$${val.toLocaleString(undefined, {minimumFractionDigits: 2})}` : '****';
+        right.appendChild(el('strong', 'text-primary text-base block', displayVal));
+        right.appendChild(el('small', 'text-secondary text-xs block', `$${price.toLocaleString()}`));
+        row.appendChild(left); row.appendChild(right);
+        frag.appendChild(row);
+      });
 
-        row.onclick = goToDetail;
+      DOM.portfolioBreakdown.replaceChildren(frag);
+      DOM.totalValue.textContent = STATE.balanceVisible ? `$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '****';
+    }
+
+    function renderTrendingLists() {
+      if(!STATE.marketData.length) return;
+
+      const rising = [...STATE.marketData].sort((a,b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5);
+      const falling = [...STATE.marketData].sort((a,b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0, 5);
+      
+      renderList(DOM.risingList, rising, 'text-success');
+      renderList(DOM.fallingList, falling, 'text-danger');
+      
+      const trending = [...STATE.marketData].sort((a,b) => b.total_volume - a.total_volume).slice(0, 4);
+      DOM.trendingCoins.replaceChildren();
+      
+      const frag = document.createDocumentFragment();
+      trending.forEach(c => {
+        const change = c.price_change_percentage_24h || 0;
+        const colorClass = change >= 0 ? 'text-success' : 'text-danger';
         
-        row.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                if(document.activeElement === row) goToDetail();
-            }
-        });
-
-        const favBtn = document.createElement('button');
-        favBtn.className = `fav-star ${isFav ? 'active' : ''}`;
-        favBtn.innerHTML = '<i class="fas fa-star"></i>';
-        // A11y: Robust String Construction
-        const favAction = isFav ? 'Remove' : 'Add';
-        favBtn.setAttribute('aria-label', `${favAction} ${c.name} to favorites`);
+        const div = el('div', 'coin-card-sm');
+        div.onclick = () => window.location.href = `coin.html?coinId=${c.id}`;
         
-        favBtn.onclick = (e) => {
-          e.stopPropagation();
-          toggleFavorite(c.id, c.name, favBtn);
-        };
-
-        const colFav = document.createElement('div');
-        colFav.className = 'col-fav';
-        colFav.appendChild(favBtn);
-
-        const colName = document.createElement('div');
-        colName.className = 'col-name';
+        const header = el('div', 'flex justify-between mb-sm');
+        header.appendChild(el('h4', 'text-sm text-primary font-bold', c.symbol.toUpperCase()));
+        const img = el('img', 'coin-card-img');
+        img.src = c.image; img.onerror = () => { img.src = 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png'; };
+        header.appendChild(img);
         
-        const img = document.createElement('img');
-        img.src = c.image;
-        img.className = 'coin-icon';
-        img.alt = c.symbol;
-        img.loading = 'lazy'; 
-        img.onerror = function() { 
-          this.onerror = null; 
-          this.src = fallbackImg; 
-        };
+        div.appendChild(header);
+        div.appendChild(el('div', 'text-lg font-bold text-primary gap-xs', `$${c.current_price.toLocaleString()}`));
+        div.appendChild(el('div', `${colorClass} text-xs font-medium`, `${change.toFixed(2)}%`));
+        frag.appendChild(div);
+      });
+      DOM.trendingCoins.appendChild(frag);
+    }
 
-        const textDiv = document.createElement('div');
-        const symDiv = document.createElement('div');
-        symDiv.className = 'coin-symbol';
-        symDiv.textContent = c.symbol.toUpperCase();
+    function renderList(container, coins, colorClass) {
+      container.replaceChildren();
+      const frag = document.createDocumentFragment();
+      
+      coins.forEach(c => {
+        const change = c.price_change_percentage_24h || 0;
+        const sign = change > 0 ? '+' : '';
+        const div = el('div', 'coin-item');
+        div.onclick = () => window.location.href = `coin.html?coinId=${c.id}`;
         
-        const volDiv = document.createElement('div');
-        volDiv.className = 'coin-vol';
-        volDiv.textContent = `Vol ${formatVolume(c.total_volume)}`;
-
-        textDiv.append(symDiv, volDiv);
-        colName.append(img, textDiv);
-
-        const colPrice = document.createElement('div');
-        colPrice.className = 'col-price';
+        const link = el('div', 'coin-item-content');
+        const left = el('div', 'flex items-center gap-sm');
+        const img = el('img', 'coin-img-sm'); img.src = c.image; img.onerror = () => { img.src = 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png'; };
+        const info = el('div', 'flex flex-col');
+        info.appendChild(el('span', 'text-primary text-sm font-bold', c.symbol.toUpperCase()));
+        info.appendChild(el('span', 'text-secondary text-xs', `Vol ${formatVolume(c.total_volume)}`));
+        left.appendChild(img); left.appendChild(info);
         
-        if (typeof c.current_price !== 'number') {
-           colPrice.textContent = '--';
-        } else if (c.current_price < 1) {
-            colPrice.textContent = '$' + c.current_price.toFixed(6);
+        const right = el('div', 'text-right');
+        right.appendChild(el('div', 'text-primary text-sm font-medium', `$${c.current_price.toLocaleString()}`));
+        right.appendChild(el('div', `${colorClass} text-xs font-bold`, `${sign}${change.toFixed(2)}%`));
+        link.appendChild(left); link.appendChild(right);
+        div.appendChild(link);
+        frag.appendChild(div);
+      });
+      container.appendChild(frag);
+    }
+
+    // --- CHART LOGIC ---
+    let chartInstance;
+    const ctx = document.getElementById('coinChart').getContext('2d');
+
+    async function updateChart() {
+      const coin = STATE.chartCoins[0]; // Only load first coin (BTC)
+      DOM.coinLabel.textContent = `${coin.symbol}/USDT`;
+
+      try {
+        // Cache Key Logic (optimization 2 confirmed)
+        const cached = getCachedData(`chart-${coin.id}`);
+        let prices, labels;
+
+        if (cached) {
+           prices = cached.prices; labels = cached.labels;
         } else {
-            colPrice.textContent = '$' + c.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+           const res = await fetch(`${CONFIG.API_URL}/coin/chart/${coin.id}?vs_currency=usd&days=7`, { signal: STATE.abortController?.signal });
+           if(res.status === 429) throw new Error('RateLimit');
+           const data = await res.json();
+           prices = data.prices.map(d => d[1]);
+           labels = data.prices.map(d => new Date(d[0]).toLocaleDateString());
+           // Cache Chart for 30 minutes (1800000ms)
+           setCachedData(`chart-${coin.id}`, { prices, labels }, 1800000); 
         }
 
-        const colChange = document.createElement('div');
-        colChange.className = 'col-change';
-        const badge = document.createElement('span');
-        badge.className = `change-btn ${colorClass}`;
-        badge.textContent = `${sign}${change.toFixed(2)}%`;
-        colChange.appendChild(badge);
+        if (!chartInstance) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+            gradient.addColorStop(0, 'rgba(247, 166, 0, 0.2)');
+            gradient.addColorStop(1, 'rgba(247, 166, 0, 0)');
 
-        row.append(colFav, colName, colPrice, colChange);
-        fragment.appendChild(row);
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: prices,
+                        borderColor: '#F7A600',
+                        backgroundColor: gradient,
+                        fill: true, borderWidth: 2, pointRadius: 0, tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { display: false }, y: { display: false } },
+                    interaction: { mode: 'index', intersect: false },
+                    animation: { duration: 500 }
+                }
+            });
+        } else {
+            chartInstance.data.labels = labels;
+            chartInstance.data.datasets[0].data = prices;
+            chartInstance.update();
+        }
+      } catch(e) { console.warn("Chart error", e); }
+    }
+
+    // --- UI EVENTS ---
+    function toggleSidebar(open) {
+        if (open) {
+            DOM.sidebar.classList.add('active');
+            DOM.overlay.classList.add('active');
+            DOM.sidebarToggle.setAttribute('aria-expanded', 'true');
+        } else {
+            DOM.sidebar.classList.remove('active');
+            DOM.overlay.classList.remove('active');
+            DOM.sidebarToggle.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    DOM.sidebarToggle.addEventListener('click', () => toggleSidebar(true));
+    DOM.overlay.addEventListener('click', () => toggleSidebar(false));
+    
+    window.toggleList = (e, type) => {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
       });
-
-      container.appendChild(fragment);
-    }
-
-    // --- LOGIC ---
-    function toggleFavorite(coinId, coinName, btnEl) {
-      if (State.favorites.has(coinId)) {
-        State.favorites.delete(coinId);
-        btnEl.classList.remove('active');
-        btnEl.setAttribute('aria-label', `Add ${coinName} to favorites`);
-      } else {
-        State.favorites.add(coinId);
-        btnEl.classList.add('active');
-        btnEl.setAttribute('aria-label', `Remove ${coinName} from favorites`);
-      }
-      localStorage.setItem('favCoins', JSON.stringify([...State.favorites]));
+      e.target.classList.add('active');
+      e.target.setAttribute('aria-selected', 'true');
       
-      if (State.currentFilter === 'favorites') applyFilter();
-    }
+      if(type === 'rising') { DOM.risingList.classList.remove('hidden'); DOM.fallingList.classList.add('hidden'); }
+      else { DOM.risingList.classList.add('hidden'); DOM.fallingList.classList.remove('hidden'); }
+    };
 
-    function applyFilter() {
-      // Fade Out
-      DOM.coinList.classList.add('fading');
+    DOM.eyeToggle.onclick = () => {
+      STATE.balanceVisible = !STATE.balanceVisible;
+      DOM.eyeToggle.className = STATE.balanceVisible ? 'fas fa-eye cursor-pointer no-btn' : 'fas fa-eye-slash cursor-pointer no-btn';
+      renderPortfolio();
+    };
 
-      // Short delay for visual polish (200ms matches CSS transition)
-      setTimeout(() => {
-          let filtered = State.coins.slice();
+    // Search (Debounced)
+    let searchTimer;
+    let searchIndex = -1;
 
-          switch (State.currentFilter) {
-            case 'favorites':
-              filtered = filtered.filter(c => State.favorites.has(c.id));
-              break;
-            case 'gainers':
-              filtered.sort((a, b) => (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0));
-              break;
-            case 'losers':
-              filtered.sort((a, b) => (a.price_change_percentage_24h ?? 0) - (b.price_change_percentage_24h ?? 0));
-              break;
-          }
-          
-          renderList(filtered, DOM.coinList);
-          
-          // Fade In
-          requestAnimationFrame(() => {
-              DOM.coinList.classList.remove('fading');
-          });
-      }, 200);
-    }
-
-    function updateSentiment(coins) {
-      if (!coins || coins.length === 0) return;
+    DOM.coinSearch.addEventListener('input', (e) => {
+      clearTimeout(searchTimer);
+      const q = e.target.value.trim().toLowerCase();
+      if(!q) { DOM.searchResults.replaceChildren(); return; }
       
-      const gainers = coins.filter(c => (c.price_change_percentage_24h ?? 0) > 0).length;
-      const percent = (gainers / coins.length) * 100;
-      
-      const bars = Array.from(DOM.sentimentBars);
-      bars.forEach(b => b.classList.remove('bg-bullish', 'bg-bearish', 'bg-neutral'));
-
-      let text, emoji, colorClass;
-
-      if (percent > 60) {
-        text = "Bullish"; emoji = "🐂"; colorClass = "text-bullish";
-        bars.forEach(b => b.classList.add('bg-bullish'));
-      } else if (percent < 40) {
-        text = "Bearish"; emoji = "🐻"; colorClass = "text-bearish";
-        bars.forEach(b => b.classList.add('bg-bearish'));
-      } else {
-        text = "Neutral"; emoji = "⚖️"; colorClass = "text-neutral";
-        // Safe mapping instead of hardcoded indices
-        const neutrals = ['bg-bearish', 'bg-neutral', 'bg-bullish'];
-        bars.forEach((b, i) => { if (neutrals[i]) b.classList.add(neutrals[i]); });
-      }
-
-      DOM.sentimentText.className = `sentiment-text ${colorClass}`;
-      DOM.sentimentText.innerHTML = `<span>${text}</span> <span aria-hidden="true">${emoji}</span>`;
-    }
-
-    // --- EVENTS & UI ---
-    function setupEventListeners() {
-      DOM.tabs.forEach(tab => tab.addEventListener('click', handleTabClick));
-      
-      DOM.tabList.addEventListener('keydown', (e) => {
-          const tabs = Array.from(DOM.tabs);
-          const idx = tabs.indexOf(document.activeElement);
-          let nextIdx = null;
-          if (e.key === 'ArrowRight') nextIdx = (idx + 1) % tabs.length;
-          else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + tabs.length) % tabs.length;
-          if (nextIdx !== null) { tabs[nextIdx].focus(); tabs[nextIdx].click(); }
-      });
-
-      DOM.openSearchBtn.addEventListener('click', () => toggleSearch(true));
-      DOM.closeSearchBtn.addEventListener('click', () => toggleSearch(false));
-      
-      let searchTimeout;
-      DOM.searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        const query = e.target.value.toLowerCase().trim();
+      searchTimer = setTimeout(() => {
+        const matches = STATE.marketData.filter(c => c.symbol.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)).slice(0,5);
+        DOM.searchResults.replaceChildren();
         
-        if (!query) { DOM.searchResults.innerHTML = ''; return; }
+        matches.forEach((c, idx) => {
+          const li = el('li', 'search-item');
+          li.setAttribute('role', 'option');
+          li.onclick = () => {
+             // Manual chart update on search
+             STATE.chartCoins = [{id: c.id, symbol: c.symbol.toUpperCase()}];
+             updateChart();
+             DOM.searchResults.replaceChildren();
+             DOM.coinSearch.value = '';
+          };
+          const div = el('div', 'flex items-center gap-sm');
+          const img = el('img'); img.src = c.image; img.width = 20; img.style.borderRadius = '50%';
+          div.appendChild(img);
+          div.appendChild(el('span', '', c.name));
+          li.appendChild(div);
+          li.appendChild(el('span', 'text-secondary', `$${c.current_price}`));
+          DOM.searchResults.appendChild(li);
+        });
+      }, 300);
+    });
 
-        searchTimeout = setTimeout(() => {
-          const matches = State.coins
-            .filter(c => c._searchStr.includes(query))
-            .slice(0, 50);
-          renderList(matches, DOM.searchResults, true);
-        }, 300);
-      });
-    }
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-container')) DOM.searchResults.replaceChildren();
+    });
 
-    function handleTabClick(e) {
-      const target = e.currentTarget;
-      DOM.tabs.forEach(t => {
-        t.classList.remove('active');
-        t.setAttribute('aria-selected', 'false');
-        t.tabIndex = -1;
-      });
-      target.classList.add('active');
-      target.setAttribute('aria-selected', 'true');
-      target.tabIndex = 0;
-      State.currentFilter = target.dataset.filter;
-      localStorage.setItem('marketTab', State.currentFilter); 
-      applyFilter();
-    }
+    document.getElementById('logoutBtn').onclick = async () => {
+      await fetch(`${CONFIG.API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+      window.location.href = 'login.html';
+    };
 
-    function toggleSearch(show) {
-      // 1. Lock Background Scroll
-      document.body.classList.toggle('no-scroll', show);
-
-      // 2. A11y: Hide background content when modal is open
-      DOM.backgroundElements.forEach(el => {
-          if(show) el.setAttribute('aria-hidden', 'true');
-          else el.removeAttribute('aria-hidden');
-      });
-
-      if (show) {
-        State.previousFocus = document.activeElement;
-        DOM.searchOverlay.classList.remove('hidden');
-        DOM.searchInput.focus();
-        DOM.searchOverlay.addEventListener('keydown', trapFocus);
-      } else {
-        DOM.searchOverlay.classList.add('hidden');
-        DOM.searchInput.value = '';
-        DOM.searchResults.innerHTML = '';
-        DOM.searchOverlay.removeEventListener('keydown', trapFocus);
-        if (State.previousFocus) State.previousFocus.focus();
-      }
-    }
-
-    function trapFocus(e) {
-      if (e.key === 'Escape') { toggleSearch(false); return; }
-      const focusable = DOM.searchOverlay.querySelectorAll('button, input');
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.key === 'Tab') {
-          if (e.shiftKey) { 
-              if (document.activeElement === first) { e.preventDefault(); last.focus(); }
-          } else { 
-              if (document.activeElement === last) { e.preventDefault(); first.focus(); }
-          }
-      }
-    }
-
-    // --- HELPERS ---
     function formatVolume(num) {
-      if (typeof num !== 'number') return '--';
-      if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-      if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+      if(num >= 1e9) return (num/1e9).toFixed(2) + 'B';
+      if(num >= 1e6) return (num/1e6).toFixed(2) + 'M';
       return num.toLocaleString();
     }
 
-    function getCachedData(key, ttl = 60000) {
-      const cached = localStorage.getItem(key);
-      if (!cached) return null;
-      try {
-        const { data, timestamp } = JSON.parse(cached);
-        return Date.now() - timestamp < ttl ? data : null;
-      } catch { return null; }
+    function getCachedData(key) {
+      const item = localStorage.getItem(key);
+      if(!item) return null;
+      const { data, expiry } = JSON.parse(item);
+      if(Date.now() > expiry) return null;
+      return data;
     }
 
-    function setCachedData(key, data) {
-      localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+    function setCachedData(key, data, ttl) {
+      localStorage.setItem(key, JSON.stringify({ data, expiry: Date.now() + ttl }));
     }
+
+    function showToast(msg, type) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.remove('toast-success', 'toast-error', 'show');
+      t.classList.add('show', `toast-${type || 'info'}`);
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // Kill calls when leaving page
+    window.addEventListener('beforeunload', stopDataSync);
+    window.addEventListener('online', () => { stopDataSync(); startDataSync(); showToast("Online", "success"); });
+    window.addEventListener('offline', () => showToast("Offline", "error"));
+
+    document.addEventListener('DOMContentLoaded', initApp);
+
   </script>
 </body>
 </html>
