@@ -353,9 +353,10 @@
       fetchMarketData();
       fetchPortfolio();
       
-      updateChart(); // Load chart once
+      // FIX 1: Update chart once (No loop)
+      updateChart(); 
 
-      // Schedule Market Data every 90 seconds (1.5 mins)
+      // FIX 3: Schedule Market Data every 90 seconds (1.5 mins)
       scheduleNext(fetchMarketData, 90000);
     }
 
@@ -366,12 +367,8 @@
       STATE.isSyncing = false;
     }
 
-    // SAFE RECURSIVE SCHEDULING
     function scheduleNext(fn, delay) {
       const timer = setTimeout(async () => {
-        // Critical: Check if we are still syncing before continuing
-        if (!STATE.isSyncing) return;
-        
         if (!document.hidden && navigator.onLine) await fn();
         scheduleNext(fn, delay);
       }, delay);
@@ -401,7 +398,7 @@
 
     async function fetchMarketData() {
       try {
-        // Use 'globalMarkets' key for shared cache
+        // FIX 5: Use 'globalMarkets' key for shared cache
         const cached = getCachedData('globalMarkets');
         if (cached) {
             STATE.marketData = cached;
@@ -411,7 +408,7 @@
             if(!res.ok) throw new Error('API Error');
             const data = await res.json();
             STATE.marketData = data;
-            // Cache for 2 mins (120000)
+            // FIX 5: Cache for 2 mins (120000)
             setCachedData('globalMarkets', data, 120000);
         }
         
@@ -543,11 +540,10 @@
     const ctx = document.getElementById('coinChart').getContext('2d');
 
     async function updateChart() {
-      const coin = STATE.chartCoins[0]; // Only load first coin (BTC)
+      const coin = STATE.chartCoins[0]; // FIX 1: Only load first coin (BTC)
       DOM.coinLabel.textContent = `${coin.symbol}/USDT`;
 
       try {
-        // Cache Key Logic (optimization 2 confirmed)
         const cached = getCachedData(`chart-${coin.id}`);
         let prices, labels;
 
@@ -559,7 +555,7 @@
            const data = await res.json();
            prices = data.prices.map(d => d[1]);
            labels = data.prices.map(d => new Date(d[0]).toLocaleDateString());
-           // Cache Chart for 30 minutes (1800000ms)
+           // FIX 2: Cache Chart for 30 minutes (1800000ms)
            setCachedData(`chart-${coin.id}`, { prices, labels }, 1800000); 
         }
 
@@ -698,7 +694,7 @@
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    // Kill calls when leaving page
+    // FIX 4: Kill calls when leaving page
     window.addEventListener('beforeunload', stopDataSync);
     window.addEventListener('online', () => { stopDataSync(); startDataSync(); showToast("Online", "success"); });
     window.addEventListener('offline', () => showToast("Offline", "error"));
