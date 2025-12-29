@@ -74,6 +74,8 @@
     .relative { position: relative; }
 
     /* --- COMPONENTS --- */
+    
+    /* Top Bar */
     .top-bar {
       position: fixed; top: 0; left: 0; right: 0;
       background: var(--bg-card); height: 60px;
@@ -83,6 +85,7 @@
     }
     .menu-btn { font-size: 20px; color: var(--text-primary); }
 
+    /* Search */
     .search-container { flex: 1; position: relative; max-width: 600px; }
     #coinSearch {
       width: 100%; background: var(--bg-input); border: 1px solid transparent;
@@ -100,7 +103,9 @@
     }
     .search-item { border-bottom: 1px solid var(--border-color); padding: 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
     .search-item:hover, .search-item.active { background: var(--bg-input); }
+    .search-item.active span { color: var(--primary-yellow); }
     
+    /* Sidebar */
     .sidebar {
       position: fixed; left: -280px; top: 0; height: 100%; width: 280px;
       background: var(--bg-card); z-index: 1100; transition: left 0.3s ease;
@@ -123,63 +128,88 @@
     
     .logout-btn { width: 100%; padding: 12px; background: rgba(246, 70, 93, 0.1); border: none; color: var(--danger-red); border-radius: 6px; margin-top: 20px; cursor: pointer; font-weight: 600; transition: 0.2s; }
     .logout-btn:hover { background: rgba(246, 70, 93, 0.2); }
+    
     .guest-badge { background: var(--bg-input); color: var(--primary-yellow); font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; display: none; }
+    
     .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1050; display: none; }
     .overlay.active { display: block; }
 
+    /* Content Area */
     .content-wrapper { padding-top: 80px; padding-left: 16px; padding-right: 16px; max-width: 1200px; margin: 0 auto; transition: padding 0.3s; }
     .dashboard-grid { display: flex; flex-direction: column; gap: 16px; }
 
+    /* Cards */
     .card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; }
     .card-padding { padding: 20px; }
+    
     .chart-card { height: 350px; display: flex; flex-direction: column; }
     .canvas-container { flex: 1; position: relative; width: 100%; }
 
     .portfolio-card { height: 100%; background: linear-gradient(135deg, #2b3139 0%, #1e2329 100%); }
     .total-value-display { font-size: 36px; font-weight: 700; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -0.5px; }
+    
     .coin-row { padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.05); }
     .coin-img-sm { width: 28px; height: 28px; border-radius: 50%; }
 
+    /* Tabs */
     .action-tabs { display: flex; background: var(--bg-card); padding: 4px; border-radius: 8px; margin-bottom: 16px; gap: 4px; border: 1px solid var(--border-color); }
     .tab-btn { flex: 1; background: transparent; border: none; color: var(--text-secondary); padding: 10px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
     .tab-btn.active { background: var(--bg-input); color: var(--text-primary); }
     .trade-btn { color: var(--primary-yellow); }
+    .trade-btn:hover { background: rgba(247, 166, 0, 0.1); }
 
+    /* Coin List */
     .coin-list-container { margin-bottom: 20px; }
     .coin-item { padding: 14px 20px; border-bottom: 1px solid var(--border-color); transition: background 0.2s; display: block; cursor: pointer; }
     .coin-item:hover { background: var(--bg-input); }
     .coin-item-content { width: 100%; display: flex; justify-content: space-between; align-items: center; font-weight: 500; }
 
+    /* Grids */
     .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
+    
     .coin-card-sm { background: var(--bg-card); padding: 16px; border-radius: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: 1px solid var(--border-color); }
     .coin-card-sm:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-color: var(--text-secondary); }
     .coin-card-img { width: 16px; height: 16px; border-radius: 50%; }
 
+    /* Bottom Nav */
     .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: 5px; }
     .nav-link { display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); font-size: 10px; gap: 6px; width: 25%; transition: 0.2s; }
     .nav-link:hover { color: var(--text-primary); }
     .nav-link.active { color: var(--primary-yellow); }
     .nav-link i { font-size: 20px; }
 
+    /* Skeleton Loading */
     .skeleton { background: linear-gradient(90deg, #2b3139 25%, #363c45 50%, #2b3139 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 4px; }
     @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     .skeleton-text { height: 14px; margin-bottom: 6px; width: 60%; }
     .skeleton-circle { width: 28px; height: 28px; border-radius: 50%; }
 
+    /* Toast */
     #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 4px; padding: 12px 16px; position: fixed; z-index: 3000; left: 50%; bottom: 80px; transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
     #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
     .toast-error { background-color: var(--danger-red) !important; color: white; }
     .toast-success { background-color: var(--success-green) !important; color: white; }
-    
+    .toast-info { background-color: #333 !important; color: white; }
+    @keyframes fadein { from {bottom: 40px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 40px; opacity: 0;} }
+
+    /* DESKTOP VIEW */
     @media (min-width: 1024px) {
       .sidebar { left: 0 !important; width: var(--sidebar-width); box-shadow: none; }
       .menu-btn, .overlay, .bottom-nav { display: none !important; }
+      
       .top-bar { left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); padding: 0 40px; }
-      .content-wrapper { padding-left: calc(var(--sidebar-width) + 40px); padding-right: 40px; padding-top: 90px; max-width: 1600px; }
+      
+      .content-wrapper { 
+        padding-left: calc(var(--sidebar-width) + 40px); padding-right: 40px; padding-top: 90px; 
+        max-width: 1600px; 
+      }
+
       .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
       .chart-card, .portfolio-card { height: 400px; }
       .action-tabs { max-width: 400px; }
       .grid-2 { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+      
       body { padding-bottom: 0; }
     }
   </style>
@@ -224,11 +254,15 @@
   </header>
 
   <div class="content-wrapper">
+    
     <div class="dashboard-grid">
       <div class="card chart-card card-padding">
         <div class="flex justify-between items-center mb-md">
           <span id="currentCoinLabel" class="font-bold text-base transition-colors">BTC/USDT</span>
-          <button class="no-btn text-secondary" id="expandChartBtn" title="Fullscreen"><i class="fas fa-expand-alt"></i></button>
+          <div class="flex gap-sm">
+            <button class="no-btn text-secondary text-xs" id="pauseChartBtn" title="Pause Rotation"><i class="fas fa-pause"></i></button>
+            <button class="no-btn text-secondary" id="expandChartBtn" title="Fullscreen"><i class="fas fa-expand-alt"></i></button>
+          </div>
         </div>
         <div class="canvas-container">
           <canvas id="coinChart"></canvas>
@@ -262,6 +296,7 @@
 
     <div id="risingList" class="card coin-list-container">
         <div class="coin-item"><div class="skeleton skeleton-text w-full"></div></div>
+        <div class="coin-item"><div class="skeleton skeleton-text w-full"></div></div>
     </div>
     <div id="fallingList" class="card coin-list-container hidden"></div>
 
@@ -270,6 +305,7 @@
         <i class="fas fa-fire text-highlight"></i> Hot Derivatives
       </div>
       <div id="trendingCoins" class="grid-2">
+         <div class="coin-card-sm"><div class="skeleton skeleton-text"></div></div>
          <div class="coin-card-sm"><div class="skeleton skeleton-text"></div></div>
       </div>
     </section>
@@ -298,13 +334,16 @@
     const getApiUrl = () => {
         if (window.__API__) return window.__API__;
         const host = window.location.hostname;
-        if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:3000/api';
+        if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.')) {
+            return 'http://localhost:3000/api';
+        }
         return 'https://krypt-broker.onrender.com/api';
     };
 
     const CONFIG = {
       API_URL: getApiUrl(),
-      CACHE_TTL: 120000 // Default 2 minutes
+      CACHE_TTL: 30000,
+      CHART_ROTATE_MS: 15000
     };
 
     // --- STATE ---
@@ -313,8 +352,10 @@
       balanceVisible: true,
       portfolioData: {},
       marketData: [],
-      chartCoins: [{ id: 'bitcoin', symbol: 'BTC' }], // Only BTC by default
+      chartCoins: [{ id: 'bitcoin', symbol: 'BTC' }, { id: 'ethereum', symbol: 'ETH' }],
       chartIndex: 0,
+      chartFailures: 0,
+      userInteracting: false, // NEW: Prevents chart rotation when user is looking at it
       abortController: null,
       intervals: []
     };
@@ -334,6 +375,7 @@
       coinSearch: document.getElementById('coinSearch'),
       coinLabel: document.getElementById('currentCoinLabel'),
       guestBadge: document.getElementById('guestBadge'),
+      pauseChartBtn: document.getElementById('pauseChartBtn'),
       chartCanvas: document.getElementById('coinChart')
     };
 
@@ -346,18 +388,16 @@
     function startDataSync() {
       if (STATE.isSyncing) return;
       STATE.isSyncing = true;
-      
       stopDataSync(); 
       STATE.abortController = new AbortController();
       
       fetchMarketData();
       fetchPortfolio();
-      
-      // FIX 1: Update chart once (No loop)
-      updateChart(); 
+      updateChart(); // Initial load
 
-      // FIX 3: Schedule Market Data every 90 seconds (1.5 mins)
-      scheduleNext(fetchMarketData, 90000);
+      // Set intervals (recursive timeout pattern preferred for async)
+      scheduleNext(fetchMarketData, 30000);
+      scheduleNext(updateChart, CONFIG.CHART_ROTATE_MS);
     }
 
     function stopDataSync() {
@@ -375,6 +415,7 @@
       STATE.intervals.push(timer);
     }
 
+    // --- HELPERS (DOM) ---
     function el(tag, cls = '', text = '') {
         const e = document.createElement(tag);
         if(cls) e.className = cls;
@@ -392,14 +433,15 @@
                 document.getElementById('userInfo').textContent = data.user.username; 
                 DOM.guestBadge.style.display = 'none';
             }
-        } else DOM.guestBadge.style.display = 'inline-block';
+        } else {
+            DOM.guestBadge.style.display = 'inline-block';
+        }
       } catch(e) { DOM.guestBadge.style.display = 'inline-block'; }
     }
 
     async function fetchMarketData() {
       try {
-        // FIX 5: Use 'globalMarkets' key for shared cache
-        const cached = getCachedData('globalMarkets');
+        const cached = getCachedData('coinMarkets');
         if (cached) {
             STATE.marketData = cached;
         } else {
@@ -408,14 +450,22 @@
             if(!res.ok) throw new Error('API Error');
             const data = await res.json();
             STATE.marketData = data;
-            // FIX 5: Cache for 2 mins (120000)
-            setCachedData('globalMarkets', data, 120000);
+            setCachedData('coinMarkets', data);
         }
         
+        if(STATE.marketData.length > 0) {
+            // Keep top 5 for rotation
+            STATE.chartCoins = STATE.marketData.slice(0, 5).map(c => ({ id: c.id, symbol: c.symbol.toUpperCase() }));
+        }
+
         renderTrendingLists();
         if(Object.keys(STATE.portfolioData).length > 0) renderPortfolio(); 
       } catch (err) { 
-        console.warn("Market fetch skipped:", err.message);
+        if (err.message === 'RateLimit') {
+            console.warn("API Rate Limit. Backing off.");
+        } else if (err.name !== 'AbortError') {
+            // showToast("Market data update failed", "error"); // Optional: Don't spam user
+        }
       }
     }
 
@@ -430,7 +480,9 @@
         STATE.portfolioData = data.portfolio || {};
         renderPortfolio();
       } catch (err) {
-        if (err.name !== 'AbortError') DOM.portfolioBreakdown.replaceChildren(el('div', 'text-center text-secondary text-sm p-4', 'Sign in to view assets'));
+        if (err.name !== 'AbortError') {
+            DOM.portfolioBreakdown.replaceChildren(el('div', 'text-center text-secondary text-sm p-4', 'Sign in to view assets'));
+        }
       }
     }
 
@@ -444,6 +496,7 @@
 
       const marketMap = new Map(STATE.marketData.map(c => [c.symbol.toLowerCase(), c]));
       let total = 0;
+      
       const frag = document.createDocumentFragment();
 
       Object.entries(STATE.portfolioData).forEach(([symbol, amount]) => {
@@ -453,24 +506,34 @@
         total += val;
 
         const row = el('div', 'coin-row flex justify-between items-center');
+        
+        // Left
         const left = el('div', 'flex items-center gap-sm');
         const img = el('img', 'coin-img-sm');
         img.src = coin?.image || 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png';
+        img.onerror = () => { img.src = 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png'; };
+        img.alt = symbol;
+        
         const infoDiv = el('div');
         infoDiv.appendChild(el('strong', 'text-primary text-base block', symbol.toUpperCase()));
         infoDiv.appendChild(el('small', 'text-secondary text-xs', amount.toFixed(4)));
+        
         left.appendChild(img); left.appendChild(infoDiv);
         
+        // Right
         const right = el('div', 'text-right');
         const displayVal = STATE.balanceVisible ? `$${val.toLocaleString(undefined, {minimumFractionDigits: 2})}` : '****';
         right.appendChild(el('strong', 'text-primary text-base block', displayVal));
         right.appendChild(el('small', 'text-secondary text-xs block', `$${price.toLocaleString()}`));
+        
         row.appendChild(left); row.appendChild(right);
         frag.appendChild(row);
       });
 
       DOM.portfolioBreakdown.replaceChildren(frag);
-      DOM.totalValue.textContent = STATE.balanceVisible ? `$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '****';
+      DOM.totalValue.textContent = STATE.balanceVisible 
+        ? `$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}` 
+        : '****';
     }
 
     function renderTrendingLists() {
@@ -496,12 +559,14 @@
         const header = el('div', 'flex justify-between mb-sm');
         header.appendChild(el('h4', 'text-sm text-primary font-bold', c.symbol.toUpperCase()));
         const img = el('img', 'coin-card-img');
-        img.src = c.image; img.onerror = () => { img.src = 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png'; };
+        img.src = c.image; img.alt = c.symbol;
+        img.onerror = () => { img.src = 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png'; };
         header.appendChild(img);
         
         div.appendChild(header);
         div.appendChild(el('div', 'text-lg font-bold text-primary gap-xs', `$${c.current_price.toLocaleString()}`));
         div.appendChild(el('div', `${colorClass} text-xs font-medium`, `${change.toFixed(2)}%`));
+        
         frag.appendChild(div);
       });
       DOM.trendingCoins.appendChild(frag);
@@ -514,12 +579,16 @@
       coins.forEach(c => {
         const change = c.price_change_percentage_24h || 0;
         const sign = change > 0 ? '+' : '';
+        
         const div = el('div', 'coin-item');
         div.onclick = () => window.location.href = `coin.html?coinId=${c.id}`;
         
         const link = el('div', 'coin-item-content');
+        
         const left = el('div', 'flex items-center gap-sm');
-        const img = el('img', 'coin-img-sm'); img.src = c.image; img.onerror = () => { img.src = 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png'; };
+        const img = el('img', 'coin-img-sm'); img.src = c.image; img.alt = c.symbol;
+        img.onerror = () => { img.src = 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png'; };
+        
         const info = el('div', 'flex flex-col');
         info.appendChild(el('span', 'text-primary text-sm font-bold', c.symbol.toUpperCase()));
         info.appendChild(el('span', 'text-secondary text-xs', `Vol ${formatVolume(c.total_volume)}`));
@@ -528,6 +597,7 @@
         const right = el('div', 'text-right');
         right.appendChild(el('div', 'text-primary text-sm font-medium', `$${c.current_price.toLocaleString()}`));
         right.appendChild(el('div', `${colorClass} text-xs font-bold`, `${sign}${change.toFixed(2)}%`));
+        
         link.appendChild(left); link.appendChild(right);
         div.appendChild(link);
         frag.appendChild(div);
@@ -540,8 +610,13 @@
     const ctx = document.getElementById('coinChart').getContext('2d');
 
     async function updateChart() {
-      const coin = STATE.chartCoins[0]; // FIX 1: Only load first coin (BTC)
+      // Don't update if user is interacting with it
+      if (STATE.userInteracting && chartInstance) return;
+      if (STATE.chartFailures > 3) return;
+
+      const coin = STATE.chartCoins[STATE.chartIndex];
       DOM.coinLabel.textContent = `${coin.symbol}/USDT`;
+      DOM.coinLabel.classList.add('text-highlight');
 
       try {
         const cached = getCachedData(`chart-${coin.id}`);
@@ -552,12 +627,14 @@
         } else {
            const res = await fetch(`${CONFIG.API_URL}/coin/chart/${coin.id}?vs_currency=usd&days=7`, { signal: STATE.abortController?.signal });
            if(res.status === 429) throw new Error('RateLimit');
+           if(!res.ok) throw new Error();
            const data = await res.json();
            prices = data.prices.map(d => d[1]);
            labels = data.prices.map(d => new Date(d[0]).toLocaleDateString());
-           // FIX 2: Cache Chart for 30 minutes (1800000ms)
-           setCachedData(`chart-${coin.id}`, { prices, labels }, 1800000); 
+           setCachedData(`chart-${coin.id}`, { prices, labels }, 300000); 
         }
+
+        STATE.chartFailures = 0;
 
         if (!chartInstance) {
             const gradient = ctx.createLinearGradient(0, 0, 0, 240);
@@ -580,7 +657,8 @@
                     plugins: { legend: { display: false } },
                     scales: { x: { display: false }, y: { display: false } },
                     interaction: { mode: 'index', intersect: false },
-                    animation: { duration: 500 }
+                    animation: { duration: 500 },
+                    onHover: () => { STATE.userInteracting = true; } // Stop rotation on hover
                 }
             });
         } else {
@@ -588,10 +666,21 @@
             chartInstance.data.datasets[0].data = prices;
             chartInstance.update();
         }
-      } catch(e) { console.warn("Chart error", e); }
+
+        setTimeout(() => DOM.coinLabel.classList.remove('text-highlight'), 500);
+        
+        // Rotate to next coin only if not manually locked
+        if (!STATE.userInteracting) {
+            STATE.chartIndex = (STATE.chartIndex + 1) % STATE.chartCoins.length;
+        }
+      } catch(e) { 
+          if(e.name !== 'AbortError') STATE.chartFailures++; 
+      }
     }
 
     // --- UI EVENTS ---
+    
+    // Toggle Sidebar
     function toggleSidebar(open) {
         if (open) {
             DOM.sidebar.classList.add('active');
@@ -605,8 +694,30 @@
     }
 
     DOM.sidebarToggle.addEventListener('click', () => toggleSidebar(true));
+    DOM.sidebarToggle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleSidebar(true);
+        }
+    });
     DOM.overlay.addEventListener('click', () => toggleSidebar(false));
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') toggleSidebar(false);
+    });
+
+    // Chart Interaction
+    DOM.chartCanvas.addEventListener('mouseleave', () => {
+        // Resume rotation after delay when mouse leaves
+        setTimeout(() => { STATE.userInteracting = false; }, 2000);
+    });
     
+    DOM.pauseChartBtn.addEventListener('click', () => {
+        STATE.userInteracting = !STATE.userInteracting;
+        DOM.pauseChartBtn.innerHTML = STATE.userInteracting ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+        showToast(STATE.userInteracting ? "Chart rotation paused" : "Chart rotation resumed", "info");
+    });
+
+    // Tabs
     window.toggleList = (e, type) => {
       document.querySelectorAll('.tab-btn').forEach(b => {
           b.classList.remove('active');
@@ -619,6 +730,7 @@
       else { DOM.risingList.classList.add('hidden'); DOM.fallingList.classList.remove('hidden'); }
     };
 
+    // Balance visibility
     DOM.eyeToggle.onclick = () => {
       STATE.balanceVisible = !STATE.balanceVisible;
       DOM.eyeToggle.className = STATE.balanceVisible ? 'fas fa-eye cursor-pointer no-btn' : 'fas fa-eye-slash cursor-pointer no-btn';
@@ -637,27 +749,59 @@
       searchTimer = setTimeout(() => {
         const matches = STATE.marketData.filter(c => c.symbol.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)).slice(0,5);
         DOM.searchResults.replaceChildren();
+        searchIndex = -1;
+        
+        if(!matches.length) {
+            DOM.searchResults.appendChild(el('li', 'search-item text-secondary', 'No results'));
+            return;
+        }
         
         matches.forEach((c, idx) => {
           const li = el('li', 'search-item');
           li.setAttribute('role', 'option');
+          li.id = `search-item-${idx}`;
+          // Set manual lock on chart if searched
           li.onclick = () => {
-             // Manual chart update on search
-             STATE.chartCoins = [{id: c.id, symbol: c.symbol.toUpperCase()}];
+             STATE.userInteracting = true; // Lock rotation
+             DOM.pauseChartBtn.innerHTML = '<i class="fas fa-play"></i>'; // Set button to play icon
+             STATE.chartCoins = [{id: c.id, symbol: c.symbol.toUpperCase()}]; // Force this coin
+             STATE.chartIndex = 0;
              updateChart();
              DOM.searchResults.replaceChildren();
              DOM.coinSearch.value = '';
           };
+          
           const div = el('div', 'flex items-center gap-sm');
           const img = el('img'); img.src = c.image; img.width = 20; img.style.borderRadius = '50%';
           div.appendChild(img);
           div.appendChild(el('span', '', c.name));
+          
           li.appendChild(div);
           li.appendChild(el('span', 'text-secondary', `$${c.current_price}`));
           DOM.searchResults.appendChild(li);
         });
       }, 300);
     });
+
+    DOM.coinSearch.addEventListener('keydown', (e) => {
+        const items = DOM.searchResults.querySelectorAll('.search-item');
+        if(items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            searchIndex = (searchIndex + 1) % items.length;
+            updateSearchFocus(items);
+        } else if (e.key === 'ArrowUp') {
+            searchIndex = (searchIndex - 1 + items.length) % items.length;
+            updateSearchFocus(items);
+        } else if (e.key === 'Enter' && searchIndex >= 0) {
+            items[searchIndex].click();
+        }
+    });
+
+    function updateSearchFocus(items) {
+        items.forEach(i => i.classList.remove('active'));
+        if(searchIndex >= 0) items[searchIndex].classList.add('active');
+    }
 
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.search-container')) DOM.searchResults.replaceChildren();
@@ -668,6 +812,7 @@
       window.location.href = 'login.html';
     };
 
+    // --- UTILS ---
     function formatVolume(num) {
       if(num >= 1e9) return (num/1e9).toFixed(2) + 'B';
       if(num >= 1e6) return (num/1e6).toFixed(2) + 'M';
@@ -682,22 +827,26 @@
       return data;
     }
 
-    function setCachedData(key, data, ttl) {
+    function setCachedData(key, data, ttl = CONFIG.CACHE_TTL) {
       localStorage.setItem(key, JSON.stringify({ data, expiry: Date.now() + ttl }));
     }
 
     function showToast(msg, type) {
       const t = document.getElementById("toast");
       t.textContent = msg;
-      t.classList.remove('toast-success', 'toast-error', 'show');
+      t.classList.remove('toast-success', 'toast-error', 'toast-info', 'show');
       t.classList.add('show', `toast-${type || 'info'}`);
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    // FIX 4: Kill calls when leaving page
-    window.addEventListener('beforeunload', stopDataSync);
-    window.addEventListener('online', () => { stopDataSync(); startDataSync(); showToast("Online", "success"); });
-    window.addEventListener('offline', () => showToast("Offline", "error"));
+    // --- LIFECYCLE ---
+    window.addEventListener('online', () => {
+      stopDataSync(); 
+      showToast("Back online!", "success");
+      startDataSync();
+    });
+
+    window.addEventListener('offline', () => showToast("You are offline", "info"));
 
     document.addEventListener('DOMContentLoaded', initApp);
 
