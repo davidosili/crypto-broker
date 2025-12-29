@@ -338,18 +338,20 @@
 
     const CONFIG = {
       API_URL: getApiUrl(),
-      CACHE_TTL: 30000 
+      CACHE_TTL: 60000 // FIXED: Increased from 30000 to 60000 (1 min)
     };
 
     // --- STATE ---
     const STATE = {
-      isSyncing: false, // Critical Guard
+      isSyncing: false,
       balanceVisible: true,
       portfolioData: {},
       marketData: [],
-      chartCoins: [{ id: 'bitcoin', symbol: 'BTC' }, { id: 'ethereum', symbol: 'ETH' }], // Default
+      chartCoins: [{ id: 'bitcoin', symbol: 'BTC' }, { id: 'ethereum', symbol: 'ETH' }],
+      chartCoinsLocked: false, // FIXED: Lock to prevent random rotation
       chartIndex: 0,
       chartFailures: 0,
+      chartRecoveryScheduled: false,
       abortController: null,
       intervals: []
     };
@@ -377,34 +379,38 @@
       startDataSync();
     }
 
+    // FIXED: Replaced recursive logic with setInterval
     function startDataSync() {
-      if (STATE.isSyncing) return; // Prevent Overlap
+      if (STATE.isSyncing) return;
       STATE.isSyncing = true;
 
       stopDataSync(); 
       STATE.abortController = new AbortController();
       
+      // Initial Immediate Call
       fetchMarketData();
       fetchPortfolio();
       updateChart();
 
-      scheduleNext(fetchMarketData, 30000);
-      scheduleNext(updateChart, 15000);
+      // FIXED: Set safe intervals
+      scheduleInterval(fetchMarketData, 60000); // 1 minute
+      scheduleInterval(updateChart, 20000);     // 20 seconds (slower rotation)
     }
 
+    // FIXED: Updated cleanup logic
     function stopDataSync() {
       if (STATE.abortController) STATE.abortController.abort();
-      STATE.intervals.forEach(clearTimeout);
+      STATE.intervals.forEach(clearInterval); // FIXED: clearInterval instead of clearTimeOut
       STATE.intervals = [];
       STATE.isSyncing = false;
     }
 
-    function scheduleNext(fn, delay) {
-      const timer = setTimeout(async () => {
-        if (!document.hidden && navigator.onLine) await fn();
-        scheduleNext(fn, delay);
+    // FIXED: New non-recursive helper
+    function scheduleInterval(fn, delay) {
+      const id = setInterval(() => {
+        if (!document.hidden && navigator.onLine) fn();
       }, delay);
-      STATE.intervals.push(timer);
+      STATE.intervals.push(id);
     }
 
     // --- HELPERS (DOM) ---
@@ -426,7 +432,7 @@
                 DOM.guestBadge.style.display = 'none';
             }
         } else {
-            DOM.guestBadge.style.display = 'inline-block'; // Show Guest Mode
+            DOM.guestBadge.style.display = 'inline-block';
         }
       } catch(e) { DOM.guestBadge.style.display = 'inline-block'; }
     }
@@ -444,15 +450,19 @@
             setCachedData('coinMarkets', data);
         }
         
-        // Update Chart Rotation Coins dynamically
-        if(STATE.marketData.length > 0) {
+        // FIXED: Locked chart coins so they don't shuffle randomly
+        if(!STATE.chartCoinsLocked && STATE.marketData.length > 0) {
             STATE.chartCoins = STATE.marketData.slice(0, 3).map(c => ({ id: c.id, symbol: c.symbol.toUpperCase() }));
+            STATE.chartCoinsLocked = true;
         }
 
         renderTrendingLists();
         if(Object.keys(STATE.portfolioData).length > 0) renderPortfolio(); 
       } catch (err) { 
-        if (err.name !== 'AbortError') showToast("Market data unavailable", "error");
+        // FIXED: Only toast if data is completely missing (initial load fail)
+        if (err.name !== 'AbortError' && STATE.marketData.length === 0) {
+            showToast("Market data unavailable", "error");
+        }
       }
     }
 
@@ -596,7 +606,17 @@
     const ctx = document.getElementById('coinChart').getContext('2d');
 
     async function updateChart() {
-      if (STATE.chartFailures > 3) return;
+      // FIXED: Smart recovery - if failed too many times, pause and reset later
+      if (STATE.chartFailures > 3) {
+        if (!STATE.chartRecoveryScheduled) {
+            STATE.chartRecoveryScheduled = true;
+            setTimeout(() => {
+                STATE.chartFailures = 0;
+                STATE.chartRecoveryScheduled = false;
+            }, 60000); // Try again in 1 min
+        }
+        return;
+      }
 
       const coin = STATE.chartCoins[STATE.chartIndex];
       DOM.coinLabel.textContent = `${coin.symbol}/USDT`;
@@ -795,6 +815,11 @@
     }
 
     // --- LIFECYCLE ---
+    // FIXED: Clean up intervals on page unload
+    window.addEventListener('beforeunload', () => {
+        stopDataSync();
+    });
+
     window.addEventListener('online', () => {
       stopDataSync(); 
       showToast("Back online!", "success");
