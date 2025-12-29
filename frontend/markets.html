@@ -285,6 +285,9 @@
       CACHE_TTL: 60000 
     };
 
+    // 🔧 IMPROVEMENT 1: Share market cache/state across pages
+    const channel = new BroadcastChannel('market-data');
+
     // --- STATE ---
     const State = {
       coins: [],
@@ -307,7 +310,6 @@
       tabs: document.querySelectorAll('.tab-item'),
       openSearchBtn: document.getElementById('openSearchBtn'),
       closeSearchBtn: document.getElementById('closeSearchBtn'),
-      // Elements to hide from ARIA when modal is open
       backgroundElements: document.querySelectorAll('#mainHeader, #mainTabs, #mainContent, #mainNav')
     };
 
@@ -315,13 +317,32 @@
     document.addEventListener('DOMContentLoaded', () => {
       renderSkeletons();
       restoreTabState();
+      loadSavedSentiment(); // 🔧 IMPROVEMENT 3: Restore sentiment immediately
       initApp();
     });
 
     function initApp() {
       setupEventListeners();
       loadMarkets();
+
+      // ✅ FIX 1: Automatic refresh (Safety check included)
+      setInterval(() => {
+        if (!document.hidden && navigator.onLine) {
+          loadMarkets();
+        }
+      }, 60000); // 60 seconds
     }
+
+    // 🔧 IMPROVEMENT 4: Cleanup on exit
+    window.addEventListener('beforeunload', () => {
+      if (State.abortController) State.abortController.abort();
+      channel.close();
+    });
+
+    // 🔧 IMPROVEMENT 1 (Part 2): Listen for updates from other tabs
+    channel.onmessage = e => {
+      processAndRender(e.data);
+    };
 
     function renderSkeletons() {
       DOM.coinList.innerHTML = Array(6).fill('<div class="coin-row"><div class="skeleton"></div></div>').join('');
@@ -336,18 +357,36 @@
       });
     }
 
+    function loadSavedSentiment() {
+        const saved = localStorage.getItem('lastSentiment');
+        if (saved) {
+            try {
+                const { text, emoji, colorClass, percent } = JSON.parse(saved);
+                renderSentimentUI(text, emoji, colorClass, percent);
+            } catch (e) { /* invalid json */ }
+        }
+    }
+
     // --- DATA FETCHING (SWR) ---
     async function loadMarkets() {
-      if (State.abortController) State.abortController.abort();
-      State.abortController = new AbortController();
-
+      // ✅ FIX 2: Check cache BEFORE creating new controller
+      // This prevents aborting a perfectly good ongoing fetch or cache hit
       const cached = getCachedData('marketData:v1', Config.CACHE_TTL);
       if (cached) {
         processAndRender(cached);
-      } else {
-        if (DOM.coinList.children.length === 0 || DOM.coinList.querySelector('.retry-btn')) {
-           renderSkeletons();
-        }
+        // If we have valid cache, we don't strictly need to fetch immediately
+        // unless we want to do a "stale-while-revalidate" in the background.
+        // For this example, we return to save bandwidth as per prompt advice.
+        return; 
+      }
+
+      // Only abort if we are actually about to fetch new data
+      if (State.abortController) State.abortController.abort();
+      State.abortController = new AbortController();
+
+      // Only show skeletons if list is empty or showing error
+      if (DOM.coinList.children.length === 0 || DOM.coinList.querySelector('.retry-btn')) {
+         renderSkeletons();
       }
 
       try {
@@ -369,10 +408,12 @@
     }
 
     function processAndRender(data) {
-        State.coins = data.map(c => ({
+        // 🔧 IMPROVEMENT 2: Optimize search string creation
+        // Only calculate if not already present (optimization for when data is passed around)
+        State.coins = data.map(c => c._searchStr ? c : {
           ...c,
           _searchStr: `${c.name} ${c.symbol}`.toLowerCase()
-        }));
+        });
 
         const totalVol = data.reduce((sum, c) => sum + (c.total_volume || 0), 0);
         DOM.totalVolume.textContent = formatVolume(totalVol);
@@ -383,7 +424,6 @@
 
     // --- ENHANCED ERROR HANDLING ---
     function renderError() {
-      // Use CSS class for spacing instead of inline style
       DOM.coinList.innerHTML = `
         <div class="error-state">
             <div style="color: var(--danger-red); margin-bottom: 15px; font-weight: 500;">
@@ -407,9 +447,6 @@
           spinner.classList.remove('hidden');
 
           setTimeout(() => {
-             // Logic: We don't need to "reset" the button here visually 
-             // because renderSkeletons() is about to destroy it.
-             // If this next loadMarkets fails, renderError will generate a BRAND NEW button.
              renderSkeletons(); 
              loadMarkets();
           }, 300); 
@@ -440,7 +477,6 @@
         row.className = 'coin-row';
         row.setAttribute('role', 'listitem');
         row.tabIndex = 0;
-        // A11y: Explicit intent
         row.setAttribute('aria-label', `View ${c.name} details`);
         
         const goToDetail = () => {
@@ -449,7 +485,6 @@
         };
 
         row.onclick = goToDetail;
-        
         row.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -460,7 +495,6 @@
         const favBtn = document.createElement('button');
         favBtn.className = `fav-star ${isFav ? 'active' : ''}`;
         favBtn.innerHTML = '<i class="fas fa-star"></i>';
-        // A11y: Robust String Construction
         const favAction = isFav ? 'Remove' : 'Add';
         favBtn.setAttribute('aria-label', `${favAction} ${c.name} to favorites`);
         
@@ -468,6 +502,15 @@
           e.stopPropagation();
           toggleFavorite(c.id, c.name, favBtn);
         };
+
+        // ✅ FIX 4: Add keyboard support for favorite button
+        favBtn.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation(); // Stop row click
+            toggleFavorite(c.id, c.name, favBtn);
+          }
+        });
 
         const colFav = document.createElement('div');
         colFav.className = 'col-fav';
@@ -543,25 +586,24 @@
       // Fade Out
       DOM.coinList.classList.add('fading');
 
-      // Short delay for visual polish (200ms matches CSS transition)
       setTimeout(() => {
           let filtered = State.coins.slice();
 
+          // ✅ FIX 3: Clone array before sorting to avoid mutation bugs
           switch (State.currentFilter) {
             case 'favorites':
               filtered = filtered.filter(c => State.favorites.has(c.id));
               break;
             case 'gainers':
-              filtered.sort((a, b) => (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0));
+              filtered = [...filtered].sort((a, b) => (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0));
               break;
             case 'losers':
-              filtered.sort((a, b) => (a.price_change_percentage_24h ?? 0) - (b.price_change_percentage_24h ?? 0));
+              filtered = [...filtered].sort((a, b) => (a.price_change_percentage_24h ?? 0) - (b.price_change_percentage_24h ?? 0));
               break;
           }
           
           renderList(filtered, DOM.coinList);
           
-          // Fade In
           requestAnimationFrame(() => {
               DOM.coinList.classList.remove('fading');
           });
@@ -574,26 +616,36 @@
       const gainers = coins.filter(c => (c.price_change_percentage_24h ?? 0) > 0).length;
       const percent = (gainers / coins.length) * 100;
       
-      const bars = Array.from(DOM.sentimentBars);
-      bars.forEach(b => b.classList.remove('bg-bullish', 'bg-bearish', 'bg-neutral'));
-
       let text, emoji, colorClass;
 
       if (percent > 60) {
         text = "Bullish"; emoji = "🐂"; colorClass = "text-bullish";
-        bars.forEach(b => b.classList.add('bg-bullish'));
       } else if (percent < 40) {
         text = "Bearish"; emoji = "🐻"; colorClass = "text-bearish";
-        bars.forEach(b => b.classList.add('bg-bearish'));
       } else {
         text = "Neutral"; emoji = "⚖️"; colorClass = "text-neutral";
-        // Safe mapping instead of hardcoded indices
-        const neutrals = ['bg-bearish', 'bg-neutral', 'bg-bullish'];
-        bars.forEach((b, i) => { if (neutrals[i]) b.classList.add(neutrals[i]); });
       }
 
-      DOM.sentimentText.className = `sentiment-text ${colorClass}`;
-      DOM.sentimentText.innerHTML = `<span>${text}</span> <span aria-hidden="true">${emoji}</span>`;
+      // 🔧 IMPROVEMENT 3: Save sentiment
+      localStorage.setItem('lastSentiment', JSON.stringify({ text, emoji, colorClass, percent }));
+      renderSentimentUI(text, emoji, colorClass, percent);
+    }
+
+    function renderSentimentUI(text, emoji, colorClass, percent) {
+        const bars = Array.from(DOM.sentimentBars);
+        bars.forEach(b => b.classList.remove('bg-bullish', 'bg-bearish', 'bg-neutral'));
+
+        if (percent > 60) {
+            bars.forEach(b => b.classList.add('bg-bullish'));
+        } else if (percent < 40) {
+            bars.forEach(b => b.classList.add('bg-bearish'));
+        } else {
+            const neutrals = ['bg-bearish', 'bg-neutral', 'bg-bullish'];
+            bars.forEach((b, i) => { if (neutrals[i]) b.classList.add(neutrals[i]); });
+        }
+
+        DOM.sentimentText.className = `sentiment-text ${colorClass}`;
+        DOM.sentimentText.innerHTML = `<span>${text}</span> <span aria-hidden="true">${emoji}</span>`;
     }
 
     // --- EVENTS & UI ---
@@ -644,10 +696,8 @@
     }
 
     function toggleSearch(show) {
-      // 1. Lock Background Scroll
       document.body.classList.toggle('no-scroll', show);
 
-      // 2. A11y: Hide background content when modal is open
       DOM.backgroundElements.forEach(el => {
           if(show) el.setAttribute('aria-hidden', 'true');
           else el.removeAttribute('aria-hidden');
@@ -700,7 +750,9 @@
 
     function setCachedData(key, data) {
       localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+      // 🔧 IMPROVEMENT 1 (Part 3): Broadcast to other tabs
+      channel.postMessage(data);
     }
   </script>
 </body>
-        </html>
+</html>
