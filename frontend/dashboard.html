@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https:; img-src 'self' https: data:; font-src 'self' https: data:;">
   <title>ProTrade Dashboard</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -259,10 +258,7 @@
       <div class="card chart-card card-padding">
         <div class="flex justify-between items-center mb-md">
           <span id="currentCoinLabel" class="font-bold text-base transition-colors">BTC/USDT</span>
-          <div class="flex gap-sm">
-            <button class="no-btn text-secondary text-xs" id="pauseChartBtn" title="Pause Rotation"><i class="fas fa-pause"></i></button>
-            <button class="no-btn text-secondary" id="expandChartBtn" title="Fullscreen"><i class="fas fa-expand-alt"></i></button>
-          </div>
+          <button class="no-btn text-secondary" id="expandChartBtn" title="Fullscreen"><i class="fas fa-expand-alt"></i></button>
         </div>
         <div class="canvas-container">
           <canvas id="coinChart"></canvas>
@@ -342,20 +338,18 @@
 
     const CONFIG = {
       API_URL: getApiUrl(),
-      CACHE_TTL: 30000,
-      CHART_ROTATE_MS: 15000
+      CACHE_TTL: 30000 
     };
 
     // --- STATE ---
     const STATE = {
-      isSyncing: false,
+      isSyncing: false, // Critical Guard
       balanceVisible: true,
       portfolioData: {},
       marketData: [],
-      chartCoins: [{ id: 'bitcoin', symbol: 'BTC' }, { id: 'ethereum', symbol: 'ETH' }],
+      chartCoins: [{ id: 'bitcoin', symbol: 'BTC' }, { id: 'ethereum', symbol: 'ETH' }], // Default
       chartIndex: 0,
       chartFailures: 0,
-      userInteracting: false, // NEW: Prevents chart rotation when user is looking at it
       abortController: null,
       intervals: []
     };
@@ -374,9 +368,7 @@
       sidebarToggle: document.getElementById('sidebarToggle'),
       coinSearch: document.getElementById('coinSearch'),
       coinLabel: document.getElementById('currentCoinLabel'),
-      guestBadge: document.getElementById('guestBadge'),
-      pauseChartBtn: document.getElementById('pauseChartBtn'),
-      chartCanvas: document.getElementById('coinChart')
+      guestBadge: document.getElementById('guestBadge')
     };
 
     // --- INITIALIZATION ---
@@ -386,18 +378,18 @@
     }
 
     function startDataSync() {
-      if (STATE.isSyncing) return;
+      if (STATE.isSyncing) return; // Prevent Overlap
       STATE.isSyncing = true;
+
       stopDataSync(); 
       STATE.abortController = new AbortController();
       
       fetchMarketData();
       fetchPortfolio();
-      updateChart(); // Initial load
+      updateChart();
 
-      // Set intervals (recursive timeout pattern preferred for async)
       scheduleNext(fetchMarketData, 30000);
-      scheduleNext(updateChart, CONFIG.CHART_ROTATE_MS);
+      scheduleNext(updateChart, 15000);
     }
 
     function stopDataSync() {
@@ -434,7 +426,7 @@
                 DOM.guestBadge.style.display = 'none';
             }
         } else {
-            DOM.guestBadge.style.display = 'inline-block';
+            DOM.guestBadge.style.display = 'inline-block'; // Show Guest Mode
         }
       } catch(e) { DOM.guestBadge.style.display = 'inline-block'; }
     }
@@ -446,26 +438,21 @@
             STATE.marketData = cached;
         } else {
             const res = await fetch(`${CONFIG.API_URL}/coin/markets`, { signal: STATE.abortController?.signal });
-            if (res.status === 429) throw new Error('RateLimit');
-            if(!res.ok) throw new Error('API Error');
+            if(!res.ok) throw new Error();
             const data = await res.json();
             STATE.marketData = data;
             setCachedData('coinMarkets', data);
         }
         
+        // Update Chart Rotation Coins dynamically
         if(STATE.marketData.length > 0) {
-            // Keep top 5 for rotation
-            STATE.chartCoins = STATE.marketData.slice(0, 5).map(c => ({ id: c.id, symbol: c.symbol.toUpperCase() }));
+            STATE.chartCoins = STATE.marketData.slice(0, 3).map(c => ({ id: c.id, symbol: c.symbol.toUpperCase() }));
         }
 
         renderTrendingLists();
         if(Object.keys(STATE.portfolioData).length > 0) renderPortfolio(); 
       } catch (err) { 
-        if (err.message === 'RateLimit') {
-            console.warn("API Rate Limit. Backing off.");
-        } else if (err.name !== 'AbortError') {
-            // showToast("Market data update failed", "error"); // Optional: Don't spam user
-        }
+        if (err.name !== 'AbortError') showToast("Market data unavailable", "error");
       }
     }
 
@@ -490,7 +477,6 @@
     function renderPortfolio() {
       if (Object.keys(STATE.portfolioData).length === 0) {
         DOM.portfolioBreakdown.replaceChildren(el('p', 'text-center text-secondary text-sm p-2', 'No assets found'));
-        DOM.totalValue.textContent = STATE.balanceVisible ? '$0.00' : '****';
         return;
       }
 
@@ -610,8 +596,6 @@
     const ctx = document.getElementById('coinChart').getContext('2d');
 
     async function updateChart() {
-      // Don't update if user is interacting with it
-      if (STATE.userInteracting && chartInstance) return;
       if (STATE.chartFailures > 3) return;
 
       const coin = STATE.chartCoins[STATE.chartIndex];
@@ -626,7 +610,6 @@
            prices = cached.prices; labels = cached.labels;
         } else {
            const res = await fetch(`${CONFIG.API_URL}/coin/chart/${coin.id}?vs_currency=usd&days=7`, { signal: STATE.abortController?.signal });
-           if(res.status === 429) throw new Error('RateLimit');
            if(!res.ok) throw new Error();
            const data = await res.json();
            prices = data.prices.map(d => d[1]);
@@ -657,8 +640,7 @@
                     plugins: { legend: { display: false } },
                     scales: { x: { display: false }, y: { display: false } },
                     interaction: { mode: 'index', intersect: false },
-                    animation: { duration: 500 },
-                    onHover: () => { STATE.userInteracting = true; } // Stop rotation on hover
+                    animation: { duration: 500 }
                 }
             });
         } else {
@@ -668,11 +650,7 @@
         }
 
         setTimeout(() => DOM.coinLabel.classList.remove('text-highlight'), 500);
-        
-        // Rotate to next coin only if not manually locked
-        if (!STATE.userInteracting) {
-            STATE.chartIndex = (STATE.chartIndex + 1) % STATE.chartCoins.length;
-        }
+        STATE.chartIndex = (STATE.chartIndex + 1) % STATE.chartCoins.length;
       } catch(e) { 
           if(e.name !== 'AbortError') STATE.chartFailures++; 
       }
@@ -680,7 +658,6 @@
 
     // --- UI EVENTS ---
     
-    // Toggle Sidebar
     function toggleSidebar(open) {
         if (open) {
             DOM.sidebar.classList.add('active');
@@ -705,18 +682,6 @@
         if (e.key === 'Escape') toggleSidebar(false);
     });
 
-    // Chart Interaction
-    DOM.chartCanvas.addEventListener('mouseleave', () => {
-        // Resume rotation after delay when mouse leaves
-        setTimeout(() => { STATE.userInteracting = false; }, 2000);
-    });
-    
-    DOM.pauseChartBtn.addEventListener('click', () => {
-        STATE.userInteracting = !STATE.userInteracting;
-        DOM.pauseChartBtn.innerHTML = STATE.userInteracting ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
-        showToast(STATE.userInteracting ? "Chart rotation paused" : "Chart rotation resumed", "info");
-    });
-
     // Tabs
     window.toggleList = (e, type) => {
       document.querySelectorAll('.tab-btn').forEach(b => {
@@ -730,14 +695,13 @@
       else { DOM.risingList.classList.add('hidden'); DOM.fallingList.classList.remove('hidden'); }
     };
 
-    // Balance visibility
     DOM.eyeToggle.onclick = () => {
       STATE.balanceVisible = !STATE.balanceVisible;
       DOM.eyeToggle.className = STATE.balanceVisible ? 'fas fa-eye cursor-pointer no-btn' : 'fas fa-eye-slash cursor-pointer no-btn';
       renderPortfolio();
     };
 
-    // Search (Debounced)
+    // Search
     let searchTimer;
     let searchIndex = -1;
 
@@ -760,16 +724,7 @@
           const li = el('li', 'search-item');
           li.setAttribute('role', 'option');
           li.id = `search-item-${idx}`;
-          // Set manual lock on chart if searched
-          li.onclick = () => {
-             STATE.userInteracting = true; // Lock rotation
-             DOM.pauseChartBtn.innerHTML = '<i class="fas fa-play"></i>'; // Set button to play icon
-             STATE.chartCoins = [{id: c.id, symbol: c.symbol.toUpperCase()}]; // Force this coin
-             STATE.chartIndex = 0;
-             updateChart();
-             DOM.searchResults.replaceChildren();
-             DOM.coinSearch.value = '';
-          };
+          li.onclick = () => window.location.href = `coin.html?coinId=${c.id}`;
           
           const div = el('div', 'flex items-center gap-sm');
           const img = el('img'); img.src = c.image; img.width = 20; img.style.borderRadius = '50%';
