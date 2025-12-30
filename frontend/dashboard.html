@@ -10,6 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
   <style>
     /* --- THEME VARIABLES --- */
     :root {
@@ -142,7 +144,7 @@
     .card-padding { padding: 20px; }
     
     .chart-card { height: 350px; display: flex; flex-direction: column; }
-    .canvas-container { flex: 1; position: relative; width: 100%; }
+    .chart-container { flex: 1; width: 100%; overflow: hidden; }
 
     .portfolio-card { height: 100%; background: linear-gradient(135deg, #2b3139 0%, #1e2329 100%); }
     .total-value-display { font-size: 36px; font-weight: 700; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -0.5px; }
@@ -183,14 +185,19 @@
     .skeleton-text { height: 14px; margin-bottom: 6px; width: 60%; }
     .skeleton-circle { width: 28px; height: 28px; border-radius: 50%; }
 
-    /* Toast */
-    #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 4px; padding: 12px 16px; position: fixed; z-index: 3000; left: 50%; bottom: 80px; transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-    #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+    /* Toast - Uses opacity for cleaner transitions */
+    #toast { 
+        visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; 
+        border-radius: 4px; padding: 12px 16px; position: fixed; z-index: 3000; left: 50%; bottom: 80px; 
+        transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); opacity: 0;
+        transition: opacity 0.3s, bottom 0.3s;
+    }
+    #toast.show { visibility: visible; opacity: 1; bottom: 80px; }
+    #toast.hidden-toast { bottom: 40px; opacity: 0; } /* State for animation start */
+    
     .toast-error { background-color: var(--danger-red) !important; color: white; }
     .toast-success { background-color: var(--success-green) !important; color: white; }
     .toast-info { background-color: #333 !important; color: white; }
-    @keyframes fadein { from {bottom: 40px; opacity: 0;} to {bottom: 80px; opacity: 1;} }
-    @keyframes fadeout { from {bottom: 80px; opacity: 1;} to {bottom: 40px; opacity: 0;} }
 
     /* DESKTOP VIEW */
     @media (min-width: 1024px) {
@@ -220,7 +227,9 @@
 
   <aside id="sidebar" class="sidebar">
     <div class="sidebar-header flex items-center gap-md">
-      <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Profile" class="profile-icon" loading="lazy">
+      <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" 
+           alt="Profile" class="profile-icon" loading="lazy"
+           onerror="this.src='https://ui-avatars.com/api/?name=Guest&background=random'">
       <div>
         <div class="flex items-center gap-xs">
             <h2 id="userInfo" class="text-base font-bold">Guest</h2>
@@ -247,7 +256,13 @@
     <button class="menu-btn no-btn" id="sidebarToggle" aria-label="Toggle Sidebar" aria-expanded="false"><i class="fas fa-bars"></i></button>
     <div class="search-container">
       <i class="fas fa-search search-icon"></i>
-      <input type="text" id="coinSearch" placeholder="Search Coin (e.g. BTC)" aria-label="Search Cryptocurrency" autocomplete="off">
+      <input type="text" id="coinSearch" 
+             placeholder="Search Coin (e.g. BTC)" 
+             aria-label="Search Cryptocurrency" 
+             aria-autocomplete="list"
+             aria-controls="searchResults"
+             aria-expanded="false"
+             autocomplete="off">
       <ul id="searchResults" role="listbox"></ul>
     </div>
   </header>
@@ -260,9 +275,7 @@
           <span id="currentCoinLabel" class="font-bold text-base transition-colors">BTC/USDT</span>
           <button class="no-btn text-secondary" id="expandChartBtn" title="Fullscreen"><i class="fas fa-expand-alt"></i></button>
         </div>
-        <div class="canvas-container">
-          <canvas id="coinChart"></canvas>
-        </div>
+        <div class="chart-container" id="coinChart"></div>
       </div>
 
       <div class="card portfolio-card card-padding">
@@ -285,9 +298,9 @@
     <div class="mt-lg"></div>
 
     <div class="action-tabs">
-      <button class="tab-btn active" onclick="toggleList(event, 'rising')" aria-selected="true">Gainers</button>
-      <button class="tab-btn" onclick="toggleList(event, 'falling')" aria-selected="false">Losers</button>
-      <button class="tab-btn trade-btn" onclick="window.location.href='trade.html'">Trade</button>
+      <button class="tab-btn active" id="btnGainers" aria-selected="true">Gainers</button>
+      <button class="tab-btn" id="btnLosers" aria-selected="false">Losers</button>
+      <button class="tab-btn trade-btn" id="btnTrade">Trade</button>
     </div>
 
     <div id="risingList" class="card coin-list-container">
@@ -324,21 +337,21 @@
     <a href="assets.html" class="nav-link"><i class="fas fa-wallet"></i><span>Assets</span></a>
   </nav>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // --- CONFIG ---
-    const getApiUrl = () => {
+    // --- CONSTANTS ---
+    const ICON_FALLBACK = 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png';
+    const USD_FMT = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
+    
+    const CONFIG = {
+      API_URL: (() => {
         if (window.__API__) return window.__API__;
         const host = window.location.hostname;
         if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.')) {
             return 'http://localhost:3000/api';
         }
         return 'https://krypt-broker.onrender.com/api';
-    };
-
-    const CONFIG = {
-      API_URL: getApiUrl(),
-      CACHE_TTL: 60000 // FIXED: Increased from 30000 to 60000 (1 min)
+      })(),
+      CACHE_TTL: 60000 
     };
 
     // --- STATE ---
@@ -347,13 +360,14 @@
       balanceVisible: true,
       portfolioData: {},
       marketData: [],
-      chartCoins: [{ id: 'bitcoin', symbol: 'BTC' }, { id: 'ethereum', symbol: 'ETH' }],
-      chartCoinsLocked: false, // FIXED: Lock to prevent random rotation
+      marketMap: new Map(),
+      chartCoins: [],
       chartIndex: 0,
       chartFailures: 0,
       chartRecoveryScheduled: false,
       abortController: null,
-      intervals: []
+      intervals: [],
+      chartInterval: null
     };
 
     // --- DOM CACHE ---
@@ -370,55 +384,95 @@
       sidebarToggle: document.getElementById('sidebarToggle'),
       coinSearch: document.getElementById('coinSearch'),
       coinLabel: document.getElementById('currentCoinLabel'),
-      guestBadge: document.getElementById('guestBadge')
+      guestBadge: document.getElementById('guestBadge'),
+      btnGainers: document.getElementById('btnGainers'),
+      btnLosers: document.getElementById('btnLosers'),
+      btnTrade: document.getElementById('btnTrade'),
+      coinChart: document.getElementById('coinChart')
     };
 
     // --- INITIALIZATION ---
     function initApp() {
+      setupEventListeners();
       fetchUserInfo();
       startDataSync();
+      initChartObserver();
     }
 
-    // FIXED: Replaced recursive logic with setInterval
+    function initChartObserver() {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            updateChart(); 
+            if (!STATE.chartInterval) {
+                STATE.chartInterval = setInterval(() => {
+                    if(!document.hidden && navigator.onLine) updateChart();
+                }, 20000);
+            }
+        } else {
+            if(STATE.chartInterval) {
+                clearInterval(STATE.chartInterval);
+                STATE.chartInterval = null;
+            }
+        }
+      }, { threshold: 0.1 });
+      observer.observe(DOM.coinChart);
+    }
+
+    function setupEventListeners() {
+        DOM.sidebarToggle.addEventListener('click', () => toggleSidebar(true));
+        DOM.overlay.addEventListener('click', () => toggleSidebar(false));
+        
+        DOM.btnGainers.addEventListener('click', () => toggleTab('rising'));
+        DOM.btnLosers.addEventListener('click', () => toggleTab('falling'));
+        DOM.btnTrade.addEventListener('click', () => window.location.href='trade.html');
+
+        DOM.eyeToggle.addEventListener('click', toggleBalanceVisibility);
+        
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+             // SECURITY NOTE: Ensure backend uses SameSite=Strict cookies. 
+             // If using custom headers for CSRF, inject them here:
+             // headers: { 'X-CSRF-Token': getCsrfToken() }
+             await fetch(`${CONFIG.API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+             window.location.href = 'login.html';
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') toggleSidebar(false);
+        });
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if(chartInstance) chartInstance.resize();
+            }, 200);
+        });
+    }
+
     function startDataSync() {
       if (STATE.isSyncing) return;
       STATE.isSyncing = true;
-
       stopDataSync(); 
       STATE.abortController = new AbortController();
       
-      // Initial Immediate Call
       fetchMarketData();
       fetchPortfolio();
-      updateChart();
-
-      // FIXED: Set safe intervals
-      scheduleInterval(fetchMarketData, 60000); // 1 minute
-      scheduleInterval(updateChart, 20000);     // 20 seconds (slower rotation)
+      scheduleInterval(fetchMarketData, 60000); 
     }
 
-    // FIXED: Updated cleanup logic
     function stopDataSync() {
       if (STATE.abortController) STATE.abortController.abort();
-      STATE.intervals.forEach(clearInterval); // FIXED: clearInterval instead of clearTimeOut
+      STATE.intervals.forEach(clearInterval); 
+      if(STATE.chartInterval) clearInterval(STATE.chartInterval);
       STATE.intervals = [];
       STATE.isSyncing = false;
     }
 
-    // FIXED: New non-recursive helper
     function scheduleInterval(fn, delay) {
       const id = setInterval(() => {
         if (!document.hidden && navigator.onLine) fn();
       }, delay);
       STATE.intervals.push(id);
-    }
-
-    // --- HELPERS (DOM) ---
-    function el(tag, cls = '', text = '') {
-        const e = document.createElement(tag);
-        if(cls) e.className = cls;
-        if(text) e.textContent = text;
-        return e;
     }
 
     // --- DATA FETCHING ---
@@ -450,16 +504,16 @@
             setCachedData('coinMarkets', data);
         }
         
-        // FIXED: Locked chart coins so they don't shuffle randomly
-        if(!STATE.chartCoinsLocked && STATE.marketData.length > 0) {
+        STATE.marketMap = new Map(STATE.marketData.map(c => [c.symbol.toLowerCase(), c]));
+
+        // Initialize Chart Coins ONCE
+        if(STATE.chartCoins.length === 0 && STATE.marketData.length > 0) {
             STATE.chartCoins = STATE.marketData.slice(0, 3).map(c => ({ id: c.id, symbol: c.symbol.toUpperCase() }));
-            STATE.chartCoinsLocked = true;
         }
 
         renderTrendingLists();
         if(Object.keys(STATE.portfolioData).length > 0) renderPortfolio(); 
       } catch (err) { 
-        // FIXED: Only toast if data is completely missing (initial load fail)
         if (err.name !== 'AbortError' && STATE.marketData.length === 0) {
             showToast("Market data unavailable", "error");
         }
@@ -485,62 +539,63 @@
 
     // --- RENDERING ---
     function renderPortfolio() {
+      if (STATE.marketData.length === 0) return;
+
       if (Object.keys(STATE.portfolioData).length === 0) {
         DOM.portfolioBreakdown.replaceChildren(el('p', 'text-center text-secondary text-sm p-2', 'No assets found'));
         return;
       }
 
-      const marketMap = new Map(STATE.marketData.map(c => [c.symbol.toLowerCase(), c]));
       let total = 0;
-      
       const frag = document.createDocumentFragment();
 
       Object.entries(STATE.portfolioData).forEach(([symbol, amount]) => {
-        const coin = marketMap.get(symbol.toLowerCase());
+        const coin = STATE.marketMap.get(symbol.toLowerCase());
         const price = coin?.current_price ?? 0;
         const val = amount * price;
         total += val;
 
         const row = el('div', 'coin-row flex justify-between items-center');
-        
-        // Left
         const left = el('div', 'flex items-center gap-sm');
-        const img = el('img', 'coin-img-sm');
-        img.src = coin?.image || 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png';
-        img.onerror = () => { img.src = 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png'; };
-        img.alt = symbol;
+        
+        // Upgraded el() usage with attributes object
+        const img = el('img', 'coin-img-sm', '', { 
+            src: coin?.image || ICON_FALLBACK, 
+            alt: symbol,
+            onerror: "this.onerror=null;this.src='" + ICON_FALLBACK + "'"
+        });
         
         const infoDiv = el('div');
         infoDiv.appendChild(el('strong', 'text-primary text-base block', symbol.toUpperCase()));
         infoDiv.appendChild(el('small', 'text-secondary text-xs', amount.toFixed(4)));
-        
         left.appendChild(img); left.appendChild(infoDiv);
         
-        // Right
         const right = el('div', 'text-right');
-        const displayVal = STATE.balanceVisible ? `$${val.toLocaleString(undefined, {minimumFractionDigits: 2})}` : '****';
+        const displayVal = STATE.balanceVisible ? USD_FMT.format(val) : '****';
         right.appendChild(el('strong', 'text-primary text-base block', displayVal));
-        right.appendChild(el('small', 'text-secondary text-xs block', `$${price.toLocaleString()}`));
-        
+        right.appendChild(el('small', 'text-secondary text-xs block', USD_FMT.format(price)));
         row.appendChild(left); row.appendChild(right);
         frag.appendChild(row);
       });
 
       DOM.portfolioBreakdown.replaceChildren(frag);
-      DOM.totalValue.textContent = STATE.balanceVisible 
-        ? `$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}` 
-        : '****';
+      DOM.totalValue.textContent = STATE.balanceVisible ? USD_FMT.format(total) : '****';
     }
 
     function renderTrendingLists() {
       if(!STATE.marketData.length) return;
 
-      const rising = [...STATE.marketData].sort((a,b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5);
-      const falling = [...STATE.marketData].sort((a,b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0, 5);
+      // OPTIMIZATION: Sort ONCE by percentage change, then slice ends
+      // Note: Data is usually ~50-100 items, so full sort is cheap but O(n log n) is better than 3 sorts
+      const sortedByChange = [...STATE.marketData].sort((a,b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+      
+      const rising = sortedByChange.slice(0, 5);
+      const falling = sortedByChange.slice(-5).reverse(); // Worst losers first
       
       renderList(DOM.risingList, rising, 'text-success');
       renderList(DOM.fallingList, falling, 'text-danger');
       
+      // Separate sort for Volume (Different metric)
       const trending = [...STATE.marketData].sort((a,b) => b.total_volume - a.total_volume).slice(0, 4);
       DOM.trendingCoins.replaceChildren();
       
@@ -554,13 +609,15 @@
         
         const header = el('div', 'flex justify-between mb-sm');
         header.appendChild(el('h4', 'text-sm text-primary font-bold', c.symbol.toUpperCase()));
-        const img = el('img', 'coin-card-img');
-        img.src = c.image; img.alt = c.symbol;
-        img.onerror = () => { img.src = 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png'; };
+        const img = el('img', 'coin-card-img', '', { 
+            src: c.image, 
+            alt: c.symbol,
+            onerror: "this.src='" + ICON_FALLBACK + "'"
+        });
         header.appendChild(img);
         
         div.appendChild(header);
-        div.appendChild(el('div', 'text-lg font-bold text-primary gap-xs', `$${c.current_price.toLocaleString()}`));
+        div.appendChild(el('div', 'text-lg font-bold text-primary gap-xs', USD_FMT.format(c.current_price)));
         div.appendChild(el('div', `${colorClass} text-xs font-medium`, `${change.toFixed(2)}%`));
         
         frag.appendChild(div);
@@ -571,29 +628,27 @@
     function renderList(container, coins, colorClass) {
       container.replaceChildren();
       const frag = document.createDocumentFragment();
-      
       coins.forEach(c => {
         const change = c.price_change_percentage_24h || 0;
         const sign = change > 0 ? '+' : '';
-        
         const div = el('div', 'coin-item');
         div.onclick = () => window.location.href = `coin.html?coinId=${c.id}`;
-        
         const link = el('div', 'coin-item-content');
-        
         const left = el('div', 'flex items-center gap-sm');
-        const img = el('img', 'coin-img-sm'); img.src = c.image; img.alt = c.symbol;
-        img.onerror = () => { img.src = 'https://cdn-icons-png.flaticon.com/512/1213/1213791.png'; };
+        
+        const img = el('img', 'coin-img-sm', '', { 
+            src: c.image, 
+            alt: c.symbol,
+            onerror: "this.src='" + ICON_FALLBACK + "'"
+        });
         
         const info = el('div', 'flex flex-col');
         info.appendChild(el('span', 'text-primary text-sm font-bold', c.symbol.toUpperCase()));
         info.appendChild(el('span', 'text-secondary text-xs', `Vol ${formatVolume(c.total_volume)}`));
         left.appendChild(img); left.appendChild(info);
-        
         const right = el('div', 'text-right');
-        right.appendChild(el('div', 'text-primary text-sm font-medium', `$${c.current_price.toLocaleString()}`));
+        right.appendChild(el('div', 'text-primary text-sm font-medium', USD_FMT.format(c.current_price)));
         right.appendChild(el('div', `${colorClass} text-xs font-bold`, `${sign}${change.toFixed(2)}%`));
-        
         link.appendChild(left); link.appendChild(right);
         div.appendChild(link);
         frag.appendChild(div);
@@ -601,22 +656,45 @@
       container.appendChild(frag);
     }
 
-    // --- CHART LOGIC ---
-    let chartInstance;
-    const ctx = document.getElementById('coinChart').getContext('2d');
+    // --- CHART LOGIC (Optimized) ---
+    let chartInstance = null;
+
+    function processCandleData(prices, groupSize = 4) {
+        const ohlc = [];
+        for (let i = 0; i < prices.length; i += groupSize) {
+            const chunk = prices.slice(i, i + groupSize);
+            if (chunk.length === 0) break;
+            const timestamp = chunk[0][0];
+            const chunkPrices = chunk.map(p => p[1]);
+            ohlc.push({ 
+                x: timestamp, 
+                y: [chunk[0][1], Math.max(...chunkPrices), Math.min(...chunkPrices), chunk[chunk.length - 1][1]] 
+            });
+        }
+        return ohlc;
+    }
+
+    function calculateSMA(data, windowSize) {
+        let sma = [];
+        for (let i = 0; i < data.length; i++) {
+            if (i < windowSize) { sma.push({ x: data[i].x, y: null }); continue; }
+            const sum = data.slice(i - windowSize, i).reduce((acc, curr) => acc + curr.y[3], 0);
+            sma.push({ x: data[i].x, y: sum / windowSize });
+        }
+        return sma;
+    }
 
     async function updateChart() {
-      // FIXED: Smart recovery - if failed too many times, pause and reset later
       if (STATE.chartFailures > 3) {
         if (!STATE.chartRecoveryScheduled) {
             STATE.chartRecoveryScheduled = true;
-            setTimeout(() => {
-                STATE.chartFailures = 0;
-                STATE.chartRecoveryScheduled = false;
-            }, 60000); // Try again in 1 min
+            showToast("Chart paused due to errors", "error");
+            setTimeout(() => { STATE.chartFailures = 0; STATE.chartRecoveryScheduled = false; }, 60000); 
         }
         return;
       }
+      
+      if(STATE.chartCoins.length === 0) return; // Guard if no coins loaded yet
 
       const coin = STATE.chartCoins[STATE.chartIndex];
       DOM.coinLabel.textContent = `${coin.symbol}/USDT`;
@@ -624,130 +702,133 @@
 
       try {
         const cached = getCachedData(`chart-${coin.id}`);
-        let prices, labels;
+        let rawPrices;
 
         if (cached) {
-           prices = cached.prices; labels = cached.labels;
+           rawPrices = cached;
         } else {
            const res = await fetch(`${CONFIG.API_URL}/coin/chart/${coin.id}?vs_currency=usd&days=7`, { signal: STATE.abortController?.signal });
            if(!res.ok) throw new Error();
            const data = await res.json();
-           prices = data.prices.map(d => d[1]);
-           labels = data.prices.map(d => new Date(d[0]).toLocaleDateString());
-           setCachedData(`chart-${coin.id}`, { prices, labels }, 300000); 
+           rawPrices = data.prices;
+           setCachedData(`chart-${coin.id}`, rawPrices, 300000); 
         }
 
         STATE.chartFailures = 0;
+        const candleData = processCandleData(rawPrices, 4); 
+        const sma7 = calculateSMA(candleData, 7);
+        const sma25 = calculateSMA(candleData, 25);
 
-        if (!chartInstance) {
-            const gradient = ctx.createLinearGradient(0, 0, 0, 240);
-            gradient.addColorStop(0, 'rgba(247, 166, 0, 0.2)');
-            gradient.addColorStop(1, 'rgba(247, 166, 0, 0)');
-
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels,
-                    datasets: [{
-                        data: prices,
-                        borderColor: '#F7A600',
-                        backgroundColor: gradient,
-                        fill: true, borderWidth: 2, pointRadius: 0, tension: 0.2
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { x: { display: false }, y: { display: false } },
-                    interaction: { mode: 'index', intersect: false },
-                    animation: { duration: 500 }
-                }
-            });
+        if (chartInstance) {
+            chartInstance.updateSeries([{ data: candleData }, { data: sma7 }, { data: sma25 }]);
         } else {
-            chartInstance.data.labels = labels;
-            chartInstance.data.datasets[0].data = prices;
-            chartInstance.update();
+            const options = {
+              series: [
+                { name: 'Candles', type: 'candlestick', data: candleData },
+                { name: 'MA7', type: 'line', data: sma7 },
+                { name: 'MA25', type: 'line', data: sma25 }
+              ],
+              chart: {
+                type: 'candlestick',
+                height: 350,
+                fontFamily: 'IBM Plex Sans, sans-serif',
+                background: 'transparent',
+                toolbar: { show: false },
+                animations: { enabled: true, easing: 'easeinout', speed: 800 }
+              },
+              stroke: { width: [1, 2, 2], curve: 'smooth' },
+              colors: ['#2EBD85', '#F7A600', '#2979ff'],
+              plotOptions: {
+                candlestick: { colors: { upward: '#2EBD85', downward: '#F6465D' }, wick: { useFillColor: true } }
+              },
+              xaxis: {
+                type: 'datetime', tooltip: { enabled: false }, axisBorder: { show: false }, axisTicks: { show: false }, labels: { show: false }
+              },
+              yaxis: {
+                tooltip: { enabled: true }, opposite: true,
+                labels: { style: { colors: '#848E9C' }, formatter: (val) => val ? val.toFixed(2) : '' }
+              },
+              grid: {
+                borderColor: '#2B3139', strokeDashArray: 4, xaxis: { lines: { show: true } }, yaxis: { lines: { show: true } },
+              },
+              theme: { mode: 'dark' },
+              tooltip: { theme: 'dark', x: { format: 'dd MMM HH:mm' } }
+            };
+            chartInstance = new ApexCharts(document.querySelector("#coinChart"), options);
+            chartInstance.render();
         }
 
         setTimeout(() => DOM.coinLabel.classList.remove('text-highlight'), 500);
         STATE.chartIndex = (STATE.chartIndex + 1) % STATE.chartCoins.length;
+
       } catch(e) { 
-          if(e.name !== 'AbortError') STATE.chartFailures++; 
+          if(e.name !== 'AbortError') {
+              STATE.chartFailures++; 
+              if(STATE.chartFailures > 2) console.warn("Chart Error:", e);
+          }
       }
     }
 
-    // --- UI EVENTS ---
-    
+    // --- UI ACTIONS ---
     function toggleSidebar(open) {
-        if (open) {
-            DOM.sidebar.classList.add('active');
-            DOM.overlay.classList.add('active');
-            DOM.sidebarToggle.setAttribute('aria-expanded', 'true');
-        } else {
-            DOM.sidebar.classList.remove('active');
-            DOM.overlay.classList.remove('active');
-            DOM.sidebarToggle.setAttribute('aria-expanded', 'false');
-        }
+        DOM.sidebar.classList.toggle('active', open);
+        DOM.overlay.classList.toggle('active', open);
+        DOM.sidebarToggle.setAttribute('aria-expanded', open);
     }
 
-    DOM.sidebarToggle.addEventListener('click', () => toggleSidebar(true));
-    DOM.sidebarToggle.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            toggleSidebar(true);
-        }
-    });
-    DOM.overlay.addEventListener('click', () => toggleSidebar(false));
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') toggleSidebar(false);
-    });
+    function toggleTab(type) {
+        DOM.btnGainers.classList.toggle('active', type === 'rising');
+        DOM.btnLosers.classList.toggle('active', type === 'falling');
+        DOM.btnGainers.setAttribute('aria-selected', type === 'rising');
+        DOM.btnLosers.setAttribute('aria-selected', type === 'falling');
+        
+        DOM.risingList.classList.toggle('hidden', type !== 'rising');
+        DOM.fallingList.classList.toggle('hidden', type !== 'falling');
+    }
 
-    // Tabs
-    window.toggleList = (e, type) => {
-      document.querySelectorAll('.tab-btn').forEach(b => {
-          b.classList.remove('active');
-          b.setAttribute('aria-selected', 'false');
-      });
-      e.target.classList.add('active');
-      e.target.setAttribute('aria-selected', 'true');
-      
-      if(type === 'rising') { DOM.risingList.classList.remove('hidden'); DOM.fallingList.classList.add('hidden'); }
-      else { DOM.risingList.classList.add('hidden'); DOM.fallingList.classList.remove('hidden'); }
-    };
-
-    DOM.eyeToggle.onclick = () => {
+    function toggleBalanceVisibility() {
       STATE.balanceVisible = !STATE.balanceVisible;
       DOM.eyeToggle.className = STATE.balanceVisible ? 'fas fa-eye cursor-pointer no-btn' : 'fas fa-eye-slash cursor-pointer no-btn';
       renderPortfolio();
-    };
+    }
 
-    // Search
+    // --- SEARCH ---
     let searchTimer;
     let searchIndex = -1;
 
     DOM.coinSearch.addEventListener('input', (e) => {
       clearTimeout(searchTimer);
       const q = e.target.value.trim().toLowerCase();
-      if(!q) { DOM.searchResults.replaceChildren(); return; }
+      
+      if(!q) { 
+          DOM.searchResults.replaceChildren(); 
+          DOM.coinSearch.setAttribute('aria-expanded', 'false');
+          return; 
+      }
       
       searchTimer = setTimeout(() => {
         const matches = STATE.marketData.filter(c => c.symbol.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)).slice(0,5);
         DOM.searchResults.replaceChildren();
         searchIndex = -1;
+        DOM.coinSearch.setAttribute('aria-expanded', 'true');
         
         if(!matches.length) {
-            DOM.searchResults.appendChild(el('li', 'search-item text-secondary', 'No results'));
+            // FIX: Added role="option" and disabled state for 'No results'
+            const li = el('li', 'search-item text-secondary', 'No results');
+            li.setAttribute('role', 'option');
+            li.setAttribute('aria-disabled', 'true');
+            DOM.searchResults.appendChild(li);
             return;
         }
         
         matches.forEach((c, idx) => {
           const li = el('li', 'search-item');
           li.setAttribute('role', 'option');
-          li.id = `search-item-${idx}`;
+          li.id = `search-item-${idx}`; 
           li.onclick = () => window.location.href = `coin.html?coinId=${c.id}`;
           
           const div = el('div', 'flex items-center gap-sm');
-          const img = el('img'); img.src = c.image; img.width = 20; img.style.borderRadius = '50%';
+          const img = el('img', '', '', { src: c.image, style: "width:20px;border-radius:50%" }); 
           div.appendChild(img);
           div.appendChild(el('span', '', c.name));
           
@@ -759,35 +840,57 @@
     });
 
     DOM.coinSearch.addEventListener('keydown', (e) => {
-        const items = DOM.searchResults.querySelectorAll('.search-item');
+        const items = DOM.searchResults.querySelectorAll('.search-item:not([aria-disabled="true"])');
         if(items.length === 0) return;
 
         if (e.key === 'ArrowDown') {
+            e.preventDefault();
             searchIndex = (searchIndex + 1) % items.length;
             updateSearchFocus(items);
         } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
             searchIndex = (searchIndex - 1 + items.length) % items.length;
             updateSearchFocus(items);
         } else if (e.key === 'Enter' && searchIndex >= 0) {
+            e.preventDefault();
             items[searchIndex].click();
         }
     });
 
     function updateSearchFocus(items) {
         items.forEach(i => i.classList.remove('active'));
-        if(searchIndex >= 0) items[searchIndex].classList.add('active');
+        if(searchIndex >= 0) {
+            const activeItem = items[searchIndex];
+            activeItem.classList.add('active');
+            DOM.coinSearch.setAttribute('aria-activedescendant', activeItem.id);
+            activeItem.scrollIntoView({ block: 'nearest' });
+        } else {
+            DOM.coinSearch.setAttribute('aria-activedescendant', '');
+        }
     }
 
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.search-container')) DOM.searchResults.replaceChildren();
+      if (!e.target.closest('.search-container')) {
+          DOM.searchResults.replaceChildren();
+          DOM.coinSearch.setAttribute('aria-expanded', 'false');
+      }
     });
 
-    document.getElementById('logoutBtn').onclick = async () => {
-      await fetch(`${CONFIG.API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
-      window.location.href = 'login.html';
-    };
+    // --- UTILS (Refactored el function) ---
+    function el(tag, className = '', text = '', attrs = {}) {
+        const e = document.createElement(tag);
+        if(className) e.className = className;
+        if(text) e.textContent = text;
+        
+        // Handle new Attributes Object
+        for (const [key, value] of Object.entries(attrs)) {
+            if (key === 'style') e.style.cssText = value;
+            else if (key.startsWith('on')) e.setAttribute(key, value); // Simple setAttribute for inline handlers (careful with CSP)
+            else e.setAttribute(key, value);
+        }
+        return e;
+    }
 
-    // --- UTILS ---
     function formatVolume(num) {
       if(num >= 1e9) return (num/1e9).toFixed(2) + 'B';
       if(num >= 1e6) return (num/1e6).toFixed(2) + 'M';
@@ -806,28 +909,28 @@
       localStorage.setItem(key, JSON.stringify({ data, expiry: Date.now() + ttl }));
     }
 
+    // Debounced Toast Logic with Reflow Fix
+    let toastTimeout; 
     function showToast(msg, type) {
+      clearTimeout(toastTimeout);
       const t = document.getElementById("toast");
       t.textContent = msg;
       t.classList.remove('toast-success', 'toast-error', 'toast-info', 'show');
+      
+      // Force Reflow to restart animation/transition reliably
+      void t.offsetWidth; 
+      
       t.classList.add('show', `toast-${type || 'info'}`);
-      setTimeout(() => t.classList.remove('show'), 3000);
+      
+      toastTimeout = setTimeout(() => {
+          t.classList.remove('show');
+      }, 3000);
     }
 
     // --- LIFECYCLE ---
-    // FIXED: Clean up intervals on page unload
-    window.addEventListener('beforeunload', () => {
-        stopDataSync();
-    });
-
-    window.addEventListener('online', () => {
-      stopDataSync(); 
-      showToast("Back online!", "success");
-      startDataSync();
-    });
-
+    window.addEventListener('beforeunload', stopDataSync);
+    window.addEventListener('online', () => { stopDataSync(); showToast("Back online!", "success"); startDataSync(); });
     window.addEventListener('offline', () => showToast("You are offline", "info"));
-
     document.addEventListener('DOMContentLoaded', initApp);
 
   </script>
